@@ -2,9 +2,15 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { sb } from '@/lib/supabase'
-import { LECCIONES_M1, LECCIONES_M2, INTRO_SLIDES, DATASET_SQL } from '@/lib/curriculum'
+import {
+  LECCIONES_M1, LECCIONES_M2, LECCIONES_M3, LECCIONES_M4,
+  INTRO_SLIDES, DATASET_SQL,
+  GLOSARIO_M1, GLOSARIO_M2, GLOSARIO_M3, GLOSARIO_M4,
+  RESUMEN_M1, RESUMEN_M2, RESUMEN_M3, RESUMEN_M4,
+} from '@/lib/curriculum'
 
 type Prog = Record<string, { completada: boolean; xp_ganado: number }>
+type Vista = 'leccion' | 'resumen' | 'glosario'
 
 export default function LeccionClient({ moduloId }: { moduloId: number }) {
   const router = useRouter()
@@ -23,25 +29,43 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
   const [resultError, setResultError] = useState('')
   const [loading, setLoading] = useState(true)
   const [rachaAnimate, setRachaAnimate] = useState(false)
+  const [vista, setVista] = useState<Vista>('leccion')
+  const [glosarioSearch, setGlosarioSearch] = useState('')
   const sqlDbRef = useRef<any>(null)
 
   const getLecciones = () => {
     if (moduloId === 1) return LECCIONES_M1
     if (moduloId === 2) return LECCIONES_M2
+    if (moduloId === 3) return LECCIONES_M3
+    if (moduloId === 4) return LECCIONES_M4
     return []
+  }
+
+  const getGlosario = () => {
+    if (moduloId === 1) return GLOSARIO_M1
+    if (moduloId === 2) return GLOSARIO_M2
+    if (moduloId === 3) return GLOSARIO_M3
+    if (moduloId === 4) return GLOSARIO_M4
+    return []
+  }
+
+  const getResumen = () => {
+    if (moduloId === 1) return RESUMEN_M1
+    if (moduloId === 2) return RESUMEN_M2
+    if (moduloId === 3) return RESUMEN_M3
+    if (moduloId === 4) return RESUMEN_M4
+    return null
   }
 
   const getModuloLabel = () => {
     if (moduloId === 1) return 'Módulo 1 · SELECT & Básicos'
     if (moduloId === 2) return 'Módulo 2 · WHERE & Filtros'
+    if (moduloId === 3) return 'Módulo 3 · JOINs'
+    if (moduloId === 4) return 'Módulo 4 · GROUP BY & Agregados'
     return `Módulo ${moduloId}`
   }
 
-  const getPrefix = () => {
-    if (moduloId === 1) return '01-'
-    if (moduloId === 2) return '02-'
-    return `0${moduloId}-`
-  }
+  const getPrefix = () => `0${moduloId}-`
 
   useEffect(() => {
     const setup = async () => {
@@ -184,13 +208,23 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     }
   }
 
+  // Navegar sin perder progreso
+  const goToLesson = (idx: number) => {
+    const lecciones = getLecciones()
+    if (idx >= 0 && idx < lecciones.length) {
+      setCurIdx(idx)
+      setVista('leccion')
+      window.scrollTo(0, 0)
+    }
+  }
+
   const nextLesson = () => {
     const lecciones = getLecciones()
     if (curIdx < lecciones.length - 1) {
-      setCurIdx(prev => prev + 1)
-      window.scrollTo(0, 0)
+      goToLesson(curIdx + 1)
     } else {
-      router.replace('/dashboard')
+      setVista('resumen')
+      window.scrollTo(0, 0)
     }
   }
 
@@ -228,16 +262,10 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     ]
     const TABLA_COLS = ['id', 'nombre', 'edad', 'ciudad']
 
-    // Estilo justificado compartido para todos los subtítulos
     const subtituloStyle: React.CSSProperties = {
-      fontSize: '0.92rem',
-      color: '#c8d8f0',
-      lineHeight: 1.8,
-      background: 'rgba(77,166,255,0.06)',
-      borderLeft: '3px solid rgba(77,166,255,0.5)',
-      borderRadius: '0 10px 10px 0',
-      padding: '14px 16px',
-      marginBottom: 18,
+      fontSize: '0.92rem', color: '#c8d8f0', lineHeight: 1.8,
+      background: 'rgba(77,166,255,0.06)', borderLeft: '3px solid rgba(77,166,255,0.5)',
+      borderRadius: '0 10px 10px 0', padding: '14px 16px', marginBottom: 18,
       textAlign: 'justify' as const,
     }
 
@@ -248,53 +276,32 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
           <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 15, overflow: 'hidden' }}>
             <div style={{ padding: '20px 20px 0' }}>
 
-              {/* SVG slide 1 — base de datos ilustrada */}
-              {slide.tipo === 'svg' && (
-                <div style={{ background: 'var(--bg2)', borderRadius: 12, padding: '20px 16px', marginBottom: 16 }}>
-                  <svg viewBox="0 0 560 180" style={{ width: '100%', height: 'auto' }} xmlns="http://www.w3.org/2000/svg">
-                    {/* Contenedor base de datos */}
-                    <rect x="4" y="4" width="552" height="172" rx="12" fill="rgba(77,166,255,0.04)" stroke="rgba(77,166,255,0.2)" strokeWidth="1.5" strokeDasharray="6,4"/>
-                    <text x="18" y="22" fill="rgba(77,166,255,0.5)" fontSize="9" fontFamily="monospace" fontWeight="600">BASE DE DATOS</text>
-
-                    {/* Tabla clientes */}
-                    <rect x="20" y="32" width="148" height="132" rx="8" fill="rgba(77,166,255,0.08)" stroke="rgba(77,166,255,0.45)" strokeWidth="1.5"/>
-                    <rect x="20" y="32" width="148" height="28" rx="8" fill="rgba(77,166,255,0.22)"/>
-                    <rect x="20" y="52" width="148" height="8" fill="rgba(77,166,255,0.22)"/>
-                    <text x="94" y="51" textAnchor="middle" fill="#7dd3fc" fontSize="11" fontWeight="700" fontFamily="monospace">clientes</text>
-                    {[['🔑 id','#94a3b8'],['nombre','#cbd5e1'],['email','#cbd5e1'],['ciudad','#cbd5e1'],['telefono','#cbd5e1']].map(([col, color], i) => (
-                      <text key={col} x="34" y={82 + i * 17} fill={color} fontSize="10" fontFamily="monospace">{col}</text>
+              {/* Slide 1 — concepto visual */}
+              {slide.tipo === 'concepto' && (
+                <div style={{ background: 'var(--bg2)', borderRadius: 12, padding: '20px', marginBottom: 16 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 16 }}>
+                    {[
+                      { ico: '🗄️', label: 'Organizada', desc: 'Los datos se guardan con estructura, no como texto libre' },
+                      { ico: '⚡', label: 'Eficiente', desc: 'Millones de registros consultados en milisegundos' },
+                      { ico: '🔗', label: 'Relacional', desc: 'Las tablas se conectan entre sí para representar la realidad' },
+                    ].map(({ ico, label, desc }) => (
+                      <div key={label} style={{ background: 'rgba(77,166,255,0.06)', border: '1px solid rgba(77,166,255,0.15)', borderRadius: 10, padding: '14px 12px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '1.6rem', marginBottom: 8 }}>{ico}</div>
+                        <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#7dd3fc', marginBottom: 4 }}>{label}</div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--sub)', lineHeight: 1.5 }}>{desc}</div>
+                      </div>
                     ))}
-
-                    {/* Tabla pedidos */}
-                    <rect x="206" y="32" width="148" height="132" rx="8" fill="rgba(62,207,142,0.08)" stroke="rgba(62,207,142,0.45)" strokeWidth="1.5"/>
-                    <rect x="206" y="32" width="148" height="28" rx="8" fill="rgba(62,207,142,0.22)"/>
-                    <rect x="206" y="52" width="148" height="8" fill="rgba(62,207,142,0.22)"/>
-                    <text x="280" y="51" textAnchor="middle" fill="#6ee7b7" fontSize="11" fontWeight="700" fontFamily="monospace">pedidos</text>
-                    {[['🔑 id','#94a3b8'],['🔗 cliente_id','#fbbf24'],['🔗 producto_id','#fbbf24'],['fecha','#cbd5e1'],['total','#cbd5e1']].map(([col, color], i) => (
-                      <text key={col} x="220" y={82 + i * 17} fill={color} fontSize="10" fontFamily="monospace">{col}</text>
-                    ))}
-
-                    {/* Tabla productos */}
-                    <rect x="392" y="32" width="148" height="132" rx="8" fill="rgba(232,168,56,0.08)" stroke="rgba(232,168,56,0.45)" strokeWidth="1.5"/>
-                    <rect x="392" y="32" width="148" height="28" rx="8" fill="rgba(232,168,56,0.22)"/>
-                    <rect x="392" y="52" width="148" height="8" fill="rgba(232,168,56,0.22)"/>
-                    <text x="466" y="51" textAnchor="middle" fill="#fcd34d" fontSize="11" fontWeight="700" fontFamily="monospace">productos</text>
-                    {[['🔑 id','#94a3b8'],['nombre','#cbd5e1'],['precio','#cbd5e1'],['categoria','#cbd5e1'],['stock','#cbd5e1']].map(([col, color], i) => (
-                      <text key={col} x="406" y={82 + i * 17} fill={color} fontSize="10" fontFamily="monospace">{col}</text>
-                    ))}
-
-                    {/* Relación clientes → pedidos */}
-                    <line x1="168" y1="99" x2="206" y2="99" stroke="rgba(251,191,36,0.6)" strokeWidth="1.5" strokeDasharray="4,3"/>
-                    <polygon points="202,95 210,99 202,103" fill="rgba(251,191,36,0.7)"/>
-                    <text x="187" y="93" textAnchor="middle" fill="rgba(251,191,36,0.8)" fontSize="8" fontFamily="monospace">1:N</text>
-
-                    {/* Relación productos → pedidos */}
-                    <line x1="392" y1="116" x2="354" y2="116" stroke="rgba(251,191,36,0.6)" strokeWidth="1.5" strokeDasharray="4,3"/>
-                    <polygon points="358,112 350,116 358,120" fill="rgba(251,191,36,0.7)"/>
-                    <text x="373" y="110" textAnchor="middle" fill="rgba(251,191,36,0.8)" fontSize="8" fontFamily="monospace">N:1</text>
-                  </svg>
-                  <div style={{ textAlign: 'center', fontSize: '0.75rem', color: 'var(--sub)', marginTop: 8, fontFamily: 'DM Mono' }}>
-                    Tres tablas relacionadas dentro de una base de datos
+                  </div>
+                  <div style={{ background: '#0b0d14', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 14px', fontFamily: 'DM Mono', fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.8 }}>
+                    <span style={{ color: '#475569' }}>-- Pregunta en lenguaje natural:</span><br/>
+                    <span style={{ color: '#94a3b8' }}>¿Cuáles son mis clientes de Buenos Aires que gastaron más de $10.000?</span><br/><br/>
+                    <span style={{ color: '#475569' }}>-- Misma pregunta en SQL:</span><br/>
+                    <span style={{ color: '#93c5fd' }}>SELECT</span><span style={{ color: '#e2e8f0' }}> nombre, email </span>
+                    <span style={{ color: '#93c5fd' }}>FROM</span><span style={{ color: '#a78bfa' }}> clientes </span>
+                    <span style={{ color: '#93c5fd' }}>WHERE</span><span style={{ color: '#e2e8f0' }}> ciudad = </span>
+                    <span style={{ color: '#86efac' }}>'Buenos Aires'</span>
+                    <span style={{ color: '#93c5fd' }}> AND</span><span style={{ color: '#e2e8f0' }}> gasto_total </span>
+                    <span style={{ color: '#6ee7b7' }}>&gt; </span><span style={{ color: '#fbbf24' }}>10000</span><span style={{ color: '#475569' }}>;</span>
                   </div>
                 </div>
               )}
@@ -312,49 +319,39 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                 </div>
               )}
 
-              {/* DER — tablas relacionadas */}
+              {/* DER */}
               {slide.tipo === 'der' && (
-                <div style={{ marginBottom: 16 }}>
-                  <svg viewBox="0 0 560 200" style={{ width: '100%', height: 'auto' }} xmlns="http://www.w3.org/2000/svg">
-                    {/* clientes */}
-                    <rect x="10" y="20" width="150" height="155" rx="8" fill="rgba(77,166,255,0.07)" stroke="rgba(77,166,255,0.4)" strokeWidth="1.5"/>
-                    <rect x="10" y="20" width="150" height="30" rx="8" fill="rgba(77,166,255,0.2)"/>
-                    <rect x="10" y="42" width="150" height="8" fill="rgba(77,166,255,0.2)"/>
-                    <text x="85" y="40" textAnchor="middle" fill="#7dd3fc" fontSize="12" fontWeight="700" fontFamily="monospace">clientes</text>
-                    <text x="24" y="68" fill="#94a3b8" fontSize="10" fontFamily="monospace">🔑 id</text>
-                    <text x="24" y="85" fill="#cbd5e1" fontSize="10" fontFamily="monospace">nombre</text>
-                    <text x="24" y="102" fill="#cbd5e1" fontSize="10" fontFamily="monospace">email</text>
-                    <text x="24" y="119" fill="#cbd5e1" fontSize="10" fontFamily="monospace">ciudad</text>
-                    <text x="24" y="136" fill="#cbd5e1" fontSize="10" fontFamily="monospace">telefono</text>
-                    {/* pedidos */}
-                    <rect x="200" y="20" width="160" height="172" rx="8" fill="rgba(62,207,142,0.07)" stroke="rgba(62,207,142,0.4)" strokeWidth="1.5"/>
-                    <rect x="200" y="20" width="160" height="30" rx="8" fill="rgba(62,207,142,0.2)"/>
-                    <rect x="200" y="42" width="160" height="8" fill="rgba(62,207,142,0.2)"/>
-                    <text x="280" y="40" textAnchor="middle" fill="#6ee7b7" fontSize="12" fontWeight="700" fontFamily="monospace">pedidos</text>
-                    <text x="214" y="68" fill="#94a3b8" fontSize="10" fontFamily="monospace">🔑 id</text>
-                    <text x="214" y="85" fill="#fbbf24" fontSize="10" fontFamily="monospace">🔗 cliente_id</text>
-                    <text x="214" y="102" fill="#fbbf24" fontSize="10" fontFamily="monospace">🔗 producto_id</text>
-                    <text x="214" y="119" fill="#cbd5e1" fontSize="10" fontFamily="monospace">fecha</text>
-                    <text x="214" y="136" fill="#cbd5e1" fontSize="10" fontFamily="monospace">total</text>
-                    <text x="214" y="153" fill="#cbd5e1" fontSize="10" fontFamily="monospace">estado</text>
-                    {/* productos */}
-                    <rect x="400" y="20" width="150" height="155" rx="8" fill="rgba(232,168,56,0.07)" stroke="rgba(232,168,56,0.4)" strokeWidth="1.5"/>
-                    <rect x="400" y="20" width="150" height="30" rx="8" fill="rgba(232,168,56,0.2)"/>
-                    <rect x="400" y="42" width="150" height="8" fill="rgba(232,168,56,0.2)"/>
-                    <text x="475" y="40" textAnchor="middle" fill="#fcd34d" fontSize="12" fontWeight="700" fontFamily="monospace">productos</text>
-                    <text x="414" y="68" fill="#94a3b8" fontSize="10" fontFamily="monospace">🔑 id</text>
-                    <text x="414" y="85" fill="#cbd5e1" fontSize="10" fontFamily="monospace">nombre</text>
-                    <text x="414" y="102" fill="#cbd5e1" fontSize="10" fontFamily="monospace">precio</text>
-                    <text x="414" y="119" fill="#cbd5e1" fontSize="10" fontFamily="monospace">categoria</text>
-                    <text x="414" y="136" fill="#cbd5e1" fontSize="10" fontFamily="monospace">stock</text>
-                    {/* Flecha clientes → pedidos */}
-                    <line x1="160" y1="85" x2="200" y2="85" stroke="rgba(251,191,36,0.65)" strokeWidth="1.5" strokeDasharray="5,3"/>
-                    <polygon points="196,81 204,85 196,89" fill="rgba(251,191,36,0.75)"/>
-                    <text x="180" y="79" textAnchor="middle" fill="rgba(251,191,36,0.9)" fontSize="8" fontFamily="monospace">1:N</text>
-                    {/* Flecha productos → pedidos */}
-                    <line x1="400" y1="102" x2="360" y2="102" stroke="rgba(251,191,36,0.65)" strokeWidth="1.5" strokeDasharray="5,3"/>
-                    <polygon points="364,98 356,102 364,106" fill="rgba(251,191,36,0.75)"/>
-                    <text x="380" y="96" textAnchor="middle" fill="rgba(251,191,36,0.9)" fontSize="8" fontFamily="monospace">N:1</text>
+                <div style={{ background: 'var(--bg2)', borderRadius: 12, padding: '16px', marginBottom: 16 }}>
+                  <svg viewBox="0 0 560 180" style={{ width: '100%', height: 'auto' }} xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="4" width="552" height="172" rx="12" fill="rgba(77,166,255,0.04)" stroke="rgba(77,166,255,0.2)" strokeWidth="1.5" strokeDasharray="6,4"/>
+                    <text x="18" y="22" fill="rgba(77,166,255,0.5)" fontSize="9" fontFamily="monospace" fontWeight="600">BASE DE DATOS</text>
+                    <rect x="20" y="32" width="148" height="132" rx="8" fill="rgba(77,166,255,0.08)" stroke="rgba(77,166,255,0.45)" strokeWidth="1.5"/>
+                    <rect x="20" y="32" width="148" height="28" rx="8" fill="rgba(77,166,255,0.22)"/>
+                    <rect x="20" y="52" width="148" height="8" fill="rgba(77,166,255,0.22)"/>
+                    <text x="94" y="51" textAnchor="middle" fill="#7dd3fc" fontSize="11" fontWeight="700" fontFamily="monospace">clientes</text>
+                    {[['🔑 id','#94a3b8'],['nombre','#cbd5e1'],['email','#cbd5e1'],['ciudad','#cbd5e1'],['telefono','#cbd5e1']].map(([col, color], i) => (
+                      <text key={String(col)} x="34" y={82 + i * 17} fill={color as string} fontSize="10" fontFamily="monospace">{col}</text>
+                    ))}
+                    <rect x="206" y="32" width="148" height="132" rx="8" fill="rgba(62,207,142,0.08)" stroke="rgba(62,207,142,0.45)" strokeWidth="1.5"/>
+                    <rect x="206" y="32" width="148" height="28" rx="8" fill="rgba(62,207,142,0.22)"/>
+                    <rect x="206" y="52" width="148" height="8" fill="rgba(62,207,142,0.22)"/>
+                    <text x="280" y="51" textAnchor="middle" fill="#6ee7b7" fontSize="11" fontWeight="700" fontFamily="monospace">pedidos</text>
+                    {[['🔑 id','#94a3b8'],['🔗 cliente_id','#fbbf24'],['🔗 producto_id','#fbbf24'],['fecha','#cbd5e1'],['total','#cbd5e1']].map(([col, color], i) => (
+                      <text key={String(col)} x="220" y={82 + i * 17} fill={color as string} fontSize="10" fontFamily="monospace">{col}</text>
+                    ))}
+                    <rect x="392" y="32" width="148" height="132" rx="8" fill="rgba(232,168,56,0.08)" stroke="rgba(232,168,56,0.45)" strokeWidth="1.5"/>
+                    <rect x="392" y="32" width="148" height="28" rx="8" fill="rgba(232,168,56,0.22)"/>
+                    <rect x="392" y="52" width="148" height="8" fill="rgba(232,168,56,0.22)"/>
+                    <text x="466" y="51" textAnchor="middle" fill="#fcd34d" fontSize="11" fontWeight="700" fontFamily="monospace">productos</text>
+                    {[['🔑 id','#94a3b8'],['nombre','#cbd5e1'],['precio','#cbd5e1'],['categoria','#cbd5e1'],['stock','#cbd5e1']].map(([col, color], i) => (
+                      <text key={String(col)} x="406" y={82 + i * 17} fill={color as string} fontSize="10" fontFamily="monospace">{col}</text>
+                    ))}
+                    <line x1="168" y1="99" x2="206" y2="99" stroke="rgba(251,191,36,0.6)" strokeWidth="1.5" strokeDasharray="4,3"/>
+                    <polygon points="202,95 210,99 202,103" fill="rgba(251,191,36,0.7)"/>
+                    <text x="187" y="93" textAnchor="middle" fill="rgba(251,191,36,0.8)" fontSize="8" fontFamily="monospace">1:N</text>
+                    <line x1="392" y1="116" x2="354" y2="116" stroke="rgba(251,191,36,0.6)" strokeWidth="1.5" strokeDasharray="4,3"/>
+                    <polygon points="358,112 350,116 358,120" fill="rgba(251,191,36,0.7)"/>
+                    <text x="373" y="110" textAnchor="middle" fill="rgba(251,191,36,0.8)" fontSize="8" fontFamily="monospace">N:1</text>
                   </svg>
                 </div>
               )}
@@ -435,7 +432,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               )}
             </div>
 
-            {/* Subtítulo y navegación */}
             <div style={{ padding: '0 20px 20px' }}>
               <div style={subtituloStyle}>{slide.subtitulo}</div>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -463,7 +459,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
   }
 
   // ── MÓDULOS NO DISPONIBLES ──
-  if (moduloId !== 1 && moduloId !== 2) {
+  if (![1,2,3,4].includes(moduloId)) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', flexDirection: 'column', gap: 16 }}>
         <div style={{ fontSize: '2rem' }}>🚧</div>
@@ -473,29 +469,92 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     )
   }
 
-  // ── MÓDULOS 1 y 2 ──
   const lecciones = getLecciones()
-  const l = lecciones[curIdx]
+  const glosario = getGlosario()
+  const resumen = getResumen()
   const total = lecciones.length
+  const l = lecciones[curIdx]
   const pct = Math.round(((curIdx + 1) / total) * 100)
 
+  // ── VISTA RESUMEN ──
+  if (vista === 'resumen' && resumen) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
+        <TopBar title="Resumen del módulo" module={getModuloLabel()} prog="✓ Completado" onBack={() => router.replace('/dashboard')} />
+        <div style={{ flex: 1, padding: '28px 20px', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
+          <div style={{ background: 'rgba(62,207,142,0.05)', border: '1px solid rgba(62,207,142,0.2)', borderRadius: 15, padding: '24px', marginBottom: 20 }}>
+            <div style={{ fontSize: '1.5rem', marginBottom: 8 }}>🏆</div>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--green)', marginBottom: 4 }}>{resumen.titulo}</div>
+            <div style={{ fontSize: '0.82rem', color: 'var(--sub)' }}>Completaste todas las lecciones del módulo</div>
+          </div>
+
+          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 15, padding: '20px', marginBottom: 16 }}>
+            <div style={{ fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--nova)', marginBottom: 16 }}>Conceptos clave</div>
+            {resumen.puntos.map((p, i) => (
+              <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '8px 0', borderBottom: i < resumen.puntos.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(77,166,255,0.15)', color: 'var(--nova)', fontSize: '0.65rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
+                <div style={{ fontSize: '0.86rem', color: '#c8d8f0', lineHeight: 1.5 }}>{p}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ background: '#0b0d14', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px', marginBottom: 20 }}>
+            <div style={{ fontSize: '0.68rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--sub)', marginBottom: 10 }}>Sintaxis del módulo</div>
+            <pre style={{ fontFamily: 'DM Mono', fontSize: '0.82rem', color: '#7dd3fc', lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap' }}>{resumen.sintaxis}</pre>
+          </div>
+
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button onClick={() => { setVista('leccion'); setCurIdx(0) }} style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 9, padding: '10px 18px', color: 'var(--sub)', cursor: 'pointer', fontSize: '0.84rem' }}>← Repasar lecciones</button>
+            <button onClick={() => setVista('glosario')} style={{ background: 'rgba(77,166,255,0.1)', border: '1px solid rgba(77,166,255,0.3)', borderRadius: 9, padding: '10px 18px', color: 'var(--nova)', cursor: 'pointer', fontSize: '0.84rem', fontWeight: 600 }}>📖 Ver glosario</button>
+            <button onClick={() => router.replace('/dashboard')} style={{ background: 'var(--green)', color: '#0a2417', border: 'none', borderRadius: 9, padding: '10px 18px', fontWeight: 600, cursor: 'pointer', fontSize: '0.84rem', marginLeft: 'auto' }}>Volver al inicio →</button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── VISTA GLOSARIO ──
+  if (vista === 'glosario') {
+    const filtrado = glosario.filter(g =>
+      g.termino.toLowerCase().includes(glosarioSearch.toLowerCase()) ||
+      g.descripcion.toLowerCase().includes(glosarioSearch.toLowerCase())
+    )
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
+        <TopBar title="Glosario" module={getModuloLabel()} prog={`${glosario.length} términos`} onBack={() => setVista('leccion')} />
+        <div style={{ flex: 1, padding: '28px 20px', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
+          <input
+            value={glosarioSearch}
+            onChange={e => setGlosarioSearch(e.target.value)}
+            placeholder="Buscar término..."
+            style={{ width: '100%', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 16px', color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: '0.9rem', outline: 'none', marginBottom: 16 }}
+          />
+          {filtrado.map((g, i) => (
+            <div key={g.termino} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px', marginBottom: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                <span style={{ fontFamily: 'DM Mono', fontSize: '0.9rem', fontWeight: 700, color: 'var(--nova)' }}>{g.termino}</span>
+              </div>
+              <div style={{ fontSize: '0.85rem', color: '#c8d8f0', lineHeight: 1.6, marginBottom: 10 }}>{g.descripcion}</div>
+              <div style={{ background: '#0b0d14', border: '1px solid var(--border)', borderRadius: 7, padding: '8px 12px', fontFamily: 'DM Mono', fontSize: '0.75rem', color: '#6ee7b7' }}>{g.ejemplo}</div>
+            </div>
+          ))}
+          {filtrado.length === 0 && (
+            <div style={{ textAlign: 'center', color: 'var(--sub)', padding: '40px 0', fontSize: '0.9rem' }}>No se encontraron términos</div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // ── VISTA LECCIÓN ──
   const PREVIEW: Record<string, { cols: string[]; rows: any[][] }> = {
-    peliculas: {
-      cols: ['id', 'titulo', 'genero', 'anio', 'calificacion'],
-      rows: [[1,'Galaxia Perdida','Ciencia Ficción',2021,8.3],[2,'El Último Tango','Drama',2019,7.1],[3,'Risa Sin Fin','Comedia',2022,6.5]]
-    },
-    series: {
-      cols: ['id', 'titulo', 'genero', 'temporadas', 'calificacion'],
-      rows: [[1,'El Imperio Caído','Drama',4,9.2],[2,'Detectives del Sur','Crimen',2,8.0]]
-    },
-    empleados: {
-      cols: ['id', 'nombre', 'departamento', 'salario', 'email'],
-      rows: [
-        [1,'Ana García','Ventas',72000,'ana@empresa.com'],
-        [2,'Luis Pérez','Sistemas',95000,'luis@empresa.com'],
-        [3,'María López','Marketing',68000,'maria@empresa.com'],
-      ]
-    },
+    peliculas: { cols: ['id','titulo','genero','anio','calificacion'], rows: [[1,'Galaxia Perdida','Ciencia Ficción',2021,8.3],[2,'El Último Tango','Drama',2019,7.1],[3,'Risa Sin Fin','Comedia',2022,6.5]] },
+    series: { cols: ['id','titulo','genero','temporadas','calificacion'], rows: [[1,'El Imperio Caído','Drama',4,9.2],[2,'Detectives del Sur','Crimen',2,8.0]] },
+    empleados: { cols: ['id','nombre','departamento','salario','jefe_id'], rows: [[1,'Ana García','Ventas',72000,3],[2,'Luis Pérez','Sistemas',95000,4],[3,'María López','Marketing',68000,null]] },
+    clientes: { cols: ['id','nombre','email','ciudad'], rows: [[1,'Martina Rodríguez','martina@mail.com','Buenos Aires'],[2,'Pablo García','pablo@mail.com','Córdoba'],[3,'Lucia Fernández','lucia@mail.com','Buenos Aires']] },
+    pedidos: { cols: ['id','cliente_id','producto_id','total','estado'], rows: [[1,1,1,85000,'completado'],[2,1,2,4500,'completado'],[3,2,3,32000,'pendiente']] },
+    productos: { cols: ['id','nombre','categoria','precio','stock'], rows: [[1,'Notebook Pro','Electrónica',85000,15],[2,'Mouse Inalámbrico','Electrónica',4500,80],[3,'Silla Ergonómica','Muebles',32000,20]] },
+    pedidos_restaurante: { cols: ['id','mesa','categoria','importe','turno'], rows: [[1,1,'Entradas',850,'noche'],[2,1,'Principal',3200,'noche'],[3,2,'Principal',2800,'mediodia']] },
   }
 
   const pv = PREVIEW[l.tabla] || PREVIEW.peliculas
@@ -509,9 +568,37 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
 
       <div style={{ flex: 1, padding: '26px 20px', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
 
+        {/* Navegación entre lecciones */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 16, overflowX: 'auto', paddingBottom: 4 }}>
+          {lecciones.map((lec, i) => {
+            const completada = prog[lec.id]?.completada
+            const esActual = i === curIdx
+            return (
+              <button
+                key={lec.id}
+                onClick={() => goToLesson(i)}
+                style={{
+                  minWidth: 32, height: 32, borderRadius: 8, border: 'none',
+                  background: esActual ? 'var(--nova2)' : completada ? 'rgba(62,207,142,0.15)' : 'var(--bg3)',
+                  color: esActual ? '#fff' : completada ? 'var(--green)' : 'var(--sub)',
+                  fontSize: '0.75rem', fontWeight: esActual ? 700 : 400, cursor: 'pointer',
+                  fontFamily: 'DM Mono', flexShrink: 0,
+                  outline: esActual ? '2px solid var(--nova)' : 'none',
+                }}
+              >
+                {completada && !esActual ? '✓' : i + 1}
+              </button>
+            )
+          })}
+          <button
+            onClick={() => setVista('glosario')}
+            style={{ marginLeft: 'auto', padding: '0 12px', height: 32, borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--sub)', fontSize: '0.75rem', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}
+          >📖 Glosario</button>
+        </div>
+
         {/* Banner racha */}
         {rachaAnimate && (
-          <div style={{ background: 'rgba(232,168,56,0.08)', border: '1px solid rgba(232,168,56,0.25)', borderRadius: 12, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10, animation: 'fadeUp 0.3s ease both' }}>
+          <div style={{ background: 'rgba(232,168,56,0.08)', border: '1px solid rgba(232,168,56,0.25)', borderRadius: 12, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: '1.4rem' }}>🔥</span>
             <div>
               <div style={{ fontWeight: 600, fontSize: '0.92rem', color: 'var(--amber)' }}>¡Racha activa! {perfil?.racha_actual} día{perfil?.racha_actual !== 1 ? 's' : ''} seguido{perfil?.racha_actual !== 1 ? 's' : ''}</div>
@@ -544,7 +631,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'DM Mono', fontSize: '0.72rem' }}>
                   <thead><tr>{pv.cols.map(c => <th key={c} style={{ padding: '6px 9px', border: '1px solid var(--border)', fontSize: '0.63rem', textTransform: 'uppercase', letterSpacing: '0.05em', background: 'var(--bg3)', color: 'var(--sub)' }}>{c}</th>)}</tr></thead>
                   <tbody>
-                    {pv.rows.map((row, ri) => <tr key={ri}>{row.map((v, ci) => <td key={ci} style={{ padding: '5px 9px', border: '1px solid var(--border)' }}>{String(v)}</td>)}</tr>)}
+                    {pv.rows.map((row, ri) => <tr key={ri}>{row.map((v, ci) => <td key={ci} style={{ padding: '5px 9px', border: '1px solid var(--border)' }}>{v !== null ? String(v) : <span style={{ color: 'var(--dim)' }}>NULL</span>}</td>)}</tr>)}
                     <tr><td colSpan={pv.cols.length} style={{ padding: '5px 9px', border: '1px solid var(--border)', textAlign: 'center', color: 'var(--dim)', fontSize: '0.68rem' }}>… más filas</td></tr>
                   </tbody>
                 </table>
@@ -585,9 +672,12 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <button onClick={runQuery} style={{ background: 'var(--nova2)', color: '#fff', border: 'none', borderRadius: 9, padding: '9px 17px', fontWeight: 600, cursor: 'pointer', fontSize: '0.84rem' }}>▶ Ejecutar</button>
               <button onClick={() => setHintOpen(!hintOpen)} style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 9, padding: '8px 15px', color: hintOpen ? 'var(--amber)' : 'var(--sub)', cursor: 'pointer', fontSize: '0.84rem' }}>💡 Pista</button>
+              {curIdx > 0 && (
+                <button onClick={() => goToLesson(curIdx - 1)} style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 9, padding: '8px 15px', color: 'var(--sub)', cursor: 'pointer', fontSize: '0.84rem' }}>← Anterior</button>
+              )}
               {answered && (
                 <button onClick={nextLesson} style={{ background: 'var(--green)', color: '#0a2417', border: 'none', borderRadius: 9, padding: '9px 17px', fontWeight: 600, cursor: 'pointer', fontSize: '0.84rem' }}>
-                  {curIdx < lecciones.length - 1 ? 'Siguiente →' : '🏆 Finalizar módulo'}
+                  {curIdx < lecciones.length - 1 ? 'Siguiente →' : '🏆 Ver resumen'}
                 </button>
               )}
             </div>
