@@ -106,6 +106,9 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
         const prefix = getPrefix()
         const done = Object.keys(pm).filter(k => k.startsWith(prefix) && pm[k]?.completada).length
         setCurIdx(Math.min(done, lecciones.length - 1))
+        if (moduloId === 3 && done === 0) {
+          setVista('intro-joins')
+        }
       }
 
       setLoading(false)
@@ -127,9 +130,13 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
       const l = lecciones[curIdx]
       setBlanks(l.blanks ? l.blanks.map(() => '') : [])
       if (l.tipo === 'debugging' && l.errorQuery) setQueryText(l.errorQuery)
-      if (prog[l.id]?.completada) setAnswered(true)
+      setProg(prev => {
+        if (prev[l.id]?.completada) setAnswered(true)
+        return prev
+      })
     }
-  }, [curIdx, curSlide, moduloId, prog])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [curIdx, curSlide, moduloId])
 
   const saveProg = async (lid: string, mid: number, xp: number, pistaUsada: boolean) => {
     await sb.from('progreso').upsert({
@@ -476,6 +483,155 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
   const l = lecciones[curIdx]
   const pct = Math.round(((curIdx + 1) / total) * 100)
 
+  // ── VISTA INTRO JOINS ──
+  if (vista === 'intro-joins') {
+    const joins = [
+      {
+        nombre: 'INNER JOIN',
+        color: '#3b82f6',
+        colorBg: 'rgba(59,130,246,0.12)',
+        desc: 'Solo las filas que tienen coincidencia en AMBAS tablas.',
+        ejemplo: 'Clientes que hicieron al menos un pedido.',
+        svg: (
+          <svg viewBox="0 0 200 120" style={{ width: '100%', height: 80 }}>
+            <circle cx="75" cy="60" r="45" fill="rgba(77,166,255,0.08)" stroke="rgba(77,166,255,0.4)" strokeWidth="1.5"/>
+            <circle cx="125" cy="60" r="45" fill="rgba(77,166,255,0.08)" stroke="rgba(77,166,255,0.4)" strokeWidth="1.5"/>
+            {/* Intersección resaltada */}
+            <clipPath id="clip-inner">
+              <circle cx="125" cy="60" r="45"/>
+            </clipPath>
+            <circle cx="75" cy="60" r="45" fill="rgba(59,130,246,0.5)" clipPath="url(#clip-inner)"/>
+            <text x="55" y="64" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">A</text>
+            <text x="145" y="64" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">B</text>
+            <text x="100" y="58" textAnchor="middle" fill="white" fontSize="8" fontFamily="monospace" fontWeight="700">A∩B</text>
+          </svg>
+        ),
+      },
+      {
+        nombre: 'LEFT JOIN',
+        color: '#10b981',
+        colorBg: 'rgba(16,185,129,0.12)',
+        desc: 'TODAS las filas de la tabla izquierda + coincidencias de la derecha. La derecha puede ser NULL.',
+        ejemplo: 'Todos los clientes, hayan comprado o no.',
+        svg: (
+          <svg viewBox="0 0 200 120" style={{ width: '100%', height: 80 }}>
+            <circle cx="75" cy="60" r="45" fill="rgba(16,185,129,0.5)" stroke="rgba(16,185,129,0.5)" strokeWidth="1.5"/>
+            <circle cx="125" cy="60" r="45" fill="rgba(77,166,255,0.08)" stroke="rgba(77,166,255,0.35)" strokeWidth="1.5"/>
+            {/* Intersección misma pero más clara */}
+            <clipPath id="clip-left">
+              <circle cx="125" cy="60" r="45"/>
+            </clipPath>
+            <circle cx="75" cy="60" r="45" fill="rgba(16,185,129,0.5)" clipPath="url(#clip-left)"/>
+            <text x="55" y="64" textAnchor="middle" fill="white" fontSize="9" fontFamily="monospace" fontWeight="700">A</text>
+            <text x="145" y="64" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">B</text>
+          </svg>
+        ),
+      },
+      {
+        nombre: 'RIGHT JOIN',
+        color: '#f59e0b',
+        colorBg: 'rgba(245,158,11,0.12)',
+        desc: 'TODAS las filas de la tabla derecha + coincidencias de la izquierda. La izquierda puede ser NULL.',
+        ejemplo: 'Todos los productos, hayan sido pedidos o no.',
+        svg: (
+          <svg viewBox="0 0 200 120" style={{ width: '100%', height: 80 }}>
+            <circle cx="75" cy="60" r="45" fill="rgba(77,166,255,0.08)" stroke="rgba(77,166,255,0.35)" strokeWidth="1.5"/>
+            <circle cx="125" cy="60" r="45" fill="rgba(245,158,11,0.5)" stroke="rgba(245,158,11,0.5)" strokeWidth="1.5"/>
+            <clipPath id="clip-right">
+              <circle cx="75" cy="60" r="45"/>
+            </clipPath>
+            <circle cx="125" cy="60" r="45" fill="rgba(245,158,11,0.5)" clipPath="url(#clip-right)"/>
+            <text x="55" y="64" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">A</text>
+            <text x="145" y="64" textAnchor="middle" fill="white" fontSize="9" fontFamily="monospace" fontWeight="700">B</text>
+          </svg>
+        ),
+      },
+      {
+        nombre: 'FULL OUTER JOIN',
+        color: '#a78bfa',
+        colorBg: 'rgba(167,139,250,0.12)',
+        desc: 'TODAS las filas de ambas tablas. Donde no hay coincidencia, aparece NULL en el lado que falta.',
+        ejemplo: 'Todos los clientes y todos los pedidos, estén relacionados o no.',
+        svg: (
+          <svg viewBox="0 0 200 120" style={{ width: '100%', height: 80 }}>
+            <circle cx="75" cy="60" r="45" fill="rgba(167,139,250,0.45)" stroke="rgba(167,139,250,0.6)" strokeWidth="1.5"/>
+            <circle cx="125" cy="60" r="45" fill="rgba(167,139,250,0.45)" stroke="rgba(167,139,250,0.6)" strokeWidth="1.5"/>
+            <text x="55" y="64" textAnchor="middle" fill="white" fontSize="9" fontFamily="monospace" fontWeight="700">A</text>
+            <text x="145" y="64" textAnchor="middle" fill="white" fontSize="9" fontFamily="monospace" fontWeight="700">B</text>
+            <text x="100" y="58" textAnchor="middle" fill="white" fontSize="8" fontFamily="monospace" fontWeight="700">A∪B</text>
+          </svg>
+        ),
+      },
+    ]
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
+        <TopBar title="Tipos de JOIN" module={getModuloLabel()} prog="Intro" onBack={() => router.replace('/dashboard')} />
+        <div style={{ flex: 1, padding: '26px 20px', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
+
+          <div style={{ background: 'rgba(77,166,255,0.06)', borderLeft: '3px solid rgba(77,166,255,0.6)', borderRadius: '0 10px 10px 0', padding: '14px 18px', marginBottom: 20, fontSize: '0.9rem', color: '#c8d8f0', lineHeight: 1.8, textAlign: 'justify' }}>
+            Un <strong>JOIN</strong> combina filas de dos tablas basándose en una columna relacionada. La diferencia entre los tipos de JOIN está en <strong>qué filas incluye</strong> cuando no hay coincidencia. Pensá en cada tabla como un círculo: el resultado del JOIN es la parte del diagrama que está coloreada.
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
+            {joins.map(j => (
+              <div key={j.nombre} style={{ background: 'var(--card)', border: `1px solid ${j.color}30`, borderRadius: 14, overflow: 'hidden' }}>
+                <div style={{ background: j.colorBg, borderBottom: `1px solid ${j.color}20`, padding: '10px 14px' }}>
+                  <div style={{ fontFamily: 'DM Mono', fontSize: '0.82rem', fontWeight: 700, color: j.color }}>{j.nombre}</div>
+                </div>
+                <div style={{ padding: '12px 14px' }}>
+                  <div style={{ marginBottom: 10 }}>{j.svg}</div>
+                  <div style={{ fontSize: '0.82rem', color: '#c8d8f0', lineHeight: 1.6, marginBottom: 8, textAlign: 'justify' }}>{j.desc}</div>
+                  <div style={{ fontSize: '0.74rem', color: 'var(--sub)', fontStyle: 'italic', lineHeight: 1.5 }}>Ej: {j.ejemplo}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Tabla comparativa */}
+          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden', marginBottom: 20 }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--sub)' }}>
+              Comparativa rápida
+            </div>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'DM Mono', fontSize: '0.78rem' }}>
+                <thead>
+                  <tr style={{ background: 'var(--bg3)' }}>
+                    {['JOIN', 'Filas de A', 'Filas de B', 'Solo coincidencias'].map(h => (
+                      <th key={h} style={{ padding: '8px 12px', textAlign: 'left', color: 'var(--sub)', fontSize: '0.7rem', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ['INNER JOIN', '✓ solo las que coinciden', '✓ solo las que coinciden', '✓ Sí'],
+                    ['LEFT JOIN', '✓ todas', '~ con NULL si no coincide', '✗ No'],
+                    ['RIGHT JOIN', '~ con NULL si no coincide', '✓ todas', '✗ No'],
+                    ['FULL OUTER JOIN', '✓ todas', '✓ todas', '✗ No'],
+                  ].map(([join, a, b, solo], i) => (
+                    <tr key={join} style={{ borderBottom: i < 3 ? '1px solid var(--border)' : 'none' }}>
+                      <td style={{ padding: '8px 12px', color: '#7dd3fc', fontWeight: 700 }}>{join}</td>
+                      <td style={{ padding: '8px 12px', color: '#94a3b8' }}>{a}</td>
+                      <td style={{ padding: '8px 12px', color: '#94a3b8' }}>{b}</td>
+                      <td style={{ padding: '8px 12px', color: solo === '✓ Sí' ? 'var(--green)' : 'var(--sub)' }}>{solo}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { setVista('leccion'); setCurIdx(0) }}
+            style={{ background: 'var(--nova2)', color: '#fff', border: 'none', borderRadius: 9, padding: '11px 24px', fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem', width: '100%' }}
+          >
+            Empezar las lecciones →
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   // ── VISTA RESUMEN ──
   if (vista === 'resumen' && resumen) {
     return (
@@ -590,9 +746,15 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               </button>
             )
           })}
+          {moduloId === 3 && (
+            <button
+              onClick={() => setVista('intro-joins')}
+              style={{ padding: '0 10px', height: 32, borderRadius: 8, border: '1px solid rgba(77,166,255,0.3)', background: 'rgba(77,166,255,0.08)', color: 'var(--nova)', fontSize: '0.75rem', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}
+            >⬤⬤ JOINs</button>
+          )}
           <button
             onClick={() => setVista('glosario')}
-            style={{ marginLeft: 'auto', padding: '0 12px', height: 32, borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--sub)', fontSize: '0.75rem', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}
+            style={{ marginLeft: moduloId === 3 ? 0 : 'auto', padding: '0 12px', height: 32, borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--sub)', fontSize: '0.75rem', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}
           >📖 Glosario</button>
         </div>
 
