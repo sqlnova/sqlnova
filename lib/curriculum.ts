@@ -3,7 +3,7 @@ export const MODULOS = [
   { id: 1, titulo: 'SELECT & Básicos', icono: '🌱', contexto: 'Streaming', lecciones_total: 10, descripcion: 'Tu primera consulta SQL' },
   { id: 2, titulo: 'WHERE & Filtros', icono: '🔍', contexto: 'Recursos humanos', lecciones_total: 10, descripcion: 'Filtrá datos con condiciones' },
   { id: 3, titulo: 'JOINs', icono: '🔗', contexto: 'E-commerce', lecciones_total: 12, descripcion: 'Unir tablas relacionadas' },
-  { id: 4, titulo: 'GROUP BY', icono: '📊', contexto: 'Restaurantes', lecciones_total: 10, descripcion: 'Agrupar y resumir datos' },
+  { id: 4, titulo: 'GROUP BY & Agregados', icono: '📊', contexto: 'Restaurantes', lecciones_total: 10, descripcion: 'Agrupar y resumir datos' },
   { id: 5, titulo: 'Funciones de Agregación', icono: '🔢', contexto: 'Finanzas', lecciones_total: 12, descripcion: 'SUM, MAX, MIN, LEAD y más' },
   { id: 6, titulo: 'Subqueries', icono: '🪆', contexto: 'Hospital', lecciones_total: 10, descripcion: 'Consultas dentro de consultas' },
   { id: 7, titulo: 'CTEs', icono: '🔄', contexto: 'Logística', lecciones_total: 8, descripcion: 'Consultas organizadas' },
@@ -27,6 +27,114 @@ export type Leccion = {
   template?: string
   blanks?: string[]
   errorQuery?: string
+}
+
+// ── GLOSARIO POR MÓDULO ──
+export type GlosarioItem = { termino: string; descripcion: string; ejemplo: string }
+
+export const GLOSARIO_M1: GlosarioItem[] = [
+  { termino: 'SELECT', descripcion: 'Indica qué columnas querés ver en el resultado.', ejemplo: 'SELECT nombre, email FROM usuarios' },
+  { termino: 'FROM', descripcion: 'Indica de qué tabla vienen los datos.', ejemplo: 'SELECT * FROM peliculas' },
+  { termino: '*', descripcion: 'Comodín que selecciona todas las columnas de una tabla.', ejemplo: 'SELECT * FROM peliculas' },
+  { termino: 'AS', descripcion: 'Asigna un alias (nombre alternativo) a una columna o tabla.', ejemplo: 'SELECT titulo AS nombre FROM peliculas' },
+  { termino: 'LIMIT', descripcion: 'Restringe la cantidad de filas devueltas por la consulta.', ejemplo: 'SELECT * FROM peliculas LIMIT 5' },
+  { termino: 'ORDER BY', descripcion: 'Ordena los resultados por una columna. ASC = menor a mayor, DESC = mayor a menor.', ejemplo: 'SELECT titulo FROM peliculas ORDER BY calificacion DESC' },
+  { termino: 'DISTINCT', descripcion: 'Elimina duplicados del resultado, devolviendo solo valores únicos.', ejemplo: 'SELECT DISTINCT genero FROM peliculas' },
+]
+
+export const GLOSARIO_M2: GlosarioItem[] = [
+  { termino: 'WHERE', descripcion: 'Filtra filas que cumplen una condición. Va después de FROM.', ejemplo: "SELECT * FROM empleados WHERE departamento = 'Ventas'" },
+  { termino: '= / <> / != ', descripcion: 'Operadores de igualdad y desigualdad para comparar valores.', ejemplo: "WHERE departamento <> 'Sistemas'" },
+  { termino: '> / < / >= / <=', descripcion: 'Operadores de comparación numérica o de fechas.', ejemplo: 'WHERE salario > 80000' },
+  { termino: 'AND', descripcion: 'Combina condiciones: ambas deben cumplirse para que la fila aparezca.', ejemplo: "WHERE departamento = 'Marketing' AND salario > 60000" },
+  { termino: 'OR', descripcion: 'Combina condiciones: al menos una debe cumplirse.', ejemplo: "WHERE ciudad = 'Buenos Aires' OR ciudad = 'Córdoba'" },
+  { termino: 'IN', descripcion: 'Filtra por múltiples valores posibles de una columna.', ejemplo: "WHERE departamento IN ('Ventas', 'Marketing')" },
+  { termino: 'LIKE', descripcion: 'Busca texto con patrones. % = cualquier texto, _ = un caracter.', ejemplo: "WHERE nombre LIKE 'A%'" },
+  { termino: 'IS NULL / IS NOT NULL', descripcion: 'Filtra filas donde una columna no tiene valor (o sí tiene).', ejemplo: 'WHERE telefono IS NULL' },
+  { termino: 'BETWEEN', descripcion: 'Filtra valores dentro de un rango, incluyendo los extremos.', ejemplo: 'WHERE salario BETWEEN 50000 AND 80000' },
+]
+
+export const GLOSARIO_M3: GlosarioItem[] = [
+  { termino: 'INNER JOIN', descripcion: 'Combina dos tablas devolviendo solo las filas con coincidencia en ambas.', ejemplo: 'FROM pedidos INNER JOIN clientes ON pedidos.cliente_id = clientes.id' },
+  { termino: 'LEFT JOIN', descripcion: 'Devuelve todas las filas de la tabla izquierda, con NULL donde no hay coincidencia.', ejemplo: 'FROM clientes LEFT JOIN pedidos ON clientes.id = pedidos.cliente_id' },
+  { termino: 'RIGHT JOIN', descripcion: 'Devuelve todas las filas de la tabla derecha, con NULL donde no hay coincidencia.', ejemplo: 'FROM pedidos RIGHT JOIN productos ON pedidos.producto_id = productos.id' },
+  { termino: 'ON', descripcion: 'Define la condición de unión entre dos tablas en un JOIN.', ejemplo: 'INNER JOIN clientes ON pedidos.cliente_id = clientes.id' },
+  { termino: 'Alias de tabla', descripcion: 'Nombre corto asignado a una tabla para simplificar el query.', ejemplo: 'FROM pedidos p INNER JOIN clientes c ON p.cliente_id = c.id' },
+  { termino: 'Self JOIN', descripcion: 'JOIN de una tabla consigo misma. Requiere alias obligatoriamente.', ejemplo: 'FROM empleados e INNER JOIN empleados j ON e.jefe_id = j.id' },
+  { termino: 'Clave primaria', descripcion: 'Columna que identifica únicamente cada fila de una tabla (usualmente id).', ejemplo: 'clientes.id' },
+  { termino: 'Clave foránea', descripcion: 'Columna que referencia la clave primaria de otra tabla.', ejemplo: 'pedidos.cliente_id referencia a clientes.id' },
+]
+
+export const GLOSARIO_M4: GlosarioItem[] = [
+  { termino: 'COUNT()', descripcion: 'Cuenta la cantidad de filas. COUNT(*) cuenta todo, COUNT(col) ignora NULLs.', ejemplo: 'SELECT COUNT(*) FROM pedidos' },
+  { termino: 'SUM()', descripcion: 'Suma los valores de una columna numérica, ignorando NULLs.', ejemplo: 'SELECT SUM(importe) FROM pedidos_restaurante' },
+  { termino: 'AVG()', descripcion: 'Calcula el promedio de una columna numérica, ignorando NULLs.', ejemplo: 'SELECT AVG(importe) FROM pedidos_restaurante' },
+  { termino: 'MAX()', descripcion: 'Devuelve el valor máximo de una columna.', ejemplo: 'SELECT MAX(importe) FROM pedidos_restaurante' },
+  { termino: 'MIN()', descripcion: 'Devuelve el valor mínimo de una columna.', ejemplo: 'SELECT MIN(importe) FROM pedidos_restaurante' },
+  { termino: 'GROUP BY', descripcion: 'Agrupa filas con el mismo valor en una columna para aplicar funciones de agregación.', ejemplo: 'SELECT mesa, COUNT(*) FROM pedidos GROUP BY mesa' },
+  { termino: 'HAVING', descripcion: 'Filtra grupos después del GROUP BY. Equivale al WHERE pero para grupos.', ejemplo: 'GROUP BY mesa HAVING SUM(importe) > 3000' },
+  { termino: 'WHERE vs HAVING', descripcion: 'WHERE filtra filas antes de agrupar. HAVING filtra grupos después de agrupar.', ejemplo: 'WHERE turno = noche GROUP BY mesa HAVING SUM(importe) > 2000' },
+]
+
+// ── RESÚMENES POR MÓDULO ──
+export type ResumenModulo = { titulo: string; puntos: string[]; sintaxis: string }
+
+export const RESUMEN_M1: ResumenModulo = {
+  titulo: 'Lo que aprendiste en SELECT & Básicos',
+  puntos: [
+    'SELECT elige qué columnas ver. * trae todas.',
+    'FROM indica de qué tabla vienen los datos.',
+    'AS renombra columnas en el resultado (alias).',
+    'LIMIT restringe cuántas filas devuelve la consulta.',
+    'ORDER BY ordena: ASC (menor a mayor), DESC (mayor a menor).',
+    'DISTINCT elimina duplicados del resultado.',
+    'Combiná ORDER BY + LIMIT para obtener el "Top N".',
+  ],
+  sintaxis: 'SELECT col1 AS alias, col2\nFROM tabla\nORDER BY col1 DESC\nLIMIT 5',
+}
+
+export const RESUMEN_M2: ResumenModulo = {
+  titulo: 'Lo que aprendiste en WHERE & Filtros',
+  puntos: [
+    'WHERE filtra filas antes de devolver el resultado.',
+    'Operadores: = igual, <> distinto, > < >= <= para números.',
+    'AND requiere que todas las condiciones se cumplan.',
+    'OR requiere que al menos una condición se cumpla.',
+    'IN filtra por múltiples valores posibles.',
+    'LIKE busca patrones de texto. % = cualquier texto.',
+    'IS NULL / IS NOT NULL filtra valores vacíos.',
+    'BETWEEN filtra rangos de valores (inclusivo).',
+  ],
+  sintaxis: "SELECT col1, col2\nFROM tabla\nWHERE col1 = 'valor'\n  AND col2 BETWEEN 100 AND 500\nORDER BY col1",
+}
+
+export const RESUMEN_M3: ResumenModulo = {
+  titulo: 'Lo que aprendiste en JOINs',
+  puntos: [
+    'INNER JOIN combina tablas devolviendo solo coincidencias.',
+    'LEFT JOIN devuelve todas las filas de la tabla izquierda.',
+    'RIGHT JOIN devuelve todas las filas de la tabla derecha.',
+    'ON define cómo se relacionan las dos tablas.',
+    'Los alias de tabla simplifican los queries largos.',
+    'Podés encadenar múltiples JOINs para unir 3+ tablas.',
+    'LEFT JOIN + IS NULL encuentra registros sin relación.',
+    'Self JOIN une una tabla consigo misma usando alias.',
+  ],
+  sintaxis: 'SELECT a.col1, b.col2\nFROM tabla_a a\nINNER JOIN tabla_b b\n  ON a.id = b.a_id\nWHERE a.col3 > 100',
+}
+
+export const RESUMEN_M4: ResumenModulo = {
+  titulo: 'Lo que aprendiste en GROUP BY & Agregados',
+  puntos: [
+    'COUNT(*) cuenta filas. SUM() suma. AVG() promedia. MAX/MIN son extremos.',
+    'GROUP BY agrupa filas con el mismo valor y aplica funciones.',
+    'La columna agrupada debe aparecer en el SELECT.',
+    'HAVING filtra grupos (como WHERE pero para grupos).',
+    'WHERE filtra ANTES de agrupar. HAVING filtra DESPUÉS.',
+    'ORDER BY sobre grupos ordena el resultado final.',
+    'Orden correcto: SELECT → FROM → WHERE → GROUP BY → HAVING → ORDER BY → LIMIT',
+  ],
+  sintaxis: 'SELECT col, SUM(valor) AS total\nFROM tabla\nWHERE condicion\nGROUP BY col\nHAVING SUM(valor) > 1000\nORDER BY total DESC',
 }
 
 export const LECCIONES_M1: Leccion[] = [
@@ -208,6 +316,127 @@ export const LECCIONES_M2: Leccion[] = [
   },
 ]
 
+export const LECCIONES_M3: Leccion[] = [
+  { id: '03-01', num: 1, titulo: 'Qué es un JOIN', tipo: 'escribir', dificultad: 'principiante', xp: 20, tabla: 'pedidos',
+    teoria: 'Hasta ahora trabajaste con una sola tabla. Con <strong>JOIN</strong> podés combinar datos de dos tablas relacionadas. <strong>INNER JOIN</strong> devuelve solo las filas que tienen coincidencia en ambas tablas. La sintaxis es: <code>FROM tabla1 INNER JOIN tabla2 ON tabla1.id = tabla2.tabla1_id</code>.',
+    enunciado: 'Trabajás en el área de datos de un e-commerce. Necesitás ver los pedidos junto con el nombre del cliente que los hizo.\n\nUsá <strong>INNER JOIN</strong> para combinar <strong>pedidos</strong> con <strong>clientes</strong> y mostrá: pedidos.id, clientes.nombre y pedidos.total.',
+    pista: 'FROM pedidos INNER JOIN clientes ON pedidos.cliente_id = clientes.id',
+    solucion: 'SELECT pedidos.id, clientes.nombre, pedidos.total FROM pedidos INNER JOIN clientes ON pedidos.cliente_id = clientes.id' },
+  { id: '03-02', num: 2, titulo: 'Alias de tablas', tipo: 'escribir', dificultad: 'principiante', xp: 20, tabla: 'pedidos',
+    teoria: 'Cuando usás JOIN, escribir el nombre completo de la tabla todo el tiempo es tedioso. Podés usar <strong>alias</strong> para abreviar: <code>FROM pedidos p INNER JOIN clientes c ON p.cliente_id = c.id</code>. El alias se asigna justo después del nombre de la tabla.',
+    enunciado: 'Reescribí la consulta anterior usando alias: <strong>p</strong> para pedidos y <strong>c</strong> para clientes.\n\nMostrá: p.id, c.nombre y p.total.',
+    pista: 'Poné el alias después del nombre de tabla: FROM pedidos p INNER JOIN clientes c ON p.cliente_id = c.id',
+    solucion: 'SELECT p.id, c.nombre, p.total FROM pedidos p INNER JOIN clientes c ON p.cliente_id = c.id' },
+  { id: '03-03', num: 3, titulo: 'JOIN con tres tablas', tipo: 'escribir', dificultad: 'intermedio', xp: 25, tabla: 'pedidos',
+    teoria: 'Podés encadenar múltiples JOINs para combinar más de dos tablas. Cada JOIN agrega una tabla nueva a la consulta. El orden importa: empezás desde una tabla base y vas agregando las relacionadas una por una.',
+    enunciado: 'Necesitás un reporte completo de ventas.\n\nCombiná <strong>pedidos</strong>, <strong>clientes</strong> y <strong>productos</strong> para mostrar: el nombre del cliente, el nombre del producto y el total del pedido.',
+    pista: 'Dos JOINs encadenados: JOIN clientes ON pedidos.cliente_id = clientes.id, luego JOIN productos ON pedidos.producto_id = productos.id',
+    solucion: 'SELECT clientes.nombre, productos.nombre, pedidos.total FROM pedidos INNER JOIN clientes ON pedidos.cliente_id = clientes.id INNER JOIN productos ON pedidos.producto_id = productos.id' },
+  { id: '03-04', num: 4, titulo: 'LEFT JOIN — incluir todos', tipo: 'escribir', dificultad: 'intermedio', xp: 25, tabla: 'clientes',
+    teoria: '<strong>LEFT JOIN</strong> devuelve TODOS los registros de la tabla izquierda (la del FROM), aunque no tengan coincidencia en la tabla derecha. Donde no hay coincidencia, los campos de la tabla derecha aparecen como <strong>NULL</strong>.',
+    enunciado: 'Necesitás ver todos los clientes, incluyendo los que nunca hicieron un pedido.\n\nUsá <strong>LEFT JOIN</strong> para traer todos los clientes con sus pedidos. Mostrá clientes.nombre y pedidos.total.',
+    pista: 'Cambiá INNER JOIN por LEFT JOIN. Los clientes sin pedidos van a mostrar NULL en total.',
+    solucion: 'SELECT clientes.nombre, pedidos.total FROM clientes LEFT JOIN pedidos ON clientes.id = pedidos.cliente_id' },
+  { id: '03-05', num: 5, titulo: 'Clientes sin pedidos', tipo: 'escribir', dificultad: 'intermedio', xp: 25, tabla: 'clientes',
+    teoria: 'Una combinación muy poderosa es <strong>LEFT JOIN + WHERE IS NULL</strong> para encontrar registros que NO tienen relación. Por ejemplo: clientes sin pedidos, productos sin ventas, empleados sin asignación.',
+    enunciado: 'El equipo de marketing quiere contactar a los clientes que nunca compraron.\n\nUsá LEFT JOIN para encontrar los clientes sin ningún pedido (donde pedidos.id IS NULL). Mostrá solo su nombre y email.',
+    pista: 'LEFT JOIN de clientes con pedidos, luego WHERE pedidos.id IS NULL',
+    solucion: 'SELECT clientes.nombre, clientes.email FROM clientes LEFT JOIN pedidos ON clientes.id = pedidos.cliente_id WHERE pedidos.id IS NULL' },
+  { id: '03-06', num: 6, titulo: 'JOIN con WHERE', tipo: 'escribir', dificultad: 'intermedio', xp: 25, tabla: 'pedidos',
+    teoria: 'Podés combinar JOIN con WHERE para filtrar los resultados combinados. El WHERE se aplica después de que las tablas se unen, por lo que podés filtrar por columnas de cualquiera de las dos tablas.',
+    enunciado: 'Necesitás ver solo los pedidos mayores a $5000.\n\nCombiná <strong>pedidos</strong> y <strong>clientes</strong>, filtrá donde el <strong>total > 5000</strong>. Mostrá nombre del cliente y total.',
+    pista: 'Primero hacé el JOIN, luego WHERE pedidos.total > 5000',
+    solucion: 'SELECT clientes.nombre, pedidos.total FROM pedidos INNER JOIN clientes ON pedidos.cliente_id = clientes.id WHERE pedidos.total > 5000' },
+  { id: '03-07', num: 7, titulo: 'TOP 5 pedidos', tipo: 'escribir', dificultad: 'intermedio', xp: 25, tabla: 'pedidos',
+    teoria: 'Todos los modificadores que aprendiste (ORDER BY, LIMIT, WHERE, AS) funcionan igual cuando usás JOIN. Se aplican sobre el resultado combinado de las tablas, como si fuera una sola tabla grande.',
+    enunciado: 'Querés ver el top 5 de pedidos más grandes con el nombre del cliente.\n\nCombiná pedidos y clientes, mostrá nombre y total, ordenados por total <strong>descendente</strong> y limitados a <strong>5</strong>.',
+    pista: 'JOIN primero, luego ORDER BY pedidos.total DESC LIMIT 5',
+    solucion: 'SELECT clientes.nombre, pedidos.total FROM pedidos INNER JOIN clientes ON pedidos.cliente_id = clientes.id ORDER BY pedidos.total DESC LIMIT 5' },
+  { id: '03-08', num: 8, titulo: 'Encontrá el error en el JOIN', tipo: 'debugging', dificultad: 'intermedio', xp: 25, tabla: 'pedidos',
+    teoria: 'El error más común en JOINs es confundir el orden de las claves en la condición ON. Siempre verificá que estás relacionando <code>tabla.clave_foranea = tabla.clave_primaria</code>.',
+    enunciado: 'Este query tiene un error. Encontralo y corregilo:\n\n<code>SELECT c.nombre, p.total FROM pedidos p INNER JOIN clientes c ON c.id = p.id</code>',
+    pista: 'La condición ON está mal. p.id es la clave primaria de pedidos, no la foránea que apunta a clientes.',
+    solucion: 'SELECT c.nombre, p.total FROM pedidos p INNER JOIN clientes c ON p.cliente_id = c.id',
+    errorQuery: 'SELECT c.nombre, p.total FROM pedidos p INNER JOIN clientes c ON c.id = p.id' },
+  { id: '03-09', num: 9, titulo: 'Self JOIN', tipo: 'escribir', dificultad: 'avanzado', xp: 30, tabla: 'empleados',
+    teoria: 'Un <strong>self JOIN</strong> une una tabla con sí misma. Es útil cuando una tabla tiene una relación interna, como empleados que reportan a otros empleados. Se necesitan alias obligatoriamente para diferenciar las dos copias de la tabla.',
+    enunciado: 'La tabla empleados tiene una columna <strong>jefe_id</strong> que apunta al id del jefe de cada empleado.\n\nHacé un self JOIN para mostrar el nombre del empleado junto con el nombre de su jefe.',
+    pista: 'FROM empleados e INNER JOIN empleados j ON e.jefe_id = j.id. Mostrá e.nombre y j.nombre AS jefe.',
+    solucion: 'SELECT e.nombre, j.nombre AS jefe FROM empleados e INNER JOIN empleados j ON e.jefe_id = j.id' },
+  { id: '03-10', num: 10, titulo: 'RIGHT JOIN', tipo: 'completar', dificultad: 'intermedio', xp: 25, tabla: 'pedidos',
+    teoria: '<strong>RIGHT JOIN</strong> es lo opuesto al LEFT JOIN: devuelve todos los registros de la tabla <strong>derecha</strong> (la del JOIN), aunque no tengan coincidencia en la izquierda. En la práctica se usa poco porque siempre podés reescribirlo como LEFT JOIN.',
+    enunciado: 'Querés ver todos los productos, incluyendo los que nunca fueron pedidos.\n\nUsá <strong>RIGHT JOIN</strong> para traer todos los productos con sus pedidos. Mostrá productos.nombre y pedidos.total.',
+    pista: 'FROM pedidos RIGHT JOIN productos ON pedidos.producto_id = productos.id',
+    solucion: 'SELECT productos.nombre, pedidos.total FROM pedidos RIGHT JOIN productos ON pedidos.producto_id = productos.id',
+    template: 'SELECT productos.nombre, pedidos.total FROM pedidos ___ JOIN productos ON pedidos.producto_id = productos.id',
+    blanks: ['RIGHT'] },
+  { id: '03-11', num: 11, titulo: 'Reporte de ventas completo', tipo: 'escribir', dificultad: 'avanzado', xp: 35, tabla: 'pedidos',
+    teoria: 'En la práctica, los reportes de negocio combinan múltiples JOINs, filtros y ordenamiento. La clave es ir construyendo el query paso a paso: primero el JOIN base, luego más tablas, y finalmente los filtros.',
+    enunciado: 'El gerente pide un reporte de ventas completadas.\n\nCombiná pedidos, clientes y productos. Filtrá los pedidos con <strong>estado = "completado"</strong>. Mostrá nombre del cliente, nombre del producto, total. Ordenados por total DESC.',
+    pista: "Tres tablas unidas, WHERE pedidos.estado = 'completado', ORDER BY pedidos.total DESC",
+    solucion: "SELECT clientes.nombre, productos.nombre, pedidos.total FROM pedidos INNER JOIN clientes ON pedidos.cliente_id = clientes.id INNER JOIN productos ON pedidos.producto_id = productos.id WHERE pedidos.estado = 'completado' ORDER BY pedidos.total DESC" },
+  { id: '03-12', num: 12, titulo: 'Clientes top — desafío maestro', tipo: 'escribir', dificultad: 'avanzado', xp: 40, tabla: 'pedidos',
+    teoria: 'Combiná todo lo que sabés. Un reporte de mejores clientes requiere unir tablas, agrupar y ordenar. GROUP BY agrupa filas con el mismo valor — lo verás en detalle en el siguiente módulo.',
+    enunciado: 'Armá un reporte de los <strong>3 clientes que más gastaron</strong> en total.\n\nUnís pedidos y clientes, sumás el total por cliente con <strong>SUM(pedidos.total)</strong>, agrupás por clientes.nombre, ordenás DESC con LIMIT 3.',
+    pista: 'SELECT clientes.nombre, SUM(pedidos.total) AS total_gastado ... GROUP BY clientes.nombre ORDER BY total_gastado DESC LIMIT 3',
+    solucion: 'SELECT clientes.nombre, SUM(pedidos.total) AS total_gastado FROM pedidos INNER JOIN clientes ON pedidos.cliente_id = clientes.id GROUP BY clientes.nombre ORDER BY total_gastado DESC LIMIT 3' },
+]
+
+export const LECCIONES_M4: Leccion[] = [
+  { id: '04-01', num: 1, titulo: 'Contar filas con COUNT', tipo: 'escribir', dificultad: 'principiante', xp: 15, tabla: 'pedidos_restaurante',
+    teoria: '<strong>COUNT(*)</strong> cuenta cuántas filas hay en una tabla o grupo. Es la función de agregación más básica. Podés usarla sola para contar todo, o combinada con GROUP BY para contar por categoría.',
+    enunciado: 'Trabajás en el sistema de un restaurante. Querés saber cuántos pedidos hay en total.\n\nUsá <strong>COUNT(*)</strong> para contar todos los registros de la tabla <strong>pedidos_restaurante</strong>.',
+    pista: 'SELECT COUNT(*) AS total_pedidos FROM pedidos_restaurante',
+    solucion: 'SELECT COUNT(*) AS total_pedidos FROM pedidos_restaurante' },
+  { id: '04-02', num: 2, titulo: 'Sumar con SUM', tipo: 'escribir', dificultad: 'principiante', xp: 15, tabla: 'pedidos_restaurante',
+    teoria: '<strong>SUM(columna)</strong> suma todos los valores de una columna numérica. Muy útil para calcular totales de ventas, ingresos o cantidades. Si hay NULLs en la columna, SUM los ignora automáticamente.',
+    enunciado: 'El dueño del restaurante quiere saber cuánto dinero entró en total.\n\nUsá <strong>SUM</strong> para calcular el total de la columna <strong>importe</strong> de <strong>pedidos_restaurante</strong>.',
+    pista: 'SELECT SUM(importe) AS total_ingresos FROM pedidos_restaurante',
+    solucion: 'SELECT SUM(importe) AS total_ingresos FROM pedidos_restaurante' },
+  { id: '04-03', num: 3, titulo: 'Promedio con AVG', tipo: 'escribir', dificultad: 'principiante', xp: 15, tabla: 'pedidos_restaurante',
+    teoria: '<strong>AVG(columna)</strong> calcula el promedio de los valores de una columna numérica. Como SUM, ignora los NULLs en el cálculo. Muy útil para métricas como ticket promedio, calificación promedio o precio medio.',
+    enunciado: 'Querés saber cuál es el importe promedio de los pedidos en el restaurante.\n\nUsá <strong>AVG</strong> sobre la columna <strong>importe</strong> de <strong>pedidos_restaurante</strong>.',
+    pista: 'SELECT AVG(importe) AS promedio FROM pedidos_restaurante',
+    solucion: 'SELECT AVG(importe) AS promedio FROM pedidos_restaurante' },
+  { id: '04-04', num: 4, titulo: 'Máximo y mínimo', tipo: 'completar', dificultad: 'principiante', xp: 15, tabla: 'pedidos_restaurante',
+    teoria: '<strong>MAX(columna)</strong> devuelve el valor más alto de una columna. <strong>MIN(columna)</strong> devuelve el más bajo. Funcionan con números, fechas y texto. Podés usarlos juntos en el mismo SELECT.',
+    enunciado: 'Querés ver el pedido más caro y el más barato en un solo resultado.\n\nUsá <strong>MAX</strong> y <strong>MIN</strong> sobre la columna <strong>importe</strong> de <strong>pedidos_restaurante</strong>.',
+    pista: 'SELECT MAX(importe) AS maximo, MIN(importe) AS minimo FROM pedidos_restaurante',
+    solucion: 'SELECT MAX(importe) AS maximo, MIN(importe) AS minimo FROM pedidos_restaurante',
+    template: 'SELECT ___(importe) AS maximo, ___(importe) AS minimo FROM pedidos_restaurante',
+    blanks: ['MAX', 'MIN'] },
+  { id: '04-05', num: 5, titulo: 'Agrupar con GROUP BY', tipo: 'escribir', dificultad: 'intermedio', xp: 20, tabla: 'pedidos_restaurante',
+    teoria: '<strong>GROUP BY</strong> agrupa los registros por los valores de una columna y aplica una función de agregación a cada grupo. La columna del GROUP BY debe aparecer en el SELECT.',
+    enunciado: 'Querés saber cuántos pedidos se hicieron por cada <strong>mesa</strong>.\n\nUsá <strong>COUNT(*)</strong> agrupado por la columna <strong>mesa</strong> de <strong>pedidos_restaurante</strong>.',
+    pista: 'SELECT mesa, COUNT(*) AS pedidos FROM pedidos_restaurante GROUP BY mesa',
+    solucion: 'SELECT mesa, COUNT(*) AS pedidos FROM pedidos_restaurante GROUP BY mesa' },
+  { id: '04-06', num: 6, titulo: 'GROUP BY con SUM', tipo: 'escribir', dificultad: 'intermedio', xp: 20, tabla: 'pedidos_restaurante',
+    teoria: 'Podés combinar GROUP BY con cualquier función de agregación. El resultado es una fila por cada valor único de la columna agrupada, con el resultado de la función aplicada a ese grupo.',
+    enunciado: 'El gerente quiere ver cuánto facturó el restaurante por cada <strong>categoría</strong> de plato.\n\nUsá <strong>SUM(importe)</strong> agrupado por <strong>categoria</strong> de <strong>pedidos_restaurante</strong>.',
+    pista: 'SELECT categoria, SUM(importe) AS total FROM pedidos_restaurante GROUP BY categoria',
+    solucion: 'SELECT categoria, SUM(importe) AS total FROM pedidos_restaurante GROUP BY categoria' },
+  { id: '04-07', num: 7, titulo: 'Filtrar grupos con HAVING', tipo: 'escribir', dificultad: 'intermedio', xp: 25, tabla: 'pedidos_restaurante',
+    teoria: '<strong>HAVING</strong> filtra grupos después de que se aplica el GROUP BY. Es como un WHERE pero para grupos. No podés usar WHERE para filtrar resultados de funciones de agregación — tenés que usar HAVING. Siempre va después del GROUP BY.',
+    enunciado: 'Querés ver solo las mesas que generaron más de <strong>$3.000</strong> en total.\n\nAgrupá por <strong>mesa</strong>, sumá el <strong>importe</strong> y filtrá con <strong>HAVING</strong> los grupos cuyo total supere 3000.',
+    pista: 'GROUP BY mesa HAVING SUM(importe) > 3000',
+    solucion: 'SELECT mesa, SUM(importe) AS total FROM pedidos_restaurante GROUP BY mesa HAVING SUM(importe) > 3000' },
+  { id: '04-08', num: 8, titulo: 'WHERE vs HAVING', tipo: 'escribir', dificultad: 'intermedio', xp: 25, tabla: 'pedidos_restaurante',
+    teoria: 'La diferencia clave: <strong>WHERE</strong> filtra filas <em>antes</em> de agrupar. <strong>HAVING</strong> filtra grupos <em>después</em> de agrupar. Podés usarlos juntos: WHERE reduce las filas que entran al GROUP BY, y HAVING filtra los grupos resultantes.',
+    enunciado: 'Querés analizar solo los pedidos del <strong>turno noche</strong> y ver qué mesas superaron los <strong>$2.000</strong>.\n\nFiltrá primero con <strong>WHERE turno = "noche"</strong>, agrupá por mesa y usá <strong>HAVING</strong> para filtrar los grupos.',
+    pista: "WHERE turno = 'noche' GROUP BY mesa HAVING SUM(importe) > 2000",
+    solucion: "SELECT mesa, SUM(importe) AS total FROM pedidos_restaurante WHERE turno = 'noche' GROUP BY mesa HAVING SUM(importe) > 2000" },
+  { id: '04-09', num: 9, titulo: 'Ranking con ORDER BY', tipo: 'escribir', dificultad: 'intermedio', xp: 20, tabla: 'pedidos_restaurante',
+    teoria: 'Podés ordenar los resultados de un GROUP BY con ORDER BY. El ORDER BY se aplica al final, después del GROUP BY y el HAVING. Podés ordenar por la columna agrupada o por el resultado de la función de agregación.',
+    enunciado: 'Querés un ranking de categorías por ingresos, de mayor a menor.\n\nAgrupá por <strong>categoria</strong>, sumá el <strong>importe</strong> y ordená el resultado de <strong>mayor a menor</strong> por el total.',
+    pista: 'GROUP BY categoria ORDER BY total DESC — podés usar el alias en el ORDER BY',
+    solucion: 'SELECT categoria, SUM(importe) AS total FROM pedidos_restaurante GROUP BY categoria ORDER BY total DESC' },
+  { id: '04-10', num: 10, titulo: 'Desafío final: reporte mensual', tipo: 'escribir', dificultad: 'avanzado', xp: 35, tabla: 'pedidos_restaurante',
+    teoria: 'El orden correcto de las cláusulas en SQL es: SELECT → FROM → WHERE → GROUP BY → HAVING → ORDER BY → LIMIT. Recordalo como un flujo: de dónde traés los datos, cómo los filtrás, cómo los agrupás, cómo filtrás los grupos, y cómo los presentás.',
+    enunciado: 'El dueño del restaurante pide el reporte mensual.\n\nDe <strong>pedidos_restaurante</strong>, mostrá las <strong>categorías</strong> con su <strong>total de ingresos</strong> y <strong>cantidad de pedidos</strong>, solo las que superaron los <strong>$5.000</strong> en total, ordenadas de mayor a menor ingreso.',
+    pista: 'SELECT categoria, SUM(importe) AS total, COUNT(*) AS pedidos ... GROUP BY categoria HAVING SUM(importe) > 5000 ORDER BY total DESC',
+    solucion: 'SELECT categoria, SUM(importe) AS total, COUNT(*) AS pedidos FROM pedidos_restaurante GROUP BY categoria HAVING SUM(importe) > 5000 ORDER BY total DESC' },
+]
+
 export const DATASET_SQL = `
 CREATE TABLE peliculas(id INTEGER PRIMARY KEY,titulo TEXT,genero TEXT,anio INTEGER,duracion_min INTEGER,calificacion REAL,idioma TEXT,director TEXT);
 INSERT INTO peliculas VALUES
@@ -228,28 +457,75 @@ INSERT INTO series VALUES
 (4,'La Cocinera','Comedia',1,2023,7.1,1,'Español'),
 (5,'Mentes Oscuras','Crimen',5,2016,8.8,0,'Inglés');
 
-CREATE TABLE empleados(id INTEGER PRIMARY KEY,nombre TEXT,departamento TEXT,salario REAL,email TEXT,telefono TEXT,fecha_ingreso TEXT);
+CREATE TABLE empleados(id INTEGER PRIMARY KEY,nombre TEXT,departamento TEXT,salario REAL,email TEXT,telefono TEXT,fecha_ingreso TEXT,jefe_id INTEGER);
 INSERT INTO empleados VALUES
-(1,'Ana García','Ventas',72000,'ana@empresa.com','1145678901','2021-03-15'),
-(2,'Luis Pérez','Sistemas',95000,'luis@empresa.com','1167890123','2019-07-01'),
-(3,'María López','Marketing',68000,'maria@empresa.com',NULL,'2022-01-10'),
-(4,'Carlos Ruiz','Finanzas',85000,'carlos@empresa.com','1134567890','2020-05-20'),
-(5,'Sofía Torres','Ventas',61000,'sofia@empresa.com','1156789012','2023-02-01'),
-(6,'Diego Martín','Marketing',59000,'diego@empresa.com',NULL,'2022-08-15'),
-(7,'Laura Sánchez','Sistemas',102000,'laura@empresa.com','1178901234','2018-11-30'),
-(8,'Andrés Gómez','Finanzas',77000,'andres@empresa.com','1190123456','2021-09-05'),
-(9,'Valentina Cruz','Ventas',88000,'valentina@empresa.com','1112345678','2020-03-22'),
-(10,'Martín Díaz','Sistemas',91000,'martin@empresa.com','1123456789','2019-01-14'),
-(11,'Camila Fernández','Marketing',63000,'camila@empresa.com',NULL,'2023-05-08'),
-(12,'Roberto Jiménez','Finanzas',54000,'roberto@empresa.com','1145670987','2022-11-20');
+(1,'Ana García','Ventas',72000,'ana@empresa.com','1145678901','2021-03-15',3),
+(2,'Luis Pérez','Sistemas',95000,'luis@empresa.com','1167890123','2019-07-01',4),
+(3,'María López','Marketing',68000,'maria@empresa.com',NULL,'2022-01-10',NULL),
+(4,'Carlos Ruiz','Finanzas',85000,'carlos@empresa.com','1134567890','2020-05-20',NULL),
+(5,'Sofía Torres','Ventas',61000,'sofia@empresa.com','1156789012','2023-02-01',3),
+(6,'Diego Martín','Marketing',59000,'diego@empresa.com',NULL,'2022-08-15',3),
+(7,'Laura Sánchez','Sistemas',102000,'laura@empresa.com','1178901234','2018-11-30',4),
+(8,'Andrés Gómez','Finanzas',77000,'andres@empresa.com','1190123456','2021-09-05',4),
+(9,'Valentina Cruz','Ventas',88000,'valentina@empresa.com','1112345678','2020-03-22',3),
+(10,'Martín Díaz','Sistemas',91000,'martin@empresa.com','1123456789','2019-01-14',2),
+(11,'Camila Fernández','Marketing',63000,'camila@empresa.com',NULL,'2023-05-08',3),
+(12,'Roberto Jiménez','Finanzas',54000,'roberto@empresa.com','1145670987','2022-11-20',4);
+
+CREATE TABLE clientes(id INTEGER PRIMARY KEY,nombre TEXT,email TEXT,ciudad TEXT,telefono TEXT);
+INSERT INTO clientes VALUES
+(1,'Martina Rodríguez','martina@mail.com','Buenos Aires','1111111111'),
+(2,'Pablo García','pablo@mail.com','Córdoba','1122222222'),
+(3,'Lucia Fernández','lucia@mail.com','Buenos Aires','1133333333'),
+(4,'Federico López','federico@mail.com','Rosario',NULL),
+(5,'Valentina Díaz','valentina@mail.com','Buenos Aires','1155555555'),
+(6,'Tomás Pérez','tomas@mail.com','Mendoza',NULL);
+
+CREATE TABLE productos(id INTEGER PRIMARY KEY,nombre TEXT,categoria TEXT,precio REAL,stock INTEGER);
+INSERT INTO productos VALUES
+(1,'Notebook Pro','Electrónica',85000,15),
+(2,'Mouse Inalámbrico','Electrónica',4500,80),
+(3,'Silla Ergonómica','Muebles',32000,20),
+(4,'Auriculares BT','Electrónica',12000,45),
+(5,'Monitor 27"','Electrónica',65000,8),
+(6,'Escritorio L','Muebles',48000,12);
+
+CREATE TABLE pedidos(id INTEGER PRIMARY KEY,cliente_id INTEGER,producto_id INTEGER,total REAL,fecha TEXT,estado TEXT);
+INSERT INTO pedidos VALUES
+(1,1,1,85000,'2024-01-15','completado'),
+(2,1,2,4500,'2024-01-20','completado'),
+(3,2,3,32000,'2024-02-01','pendiente'),
+(4,3,4,12000,'2024-02-10','completado'),
+(5,3,5,65000,'2024-02-15','completado'),
+(6,5,1,85000,'2024-03-01','completado'),
+(7,5,6,48000,'2024-03-05','pendiente'),
+(8,2,2,4500,'2024-03-10','completado');
+
+CREATE TABLE pedidos_restaurante(id INTEGER PRIMARY KEY,mesa INTEGER,categoria TEXT,plato TEXT,importe REAL,turno TEXT,fecha TEXT);
+INSERT INTO pedidos_restaurante VALUES
+(1,1,'Entradas','Empanadas',850,'noche','2024-01-10'),
+(2,1,'Principal','Bife de chorizo',3200,'noche','2024-01-10'),
+(3,2,'Principal','Milanesa napolitana',2800,'mediodia','2024-01-10'),
+(4,2,'Postres','Tiramisú',950,'mediodia','2024-01-10'),
+(5,3,'Principal','Pasta al pesto',2400,'noche','2024-01-11'),
+(6,3,'Bebidas','Vino Malbec',1800,'noche','2024-01-11'),
+(7,4,'Entradas','Tabla de quesos',1200,'mediodia','2024-01-11'),
+(8,4,'Principal','Asado completo',5600,'mediodia','2024-01-11'),
+(9,1,'Principal','Risotto',2900,'mediodia','2024-01-12'),
+(10,2,'Entradas','Bruschetta',780,'noche','2024-01-12'),
+(11,5,'Principal','Paella',3800,'noche','2024-01-12'),
+(12,5,'Postres','Crème brûlée',1100,'noche','2024-01-12'),
+(13,3,'Bebidas','Cerveza artesanal',650,'mediodia','2024-01-13'),
+(14,1,'Principal','Salmón grillado',4200,'noche','2024-01-13'),
+(15,4,'Principal','Pollo al limón',2600,'noche','2024-01-13');
 `
 
 export const INTRO_SLIDES = [
   {
     id: '00-01',
     titulo: '¿Qué es una base de datos?',
-    subtitulo: 'Una base de datos es como un archivo organizado donde guardás información de forma estructurada. En vez de papel o planillas dispersas, todo queda centralizado y podés encontrar cualquier dato al instante, aunque sean millones de registros.',
-    tipo: 'svg' as const,
+    subtitulo: 'Una base de datos es un sistema organizado para guardar, consultar y gestionar grandes cantidades de información de forma eficiente. A diferencia de un archivo de texto o una planilla, permite encontrar cualquier dato al instante aunque sean millones de registros.',
+    tipo: 'concepto' as const,
   },
   {
     id: '00-02',
