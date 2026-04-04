@@ -88,11 +88,36 @@ if (prog[l.id]?.completada) setAnswered(true)
 }, [curIdx, curSlide, moduloId, prog])
 
 const saveProg = async (lid: string, mid: number, xp: number, pistaUsada: boolean) => {
-await sb.from(‘progreso’).upsert({
-usuario_id: user.id, leccion_id: lid, modulo_id: mid,
-completada: true, xp_ganado: xp, pista_usada: pistaUsada,
-completada_en: new Date().toISOString()
-}, { onConflict: ‘usuario_id,leccion_id’ })
+  // 1. Guardar progreso de la lección
+  await sb.from('progreso').upsert({
+    usuario_id: user.id, leccion_id: lid, modulo_id: mid,
+    completada: true, xp_ganado: xp, pista_usada: pistaUsada,
+    completada_en: new Date().toISOString()
+  }, { onConflict: 'usuario_id,leccion_id' })
+ 
+  // 2. Actualizar XP y racha via función server-side (evita bugs de estado)
+  const { data, error } = await sb.rpc('actualizar_racha', {
+    p_usuario_id: user.id,
+    p_xp: xp
+  })
+ 
+  if (!error && data) {
+    const resultado = data as { racha_actual: number; racha_maxima: number; xp_total: number }
+    const rachaSubio = resultado.racha_actual > (perfil?.racha_actual || 0)
+ 
+    setPerfil((prev: any) => ({
+      ...prev,
+      xp_total: resultado.xp_total,
+      racha_actual: resultado.racha_actual,
+      racha_maxima: resultado.racha_maxima,
+      ultima_actividad: new Date().toISOString().split('T')[0],
+    }))
+ 
+    if (rachaSubio) setRachaAnimate(true)
+  }
+ 
+  setProg(prev => ({ ...prev, [lid]: { completada: true, xp_ganado: xp } }))
+}
 
 ```
 // ── LÓGICA DE RACHA ──
