@@ -703,6 +703,22 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
   }
 
   // ── VISTA LECCIÓN ──
+  // Tablas a mostrar por lección — para JOINs muestra todas las involucradas
+  const TABLAS_JOIN: Record<string, string[]> = {
+    '03-01': ['pedidos', 'clientes'],
+    '03-02': ['pedidos', 'clientes'],
+    '03-03': ['pedidos', 'clientes', 'productos'],
+    '03-04': ['clientes', 'pedidos'],
+    '03-05': ['clientes', 'pedidos'],
+    '03-06': ['pedidos', 'clientes'],
+    '03-07': ['pedidos', 'clientes'],
+    '03-08': ['pedidos', 'clientes'],
+    '03-09': ['empleados'],
+    '03-10': ['pedidos', 'productos'],
+    '03-11': ['pedidos', 'clientes', 'productos'],
+    '03-12': ['pedidos', 'clientes'],
+  }
+
   const PREVIEW: Record<string, { cols: string[]; rows: any[][] }> = {
     peliculas: { cols: ['id','titulo','genero','anio','calificacion'], rows: [[1,'Galaxia Perdida','Ciencia Ficción',2021,8.3],[2,'El Último Tango','Drama',2019,7.1],[3,'Risa Sin Fin','Comedia',2022,6.5]] },
     series: { cols: ['id','titulo','genero','temporadas','calificacion'], rows: [[1,'El Imperio Caído','Drama',4,9.2],[2,'Detectives del Sur','Crimen',2,8.0]] },
@@ -784,21 +800,39 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
             <div style={{ fontSize: '0.97rem', fontWeight: 500, letterSpacing: '-0.01em', lineHeight: 1.6, marginBottom: 15, color: 'var(--text)' }}
               dangerouslySetInnerHTML={{ __html: l.enunciado.replace(/\n/g, '<br/>') }} />
 
-            <div onClick={() => setDataOpen(!dataOpen)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: '0.77rem', color: 'var(--sub)', cursor: 'pointer', marginBottom: 12, padding: '4px 9px', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 7 }}>
-              📋 Ver tabla: <strong style={{ color: 'var(--nova)' }}>{l.tabla}</strong> {dataOpen ? '▴' : '▾'}
-            </div>
-
-            {dataOpen && (
-              <div style={{ overflowX: 'auto', marginBottom: 12 }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'DM Mono', fontSize: '0.72rem' }}>
-                  <thead><tr>{pv.cols.map(c => <th key={c} style={{ padding: '6px 9px', border: '1px solid var(--border)', fontSize: '0.63rem', textTransform: 'uppercase', letterSpacing: '0.05em', background: 'var(--bg3)', color: 'var(--sub)' }}>{c}</th>)}</tr></thead>
-                  <tbody>
-                    {pv.rows.map((row, ri) => <tr key={ri}>{row.map((v, ci) => <td key={ci} style={{ padding: '5px 9px', border: '1px solid var(--border)' }}>{v !== null ? String(v) : <span style={{ color: 'var(--dim)' }}>NULL</span>}</td>)}</tr>)}
-                    <tr><td colSpan={pv.cols.length} style={{ padding: '5px 9px', border: '1px solid var(--border)', textAlign: 'center', color: 'var(--dim)', fontSize: '0.68rem' }}>… más filas</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            )}
+            {/* Tablas relacionadas — para JOINs muestra todas las involucradas */}
+            {(() => {
+              const tablaNames = TABLAS_JOIN[l.id] || [l.tabla]
+              return (
+                <>
+                  <div onClick={() => setDataOpen(!dataOpen)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: '0.77rem', color: 'var(--sub)', cursor: 'pointer', marginBottom: 12, padding: '4px 9px', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 7 }}>
+                    📋 Ver tablas: {tablaNames.map((t, i) => <span key={t}><strong style={{ color: 'var(--nova)' }}>{t}</strong>{i < tablaNames.length - 1 ? <span style={{ color: 'var(--sub)', margin: '0 4px' }}>+</span> : null}</span>)} {dataOpen ? '▴' : '▾'}
+                  </div>
+                  {dataOpen && (
+                    <div style={{ marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {tablaNames.map(tName => {
+                        const tData = PREVIEW[tName]
+                        if (!tData) return null
+                        return (
+                          <div key={tName}>
+                            <div style={{ fontFamily: 'DM Mono', fontSize: '0.68rem', color: 'var(--nova)', fontWeight: 700, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{tName}</div>
+                            <div style={{ overflowX: 'auto' }}>
+                              <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'DM Mono', fontSize: '0.72rem' }}>
+                                <thead><tr>{tData.cols.map(c => <th key={c} style={{ padding: '6px 9px', border: '1px solid var(--border)', fontSize: '0.63rem', textTransform: 'uppercase', letterSpacing: '0.05em', background: 'var(--bg3)', color: 'var(--sub)' }}>{c}</th>)}</tr></thead>
+                                <tbody>
+                                  {tData.rows.map((row, ri) => <tr key={ri}>{row.map((v, ci) => <td key={ci} style={{ padding: '5px 9px', border: '1px solid var(--border)' }}>{v !== null ? String(v) : <span style={{ color: 'var(--dim)' }}>NULL</span>}</td>)}</tr>)}
+                                  <tr><td colSpan={tData.cols.length} style={{ padding: '5px 9px', border: '1px solid var(--border)', textAlign: 'center', color: 'var(--dim)', fontSize: '0.68rem' }}>… más filas</td></tr>
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </>
+              )
+            })()}
 
             {l.tipo === 'completar' && l.template && l.blanks ? (
               <div style={{ fontFamily: 'DM Mono', fontSize: '0.88rem', lineHeight: 2.4, padding: '13px 15px', background: '#0b0d14', border: '1px solid var(--border2)', borderRadius: 11, marginBottom: 13 }}>
