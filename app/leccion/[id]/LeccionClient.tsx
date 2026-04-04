@@ -38,11 +38,27 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
       ;(progData || []).forEach((r: any) => { pm[r.leccion_id] = r })
       setProg(pm)
 
-      // Load sql.js only for lesson modules
+      // Carga sql.js — usa instancia precargada en background si está disponible
       if (moduloId !== 0) {
-        const SQL = await (window as any).initSqlJs({
-          locateFile: (f: string) => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}`
-        })
+        let SQL: any
+
+        if ((window as any)._sqljsReady && (window as any)._sqljsInstance) {
+          // Ya está listo en memoria — 0ms de espera
+          SQL = (window as any)._sqljsInstance
+        } else if ((window as any)._sqljsPromise) {
+          // Está cargando en background, esperamos que termine
+          SQL = await (window as any)._sqljsPromise
+        } else {
+          // Fallback: cargar desde cero
+          const script = document.createElement('script')
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js'
+          document.head.appendChild(script)
+          await new Promise(resolve => { script.onload = resolve })
+          SQL = await (window as any).initSqlJs({
+            locateFile: (f: string) => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}`
+          })
+        }
+
         const db = new SQL.Database()
         db.run(DATASET_SQL)
         sqlDbRef.current = db
@@ -267,7 +283,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     )
   }
 
-  // LESSON MODULE 1
+  // MÓDULOS AÚN NO DISPONIBLES
   if (moduloId !== 1) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', flexDirection: 'column', gap: 16 }}>
@@ -278,6 +294,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     )
   }
 
+  // MÓDULO 1
   const l = LECCIONES_M1[curIdx]
   const total = LECCIONES_M1.length
   const pct = Math.round(((curIdx + 1) / total) * 100)
@@ -303,12 +320,14 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
       <TopBar title={l.titulo} module="Módulo 1 · SELECT & Básicos" prog={`${curIdx + 1} / ${total}`} onBack={() => router.replace('/dashboard')} />
 
       <div style={{ flex: 1, padding: '26px 20px', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
-        {/* Theory */}
+
+        {/* Teoría */}
         <div style={{ background: 'rgba(77,166,255,0.045)', borderLeft: '2px solid rgba(77,166,255,0.38)', borderRadius: '0 9px 9px 0', padding: '13px 16px', marginBottom: 18, fontSize: '0.87rem', color: 'var(--sub)', lineHeight: 1.7 }}
           dangerouslySetInnerHTML={{ __html: l.teoria }} />
 
-        {/* Exercise card */}
+        {/* Tarjeta de ejercicio */}
         <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 15, overflow: 'hidden', marginBottom: 16 }}>
+
           {/* Header */}
           <div style={{ padding: '13px 17px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: '0.67rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '3px 9px', borderRadius: 5, background: badgeBg, color: badgeColor }}>{badgeLabel}</span>
@@ -316,9 +335,10 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
           </div>
 
           <div style={{ padding: '18px 17px' }}>
-            <div style={{ fontSize: '0.97rem', fontWeight: 500, letterSpacing: '-0.01em', lineHeight: 1.55, marginBottom: 15 }}>
-              {l.enunciado.split('\n').map((line, i) => <span key={i}>{line}{i < l.enunciado.split('\n').length - 1 && <br />}</span>)}
-            </div>
+
+            {/* Enunciado */}
+            <div style={{ fontSize: '0.97rem', fontWeight: 500, letterSpacing: '-0.01em', lineHeight: 1.55, marginBottom: 15 }}
+              dangerouslySetInnerHTML={{ __html: l.enunciado.replace(/\n/g, '<br/>') }} />
 
             {/* Dataset toggle */}
             <div onClick={() => setDataOpen(!dataOpen)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: '0.77rem', color: 'var(--sub)', cursor: 'pointer', marginBottom: 12, padding: '4px 9px', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 7 }}>
@@ -337,7 +357,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               </div>
             )}
 
-            {/* Editor */}
+            {/* Editor — completar con blanks */}
             {l.tipo === 'completar' && l.template && l.blanks ? (
               <div style={{ fontFamily: 'DM Mono', fontSize: '0.88rem', lineHeight: 2.4, padding: '13px 15px', background: '#0b0d14', border: '1px solid var(--border2)', borderRadius: 11, marginBottom: 13 }}>
                 {l.template.split('___').map((part, i) => (
@@ -347,6 +367,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                       <input
                         value={blanks[i] || ''}
                         onChange={e => { const nb = [...blanks]; nb[i] = e.target.value; setBlanks(nb) }}
+                        placeholder="..."
                         style={{ background: 'rgba(77,166,255,0.08)', border: '1px dashed rgba(77,166,255,0.32)', borderRadius: 5, color: 'var(--nova)', fontFamily: 'DM Mono', fontSize: '0.85rem', padding: '2px 7px', minWidth: 68, outline: 'none' }}
                       />
                     )}
@@ -354,6 +375,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                 ))}
               </div>
             ) : (
+              /* Editor — escribir o debugging */
               <div style={{ background: '#0b0d14', border: '1px solid var(--border2)', borderRadius: 11, overflow: 'hidden', marginBottom: 13 }}>
                 <div style={{ background: '#0e1018', padding: '6px 11px', display: 'flex', alignItems: 'center', gap: 5, borderBottom: '1px solid var(--border)' }}>
                   {['#ff5f57','#ffbd2e','#28c840'].map(c => <div key={c} style={{ width: 7, height: 7, borderRadius: '50%', background: c }} />)}
@@ -368,7 +390,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               </div>
             )}
 
-            {/* Actions */}
+            {/* Acciones */}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <button onClick={runQuery} style={{ background: 'var(--nova2)', color: '#fff', border: 'none', borderRadius: 9, padding: '9px 17px', fontWeight: 600, cursor: 'pointer', fontSize: '0.84rem' }}>▶ Ejecutar</button>
               <button onClick={() => setHintOpen(!hintOpen)} style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 9, padding: '8px 15px', color: hintOpen ? 'var(--amber)' : 'var(--sub)', cursor: 'pointer', fontSize: '0.84rem' }}>💡 Pista</button>
@@ -379,7 +401,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               )}
             </div>
 
-            {/* Hint */}
+            {/* Pista */}
             {hintOpen && (
               <div style={{ marginTop: 11, background: 'rgba(232,168,56,0.045)', border: '1px solid rgba(232,168,56,0.16)', borderRadius: 9, padding: '11px 14px' }}>
                 <div style={{ fontSize: '0.68rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--amber)', marginBottom: 4 }}>Pista</div>
@@ -387,12 +409,12 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               </div>
             )}
 
-            {/* Result */}
+            {/* Resultado */}
             {(result || resultError) && (
               <div style={{ marginTop: 15 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 9 }}>
                   <span style={{ fontSize: '0.77rem', fontWeight: 600, padding: '4px 10px', borderRadius: 6, background: resultError ? 'rgba(229,83,75,0.09)' : 'rgba(62,207,142,0.09)', color: resultError ? 'var(--red)' : 'var(--green)', border: `1px solid ${resultError ? 'rgba(229,83,75,0.22)' : 'rgba(62,207,142,0.22)'}` }}>
-                    {resultError ? '✗ Error' : '✓ Correcto'}
+                    {resultError ? '✗ Error en el query' : '✓ Query ejecutado'}
                   </span>
                   {result && !resultError && <span style={{ fontSize: '0.71rem', color: 'var(--sub)', fontFamily: 'DM Mono' }}>{result.values.length} fila{result.values.length !== 1 ? 's' : ''}</span>}
                 </div>
@@ -409,7 +431,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               </div>
             )}
 
-            {/* Success */}
+            {/* Éxito */}
             {answered && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 13, marginTop: 15, background: 'rgba(62,207,142,0.05)', border: '1px solid rgba(62,207,142,0.18)', borderRadius: 12, padding: '15px 17px' }}>
                 <span style={{ fontSize: '1.5rem' }}>✅</span>
