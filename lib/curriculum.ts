@@ -119,6 +119,95 @@ export const LECCIONES_M1: Leccion[] = [
   },
 ]
 
+export const LECCIONES_M2: Leccion[] = [
+  {
+    id: '02-01', num: 1, titulo: 'Filtrar con WHERE', tipo: 'escribir',
+    dificultad: 'principiante', xp: 15, tabla: 'empleados',
+    teoria: 'Hasta ahora traías todos los registros de una tabla. Con <strong>WHERE</strong> podés filtrar y traer solo los que cumplen una condición. Es como decirle a SQL: "Dame los datos, pero solo los que cumplan esta regla". WHERE siempre va después de FROM.',
+    enunciado: 'Trabajás en el área de RRHH de una empresa. Necesitás ver los empleados de un departamento específico.\n\nTraé todos los datos de los empleados que trabajen en el departamento <strong>"Ventas"</strong>.',
+    pista: "La sintaxis es: SELECT * FROM empleados WHERE columna = 'valor'. Los textos van entre comillas simples.",
+    solucion: "SELECT * FROM empleados WHERE departamento = 'Ventas'",
+  },
+  {
+    id: '02-02', num: 2, titulo: 'Comparar números con WHERE', tipo: 'escribir',
+    dificultad: 'principiante', xp: 15, tabla: 'empleados',
+    teoria: 'WHERE no solo funciona con textos. También podés comparar números usando operadores: <strong>&gt;</strong> (mayor que), <strong>&lt;</strong> (menor que), <strong>&gt;=</strong> (mayor o igual) y <strong>&lt;=</strong> (menor o igual). Esto es muy útil para filtrar por rangos de valores.',
+    enunciado: 'La empresa quiere identificar a los empleados mejor pagados para una revisión salarial.\n\nTraé el <strong>nombre</strong> y <strong>salario</strong> de todos los empleados que ganen más de <strong>$80.000</strong>.',
+    pista: 'Usá el operador > después de WHERE: WHERE salario > 80000',
+    solucion: 'SELECT nombre, salario FROM empleados WHERE salario > 80000',
+  },
+  {
+    id: '02-03', num: 3, titulo: 'Filtrar por desigualdad con <>', tipo: 'completar',
+    dificultad: 'principiante', xp: 15, tabla: 'empleados',
+    teoria: 'Para filtrar registros que <strong>no sean iguales</strong> a un valor usás el operador <strong>&lt;&gt;</strong> (o también <strong>!=</strong>). Es el equivalente a "distinto de". Muy útil cuando querés excluir un grupo específico de los resultados.',
+    enunciado: 'Hubo un cambio organizacional y necesitás ver todos los empleados <strong>excepto</strong> los de Sistemas.\n\nTraé nombre y departamento de los empleados cuyo departamento sea distinto de <strong>"Sistemas"</strong>.',
+    pista: "El operador de distinto en SQL es <> . Ejemplo: WHERE columna <> 'valor'",
+    solucion: "SELECT nombre, departamento FROM empleados WHERE departamento <> 'Sistemas'",
+    template: "SELECT nombre, departamento FROM empleados WHERE departamento ___ 'Sistemas'",
+    blanks: ['<>'],
+  },
+  {
+    id: '02-04', num: 4, titulo: 'Combinar condiciones con AND', tipo: 'escribir',
+    dificultad: 'principiante', xp: 20, tabla: 'empleados',
+    teoria: 'Podés combinar múltiples condiciones con <strong>AND</strong>. Cuando usás AND, ambas condiciones deben cumplirse al mismo tiempo para que el registro aparezca. Es como decir "quiero los empleados que cumplan esto Y también aquello".',
+    enunciado: 'Necesitás encontrar empleados específicos para un proyecto.\n\nTraé el <strong>nombre</strong>, <strong>departamento</strong> y <strong>salario</strong> de los empleados que trabajen en <strong>"Marketing"</strong> Y que ganen más de <strong>$60.000</strong>.',
+    pista: "Conectá dos condiciones con AND: WHERE departamento = 'Marketing' AND salario > 60000",
+    solucion: "SELECT nombre, departamento, salario FROM empleados WHERE departamento = 'Marketing' AND salario > 60000",
+  },
+  {
+    id: '02-05', num: 5, titulo: 'Ampliar resultados con OR', tipo: 'escribir',
+    dificultad: 'principiante', xp: 20, tabla: 'empleados',
+    teoria: 'Con <strong>OR</strong> el registro aparece si cumple <strong>al menos una</strong> de las condiciones. Es lo opuesto a AND: no necesitás que se cumplan todas, solo una. Muy útil cuando querés traer datos de varios grupos a la vez.',
+    enunciado: 'Necesitás convocar a dos departamentos para una reunión.\n\nTraé el <strong>nombre</strong> y <strong>departamento</strong> de los empleados que trabajen en <strong>"Ventas"</strong> O en <strong>"Marketing"</strong>.',
+    pista: "Usá OR entre las dos condiciones: WHERE departamento = 'Ventas' OR departamento = 'Marketing'",
+    solucion: "SELECT nombre, departamento FROM empleados WHERE departamento = 'Ventas' OR departamento = 'Marketing'",
+  },
+  {
+    id: '02-06', num: 6, titulo: 'Buscar en una lista con IN', tipo: 'completar',
+    dificultad: 'intermedio', xp: 20, tabla: 'empleados',
+    teoria: "Cuando querés filtrar por varios valores posibles de una misma columna, en lugar de encadenar muchos OR podés usar <strong>IN</strong>. Es más limpio y fácil de leer. La sintaxis es: <code>WHERE columna IN ('valor1', 'valor2')</code>.",
+    enunciado: 'Necesitás ver los empleados de tres departamentos a la vez.\n\nTraé <strong>nombre</strong> y <strong>departamento</strong> de los empleados que pertenezcan a <strong>"Ventas"</strong>, <strong>"Marketing"</strong> o <strong>"Finanzas"</strong>. Usá IN.',
+    pista: "La sintaxis de IN es: WHERE departamento IN ('Ventas', 'Marketing', 'Finanzas')",
+    solucion: "SELECT nombre, departamento FROM empleados WHERE departamento IN ('Ventas', 'Marketing', 'Finanzas')",
+    template: "SELECT nombre, departamento FROM empleados WHERE departamento IN (___)",
+    blanks: ["'Ventas', 'Marketing', 'Finanzas'"],
+  },
+  {
+    id: '02-07', num: 7, titulo: 'Buscar texto parcial con LIKE', tipo: 'escribir',
+    dificultad: 'intermedio', xp: 20, tabla: 'empleados',
+    teoria: "<strong>LIKE</strong> te permite buscar texto que coincida con un patrón. El símbolo <strong>%</strong> actúa como comodín y significa 'cualquier cosa'. Por ejemplo, <code>LIKE 'Ana%'</code> encuentra todo lo que empieza con 'Ana'. <code>LIKE '%García'</code> encuentra todo lo que termina con 'García'.",
+    enunciado: 'Querés encontrar empleados cuyo nombre empiece con la letra <strong>"A"</strong>.\n\nTraé el <strong>nombre</strong> y <strong>departamento</strong> de todos los empleados cuyo nombre comience con <strong>"A"</strong>.',
+    pista: "Usá LIKE con el comodín % al final: WHERE nombre LIKE 'A%'",
+    solucion: "SELECT nombre, departamento FROM empleados WHERE nombre LIKE 'A%'",
+  },
+  {
+    id: '02-08', num: 8, titulo: 'Filtrar valores nulos con IS NULL', tipo: 'escribir',
+    dificultad: 'intermedio', xp: 20, tabla: 'empleados',
+    teoria: 'En SQL, <strong>NULL</strong> representa la ausencia de valor — no es cero ni vacío, es "desconocido". Para filtrar registros sin valor en una columna usás <strong>IS NULL</strong>. Para los que sí tienen valor usás <strong>IS NOT NULL</strong>. Importante: nunca uses = NULL, siempre IS NULL.',
+    enunciado: 'Al revisar la base de empleados encontrás que algunos no tienen teléfono registrado.\n\nTraé el <strong>nombre</strong> y <strong>email</strong> de los empleados que <strong>no tienen teléfono</strong> cargado.',
+    pista: 'Para filtrar valores vacíos usá IS NULL, nunca = NULL: WHERE telefono IS NULL',
+    solucion: 'SELECT nombre, email FROM empleados WHERE telefono IS NULL',
+  },
+  {
+    id: '02-09', num: 9, titulo: 'Rango de valores con BETWEEN', tipo: 'completar',
+    dificultad: 'intermedio', xp: 25, tabla: 'empleados',
+    teoria: '<strong>BETWEEN</strong> filtra registros dentro de un rango de valores, incluyendo los extremos. Es equivalente a <code>WHERE salario &gt;= 50000 AND salario &lt;= 80000</code> pero mucho más legible. Funciona con números, fechas y texto.',
+    enunciado: 'RRHH necesita identificar la franja salarial media de la empresa.\n\nTraé <strong>nombre</strong> y <strong>salario</strong> de los empleados que ganen entre <strong>$50.000</strong> y <strong>$80.000</strong> (ambos inclusive). Usá BETWEEN.',
+    pista: 'La sintaxis es: WHERE salario BETWEEN 50000 AND 80000',
+    solucion: 'SELECT nombre, salario FROM empleados WHERE salario BETWEEN 50000 AND 80000',
+    template: 'SELECT nombre, salario FROM empleados WHERE salario ___ 50000 AND 80000',
+    blanks: ['BETWEEN'],
+  },
+  {
+    id: '02-10', num: 10, titulo: 'Desafío final: combiná todo', tipo: 'escribir',
+    dificultad: 'avanzado', xp: 30, tabla: 'empleados',
+    teoria: 'En la práctica los filtros reales combinan múltiples condiciones. Podés mezclar AND, OR, IN, LIKE y BETWEEN en un mismo WHERE. Cuando combinás AND y OR, usá <strong>paréntesis</strong> para asegurarte de que las condiciones se evalúen en el orden correcto.',
+    enunciado: 'El gerente necesita un reporte específico.\n\nTraé <strong>nombre</strong>, <strong>departamento</strong> y <strong>salario</strong> de los empleados que trabajen en <strong>"Ventas"</strong> o <strong>"Marketing"</strong>, Y que ganen más de <strong>$55.000</strong>. Ordenados por salario de mayor a menor.',
+    pista: "Usá paréntesis para el OR: WHERE (departamento = 'Ventas' OR departamento = 'Marketing') AND salario > 55000",
+    solucion: "SELECT nombre, departamento, salario FROM empleados WHERE (departamento = 'Ventas' OR departamento = 'Marketing') AND salario > 55000 ORDER BY salario DESC",
+  },
+]
+
 export const DATASET_SQL = `
 CREATE TABLE peliculas(id INTEGER PRIMARY KEY,titulo TEXT,genero TEXT,anio INTEGER,duracion_min INTEGER,calificacion REAL,idioma TEXT,director TEXT);
 INSERT INTO peliculas VALUES
@@ -138,6 +227,21 @@ INSERT INTO series VALUES
 (3,'Futuros Posibles','Ciencia Ficción',3,2020,7.6,1,'Inglés'),
 (4,'La Cocinera','Comedia',1,2023,7.1,1,'Español'),
 (5,'Mentes Oscuras','Crimen',5,2016,8.8,0,'Inglés');
+
+CREATE TABLE empleados(id INTEGER PRIMARY KEY,nombre TEXT,departamento TEXT,salario REAL,email TEXT,telefono TEXT,fecha_ingreso TEXT);
+INSERT INTO empleados VALUES
+(1,'Ana García','Ventas',72000,'ana@empresa.com','1145678901','2021-03-15'),
+(2,'Luis Pérez','Sistemas',95000,'luis@empresa.com','1167890123','2019-07-01'),
+(3,'María López','Marketing',68000,'maria@empresa.com',NULL,'2022-01-10'),
+(4,'Carlos Ruiz','Finanzas',85000,'carlos@empresa.com','1134567890','2020-05-20'),
+(5,'Sofía Torres','Ventas',61000,'sofia@empresa.com','1156789012','2023-02-01'),
+(6,'Diego Martín','Marketing',59000,'diego@empresa.com',NULL,'2022-08-15'),
+(7,'Laura Sánchez','Sistemas',102000,'laura@empresa.com','1178901234','2018-11-30'),
+(8,'Andrés Gómez','Finanzas',77000,'andres@empresa.com','1190123456','2021-09-05'),
+(9,'Valentina Cruz','Ventas',88000,'valentina@empresa.com','1112345678','2020-03-22'),
+(10,'Martín Díaz','Sistemas',91000,'martin@empresa.com','1123456789','2019-01-14'),
+(11,'Camila Fernández','Marketing',63000,'camila@empresa.com',NULL,'2023-05-08'),
+(12,'Roberto Jiménez','Finanzas',54000,'roberto@empresa.com','1145670987','2022-11-20');
 `
 
 export const INTRO_SLIDES = [
