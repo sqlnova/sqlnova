@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { sb } from '@/lib/supabase'
-import { LECCIONES_M1, INTRO_SLIDES, DATASET_SQL } from '@/lib/curriculum'
+import { LECCIONES_M1, LECCIONES_M2, INTRO_SLIDES, DATASET_SQL } from '@/lib/curriculum'
 
 type Prog = Record<string, { completada: boolean; xp_ganado: number }>
 
@@ -23,6 +23,24 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
   const [loading, setLoading] = useState(true)
   const [rachaAnimate, setRachaAnimate] = useState(false)
   const sqlDbRef = useRef<any>(null)
+
+  const getLecciones = () => {
+    if (moduloId === 1) return LECCIONES_M1
+    if (moduloId === 2) return LECCIONES_M2
+    return []
+  }
+
+  const getModuloLabel = () => {
+    if (moduloId === 1) return 'Módulo 1 · SELECT & Básicos'
+    if (moduloId === 2) return 'Módulo 2 · WHERE & Filtros'
+    return `Módulo ${moduloId}`
+  }
+
+  const getPrefix = () => {
+    if (moduloId === 1) return '01-'
+    if (moduloId === 2) return '02-'
+    return `0${moduloId}-`
+  }
 
   useEffect(() => {
     const setup = async () => {
@@ -58,9 +76,11 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
         sqlDbRef.current = db
       }
 
-      if (moduloId === 1) {
-        const done = Object.keys(pm).filter(k => k.startsWith('01-') && pm[k]?.completada).length
-        setCurIdx(Math.min(done, LECCIONES_M1.length - 1))
+      const lecciones = getLecciones()
+      if (lecciones.length > 0) {
+        const prefix = getPrefix()
+        const done = Object.keys(pm).filter(k => k.startsWith(prefix) && pm[k]?.completada).length
+        setCurIdx(Math.min(done, lecciones.length - 1))
       }
 
       setLoading(false)
@@ -76,8 +96,9 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     setResultError('')
     setQueryText('')
     setRachaAnimate(false)
-    if (moduloId === 1 && LECCIONES_M1[curIdx]) {
-      const l = LECCIONES_M1[curIdx]
+    const lecciones = getLecciones()
+    if (lecciones.length > 0 && lecciones[curIdx]) {
+      const l = lecciones[curIdx]
       setBlanks(l.blanks ? l.blanks.map(() => '') : [])
       if (l.tipo === 'debugging' && l.errorQuery) setQueryText(l.errorQuery)
       if (prog[l.id]?.completada) setAnswered(true)
@@ -85,14 +106,12 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
   }, [curIdx, curSlide, moduloId, prog])
 
   const saveProg = async (lid: string, mid: number, xp: number, pistaUsada: boolean) => {
-    // 1. Guardar progreso de la lección
     await sb.from('progreso').upsert({
       usuario_id: user.id, leccion_id: lid, modulo_id: mid,
       completada: true, xp_ganado: xp, pista_usada: pistaUsada,
       completada_en: new Date().toISOString()
     }, { onConflict: 'usuario_id,leccion_id' })
 
-    // 2. Actualizar XP y racha via función server-side
     const { data, error } = await sb.rpc('actualizar_racha', {
       p_usuario_id: user.id,
       p_xp: xp
@@ -101,7 +120,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     if (!error && data) {
       const resultado = data as { racha_actual: number; racha_maxima: number; xp_total: number }
       const rachaSubio = resultado.racha_actual > (perfil?.racha_actual || 0)
-
       setPerfil((prev: any) => ({
         ...prev,
         xp_total: resultado.xp_total,
@@ -109,7 +127,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
         racha_maxima: resultado.racha_maxima,
         ultima_actividad: new Date().toISOString().split('T')[0],
       }))
-
       if (rachaSubio) setRachaAnimate(true)
     }
 
@@ -117,7 +134,8 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
   }
 
   const getQuery = () => {
-    const l = LECCIONES_M1[curIdx]
+    const lecciones = getLecciones()
+    const l = lecciones[curIdx]
     if (l.tipo === 'completar' && l.template && l.blanks) {
       let q = l.template
       blanks.forEach(b => { q = q.replace('___', b) })
@@ -129,7 +147,8 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
   const normalize = (q: string) => q.replace(/;$/, '').replace(/\s+/g, ' ').trim().toUpperCase()
 
   const runQuery = async () => {
-    const l = LECCIONES_M1[curIdx]
+    const lecciones = getLecciones()
+    const l = lecciones[curIdx]
     const q = getQuery().trim()
     if (!q || !sqlDbRef.current) return
 
@@ -163,7 +182,8 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
   }
 
   const nextLesson = () => {
-    if (curIdx < LECCIONES_M1.length - 1) {
+    const lecciones = getLecciones()
+    if (curIdx < lecciones.length - 1) {
       setCurIdx(prev => prev + 1)
       window.scrollTo(0, 0)
     } else {
@@ -286,7 +306,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
   }
 
   // ── MÓDULOS NO DISPONIBLES ──
-  if (moduloId !== 1) {
+  if (moduloId !== 1 && moduloId !== 2) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', flexDirection: 'column', gap: 16 }}>
         <div style={{ fontSize: '2rem' }}>🚧</div>
@@ -296,9 +316,10 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     )
   }
 
-  // ── MÓDULO 1 ──
-  const l = LECCIONES_M1[curIdx]
-  const total = LECCIONES_M1.length
+  // ── MÓDULOS 1 y 2 ──
+  const lecciones = getLecciones()
+  const l = lecciones[curIdx]
+  const total = lecciones.length
   const pct = Math.round(((curIdx + 1) / total) * 100)
 
   const PREVIEW: Record<string, { cols: string[]; rows: any[][] }> = {
@@ -309,7 +330,15 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     series: {
       cols: ['id', 'titulo', 'genero', 'temporadas', 'calificacion'],
       rows: [[1,'El Imperio Caído','Drama',4,9.2],[2,'Detectives del Sur','Crimen',2,8.0]]
-    }
+    },
+    empleados: {
+      cols: ['id', 'nombre', 'departamento', 'salario', 'email'],
+      rows: [
+        [1,'Ana García','Ventas',72000,'ana@empresa.com'],
+        [2,'Luis Pérez','Sistemas',95000,'luis@empresa.com'],
+        [3,'María López','Marketing',68000,'maria@empresa.com'],
+      ]
+    },
   }
 
   const pv = PREVIEW[l.tabla] || PREVIEW.peliculas
@@ -319,7 +348,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
-      <TopBar title={l.titulo} module="Módulo 1 · SELECT & Básicos" prog={`${curIdx + 1} / ${total}`} onBack={() => router.replace('/dashboard')} />
+      <TopBar title={l.titulo} module={getModuloLabel()} prog={`${curIdx + 1} / ${total}`} onBack={() => router.replace('/dashboard')} />
 
       <div style={{ flex: 1, padding: '26px 20px', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
 
@@ -346,11 +375,9 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
           </div>
 
           <div style={{ padding: '18px 17px' }}>
-            {/* Enunciado */}
             <div style={{ fontSize: '0.97rem', fontWeight: 500, letterSpacing: '-0.01em', lineHeight: 1.55, marginBottom: 15 }}
               dangerouslySetInnerHTML={{ __html: l.enunciado.replace(/\n/g, '<br/>') }} />
 
-            {/* Dataset toggle */}
             <div onClick={() => setDataOpen(!dataOpen)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: '0.77rem', color: 'var(--sub)', cursor: 'pointer', marginBottom: 12, padding: '4px 9px', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 7 }}>
               📋 Ver tabla: <strong style={{ color: 'var(--nova)' }}>{l.tabla}</strong> {dataOpen ? '▴' : '▾'}
             </div>
@@ -367,7 +394,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               </div>
             )}
 
-            {/* Editor completar */}
             {l.tipo === 'completar' && l.template && l.blanks ? (
               <div style={{ fontFamily: 'DM Mono', fontSize: '0.88rem', lineHeight: 2.4, padding: '13px 15px', background: '#0b0d14', border: '1px solid var(--border2)', borderRadius: 11, marginBottom: 13 }}>
                 {l.template.split('___').map((part, i) => (
@@ -385,7 +411,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                 ))}
               </div>
             ) : (
-              /* Editor escribir / debugging */
               <div style={{ background: '#0b0d14', border: '1px solid var(--border2)', borderRadius: 11, overflow: 'hidden', marginBottom: 13 }}>
                 <div style={{ background: '#0e1018', padding: '6px 11px', display: 'flex', alignItems: 'center', gap: 5, borderBottom: '1px solid var(--border)' }}>
                   {['#ff5f57','#ffbd2e','#28c840'].map(c => <div key={c} style={{ width: 7, height: 7, borderRadius: '50%', background: c }} />)}
@@ -400,18 +425,16 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               </div>
             )}
 
-            {/* Acciones */}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <button onClick={runQuery} style={{ background: 'var(--nova2)', color: '#fff', border: 'none', borderRadius: 9, padding: '9px 17px', fontWeight: 600, cursor: 'pointer', fontSize: '0.84rem' }}>▶ Ejecutar</button>
               <button onClick={() => setHintOpen(!hintOpen)} style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 9, padding: '8px 15px', color: hintOpen ? 'var(--amber)' : 'var(--sub)', cursor: 'pointer', fontSize: '0.84rem' }}>💡 Pista</button>
               {answered && (
                 <button onClick={nextLesson} style={{ background: 'var(--green)', color: '#0a2417', border: 'none', borderRadius: 9, padding: '9px 17px', fontWeight: 600, cursor: 'pointer', fontSize: '0.84rem' }}>
-                  {curIdx < LECCIONES_M1.length - 1 ? 'Siguiente →' : '🏆 Finalizar módulo'}
+                  {curIdx < lecciones.length - 1 ? 'Siguiente →' : '🏆 Finalizar módulo'}
                 </button>
               )}
             </div>
 
-            {/* Pista */}
             {hintOpen && (
               <div style={{ marginTop: 11, background: 'rgba(232,168,56,0.045)', border: '1px solid rgba(232,168,56,0.16)', borderRadius: 9, padding: '11px 14px' }}>
                 <div style={{ fontSize: '0.68rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--amber)', marginBottom: 4 }}>Pista</div>
@@ -419,7 +442,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               </div>
             )}
 
-            {/* Resultado */}
             {(result || resultError) && (
               <div style={{ marginTop: 15 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 9 }}>
@@ -441,7 +463,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               </div>
             )}
 
-            {/* Éxito */}
             {answered && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 13, marginTop: 15, background: 'rgba(62,207,142,0.05)', border: '1px solid rgba(62,207,142,0.18)', borderRadius: 12, padding: '15px 17px' }}>
                 <span style={{ fontSize: '1.5rem' }}>✅</span>
