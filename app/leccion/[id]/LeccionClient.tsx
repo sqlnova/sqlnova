@@ -10,7 +10,7 @@ import {
 } from '@/lib/curriculum'
 
 type Prog = Record<string, { completada: boolean; xp_ganado: number }>
-type Vista = 'leccion' | 'resumen' | 'glosario'
+type Vista = 'leccion' | 'resumen' | 'glosario' | 'intro-joins'
 
 export default function LeccionClient({ moduloId }: { moduloId: number }) {
   const router = useRouter()
