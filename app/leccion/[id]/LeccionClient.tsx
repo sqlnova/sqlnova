@@ -228,12 +228,76 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     ]
     const TABLA_COLS = ['id', 'nombre', 'edad', 'ciudad']
 
+    // Estilo justificado compartido para todos los subtítulos
+    const subtituloStyle: React.CSSProperties = {
+      fontSize: '0.92rem',
+      color: '#c8d8f0',
+      lineHeight: 1.8,
+      background: 'rgba(77,166,255,0.06)',
+      borderLeft: '3px solid rgba(77,166,255,0.5)',
+      borderRadius: '0 10px 10px 0',
+      padding: '14px 16px',
+      marginBottom: 18,
+      textAlign: 'justify' as const,
+    }
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
         <TopBar title={slide.titulo} module="Módulo 0 · Introducción" prog={`${curSlide + 1} / ${total}`} onBack={() => router.replace('/dashboard')} />
         <div style={{ flex: 1, padding: '28px 20px', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
           <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 15, overflow: 'hidden' }}>
             <div style={{ padding: '20px 20px 0' }}>
+
+              {/* SVG slide 1 — base de datos ilustrada */}
+              {slide.tipo === 'svg' && (
+                <div style={{ background: 'var(--bg2)', borderRadius: 12, padding: '20px 16px', marginBottom: 16 }}>
+                  <svg viewBox="0 0 560 180" style={{ width: '100%', height: 'auto' }} xmlns="http://www.w3.org/2000/svg">
+                    {/* Contenedor base de datos */}
+                    <rect x="4" y="4" width="552" height="172" rx="12" fill="rgba(77,166,255,0.04)" stroke="rgba(77,166,255,0.2)" strokeWidth="1.5" strokeDasharray="6,4"/>
+                    <text x="18" y="22" fill="rgba(77,166,255,0.5)" fontSize="9" fontFamily="monospace" fontWeight="600">BASE DE DATOS</text>
+
+                    {/* Tabla clientes */}
+                    <rect x="20" y="32" width="148" height="132" rx="8" fill="rgba(77,166,255,0.08)" stroke="rgba(77,166,255,0.45)" strokeWidth="1.5"/>
+                    <rect x="20" y="32" width="148" height="28" rx="8" fill="rgba(77,166,255,0.22)"/>
+                    <rect x="20" y="52" width="148" height="8" fill="rgba(77,166,255,0.22)"/>
+                    <text x="94" y="51" textAnchor="middle" fill="#7dd3fc" fontSize="11" fontWeight="700" fontFamily="monospace">clientes</text>
+                    {[['🔑 id','#94a3b8'],['nombre','#cbd5e1'],['email','#cbd5e1'],['ciudad','#cbd5e1'],['telefono','#cbd5e1']].map(([col, color], i) => (
+                      <text key={col} x="34" y={82 + i * 17} fill={color} fontSize="10" fontFamily="monospace">{col}</text>
+                    ))}
+
+                    {/* Tabla pedidos */}
+                    <rect x="206" y="32" width="148" height="132" rx="8" fill="rgba(62,207,142,0.08)" stroke="rgba(62,207,142,0.45)" strokeWidth="1.5"/>
+                    <rect x="206" y="32" width="148" height="28" rx="8" fill="rgba(62,207,142,0.22)"/>
+                    <rect x="206" y="52" width="148" height="8" fill="rgba(62,207,142,0.22)"/>
+                    <text x="280" y="51" textAnchor="middle" fill="#6ee7b7" fontSize="11" fontWeight="700" fontFamily="monospace">pedidos</text>
+                    {[['🔑 id','#94a3b8'],['🔗 cliente_id','#fbbf24'],['🔗 producto_id','#fbbf24'],['fecha','#cbd5e1'],['total','#cbd5e1']].map(([col, color], i) => (
+                      <text key={col} x="220" y={82 + i * 17} fill={color} fontSize="10" fontFamily="monospace">{col}</text>
+                    ))}
+
+                    {/* Tabla productos */}
+                    <rect x="392" y="32" width="148" height="132" rx="8" fill="rgba(232,168,56,0.08)" stroke="rgba(232,168,56,0.45)" strokeWidth="1.5"/>
+                    <rect x="392" y="32" width="148" height="28" rx="8" fill="rgba(232,168,56,0.22)"/>
+                    <rect x="392" y="52" width="148" height="8" fill="rgba(232,168,56,0.22)"/>
+                    <text x="466" y="51" textAnchor="middle" fill="#fcd34d" fontSize="11" fontWeight="700" fontFamily="monospace">productos</text>
+                    {[['🔑 id','#94a3b8'],['nombre','#cbd5e1'],['precio','#cbd5e1'],['categoria','#cbd5e1'],['stock','#cbd5e1']].map(([col, color], i) => (
+                      <text key={col} x="406" y={82 + i * 17} fill={color} fontSize="10" fontFamily="monospace">{col}</text>
+                    ))}
+
+                    {/* Relación clientes → pedidos */}
+                    <line x1="168" y1="99" x2="206" y2="99" stroke="rgba(251,191,36,0.6)" strokeWidth="1.5" strokeDasharray="4,3"/>
+                    <polygon points="202,95 210,99 202,103" fill="rgba(251,191,36,0.7)"/>
+                    <text x="187" y="93" textAnchor="middle" fill="rgba(251,191,36,0.8)" fontSize="8" fontFamily="monospace">1:N</text>
+
+                    {/* Relación productos → pedidos */}
+                    <line x1="392" y1="116" x2="354" y2="116" stroke="rgba(251,191,36,0.6)" strokeWidth="1.5" strokeDasharray="4,3"/>
+                    <polygon points="358,112 350,116 358,120" fill="rgba(251,191,36,0.7)"/>
+                    <text x="373" y="110" textAnchor="middle" fill="rgba(251,191,36,0.8)" fontSize="8" fontFamily="monospace">N:1</text>
+                  </svg>
+                  <div style={{ textAlign: 'center', fontSize: '0.75rem', color: 'var(--sub)', marginTop: 8, fontFamily: 'DM Mono' }}>
+                    Tres tablas relacionadas dentro de una base de datos
+                  </div>
+                </div>
+              )}
 
               {/* Apps grid */}
               {slide.tipo === 'apps' && (
@@ -248,55 +312,49 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                 </div>
               )}
 
-              {/* DER visual */}
+              {/* DER — tablas relacionadas */}
               {slide.tipo === 'der' && (
                 <div style={{ marginBottom: 16 }}>
-                  <svg viewBox="0 0 560 220" style={{ width: '100%', height: 'auto' }} xmlns="http://www.w3.org/2000/svg">
-                    {/* Tabla clientes */}
-                    <rect x="10" y="20" width="150" height="160" rx="8" fill="rgba(77,166,255,0.07)" stroke="rgba(77,166,255,0.4)" strokeWidth="1.5"/>
-                    <rect x="10" y="20" width="150" height="32" rx="8" fill="rgba(77,166,255,0.2)"/>
-                    <rect x="10" y="44" width="150" height="8" rx="0" fill="rgba(77,166,255,0.2)"/>
-                    <text x="85" y="41" textAnchor="middle" fill="#4da6ff" fontSize="12" fontWeight="700" fontFamily="monospace">clientes</text>
-                    <text x="24" y="72" fill="#a0b4cc" fontSize="10" fontFamily="monospace">🔑 id</text>
-                    <text x="24" y="90" fill="#c8d8e8" fontSize="10" fontFamily="monospace">nombre</text>
-                    <text x="24" y="108" fill="#c8d8e8" fontSize="10" fontFamily="monospace">email</text>
-                    <text x="24" y="126" fill="#c8d8e8" fontSize="10" fontFamily="monospace">ciudad</text>
-                    <text x="24" y="144" fill="#c8d8e8" fontSize="10" fontFamily="monospace">telefono</text>
-
-                    {/* Tabla pedidos (centro) */}
-                    <rect x="200" y="20" width="160" height="180" rx="8" fill="rgba(62,207,142,0.07)" stroke="rgba(62,207,142,0.4)" strokeWidth="1.5"/>
-                    <rect x="200" y="20" width="160" height="32" rx="8" fill="rgba(62,207,142,0.2)"/>
-                    <rect x="200" y="44" width="160" height="8" rx="0" fill="rgba(62,207,142,0.2)"/>
-                    <text x="280" y="41" textAnchor="middle" fill="#3ecf8e" fontSize="12" fontWeight="700" fontFamily="monospace">pedidos</text>
-                    <text x="214" y="72" fill="#a0b4cc" fontSize="10" fontFamily="monospace">🔑 id</text>
-                    <text x="214" y="90" fill="#f0a050" fontSize="10" fontFamily="monospace">🔗 cliente_id</text>
-                    <text x="214" y="108" fill="#f0a050" fontSize="10" fontFamily="monospace">🔗 producto_id</text>
-                    <text x="214" y="126" fill="#c8d8e8" fontSize="10" fontFamily="monospace">fecha</text>
-                    <text x="214" y="144" fill="#c8d8e8" fontSize="10" fontFamily="monospace">total</text>
-                    <text x="214" y="162" fill="#c8d8e8" fontSize="10" fontFamily="monospace">estado</text>
-
-                    {/* Tabla productos */}
-                    <rect x="400" y="20" width="150" height="160" rx="8" fill="rgba(232,168,56,0.07)" stroke="rgba(232,168,56,0.4)" strokeWidth="1.5"/>
-                    <rect x="400" y="20" width="150" height="32" rx="8" fill="rgba(232,168,56,0.2)"/>
-                    <rect x="400" y="44" width="150" height="8" rx="0" fill="rgba(232,168,56,0.2)"/>
-                    <text x="475" y="41" textAnchor="middle" fill="#e8a838" fontSize="12" fontWeight="700" fontFamily="monospace">productos</text>
-                    <text x="414" y="72" fill="#a0b4cc" fontSize="10" fontFamily="monospace">🔑 id</text>
-                    <text x="414" y="90" fill="#c8d8e8" fontSize="10" fontFamily="monospace">nombre</text>
-                    <text x="414" y="108" fill="#c8d8e8" fontSize="10" fontFamily="monospace">precio</text>
-                    <text x="414" y="126" fill="#c8d8e8" fontSize="10" fontFamily="monospace">categoria</text>
-                    <text x="414" y="144" fill="#c8d8e8" fontSize="10" fontFamily="monospace">stock</text>
-
+                  <svg viewBox="0 0 560 200" style={{ width: '100%', height: 'auto' }} xmlns="http://www.w3.org/2000/svg">
+                    {/* clientes */}
+                    <rect x="10" y="20" width="150" height="155" rx="8" fill="rgba(77,166,255,0.07)" stroke="rgba(77,166,255,0.4)" strokeWidth="1.5"/>
+                    <rect x="10" y="20" width="150" height="30" rx="8" fill="rgba(77,166,255,0.2)"/>
+                    <rect x="10" y="42" width="150" height="8" fill="rgba(77,166,255,0.2)"/>
+                    <text x="85" y="40" textAnchor="middle" fill="#7dd3fc" fontSize="12" fontWeight="700" fontFamily="monospace">clientes</text>
+                    <text x="24" y="68" fill="#94a3b8" fontSize="10" fontFamily="monospace">🔑 id</text>
+                    <text x="24" y="85" fill="#cbd5e1" fontSize="10" fontFamily="monospace">nombre</text>
+                    <text x="24" y="102" fill="#cbd5e1" fontSize="10" fontFamily="monospace">email</text>
+                    <text x="24" y="119" fill="#cbd5e1" fontSize="10" fontFamily="monospace">ciudad</text>
+                    <text x="24" y="136" fill="#cbd5e1" fontSize="10" fontFamily="monospace">telefono</text>
+                    {/* pedidos */}
+                    <rect x="200" y="20" width="160" height="172" rx="8" fill="rgba(62,207,142,0.07)" stroke="rgba(62,207,142,0.4)" strokeWidth="1.5"/>
+                    <rect x="200" y="20" width="160" height="30" rx="8" fill="rgba(62,207,142,0.2)"/>
+                    <rect x="200" y="42" width="160" height="8" fill="rgba(62,207,142,0.2)"/>
+                    <text x="280" y="40" textAnchor="middle" fill="#6ee7b7" fontSize="12" fontWeight="700" fontFamily="monospace">pedidos</text>
+                    <text x="214" y="68" fill="#94a3b8" fontSize="10" fontFamily="monospace">🔑 id</text>
+                    <text x="214" y="85" fill="#fbbf24" fontSize="10" fontFamily="monospace">🔗 cliente_id</text>
+                    <text x="214" y="102" fill="#fbbf24" fontSize="10" fontFamily="monospace">🔗 producto_id</text>
+                    <text x="214" y="119" fill="#cbd5e1" fontSize="10" fontFamily="monospace">fecha</text>
+                    <text x="214" y="136" fill="#cbd5e1" fontSize="10" fontFamily="monospace">total</text>
+                    <text x="214" y="153" fill="#cbd5e1" fontSize="10" fontFamily="monospace">estado</text>
+                    {/* productos */}
+                    <rect x="400" y="20" width="150" height="155" rx="8" fill="rgba(232,168,56,0.07)" stroke="rgba(232,168,56,0.4)" strokeWidth="1.5"/>
+                    <rect x="400" y="20" width="150" height="30" rx="8" fill="rgba(232,168,56,0.2)"/>
+                    <rect x="400" y="42" width="150" height="8" fill="rgba(232,168,56,0.2)"/>
+                    <text x="475" y="40" textAnchor="middle" fill="#fcd34d" fontSize="12" fontWeight="700" fontFamily="monospace">productos</text>
+                    <text x="414" y="68" fill="#94a3b8" fontSize="10" fontFamily="monospace">🔑 id</text>
+                    <text x="414" y="85" fill="#cbd5e1" fontSize="10" fontFamily="monospace">nombre</text>
+                    <text x="414" y="102" fill="#cbd5e1" fontSize="10" fontFamily="monospace">precio</text>
+                    <text x="414" y="119" fill="#cbd5e1" fontSize="10" fontFamily="monospace">categoria</text>
+                    <text x="414" y="136" fill="#cbd5e1" fontSize="10" fontFamily="monospace">stock</text>
                     {/* Flecha clientes → pedidos */}
-                    <line x1="160" y1="90" x2="200" y2="90" stroke="rgba(240,160,80,0.7)" strokeWidth="1.5" strokeDasharray="4,3"/>
-                    <polygon points="196,86 204,90 196,94" fill="rgba(240,160,80,0.7)"/>
-
+                    <line x1="160" y1="85" x2="200" y2="85" stroke="rgba(251,191,36,0.65)" strokeWidth="1.5" strokeDasharray="5,3"/>
+                    <polygon points="196,81 204,85 196,89" fill="rgba(251,191,36,0.75)"/>
+                    <text x="180" y="79" textAnchor="middle" fill="rgba(251,191,36,0.9)" fontSize="8" fontFamily="monospace">1:N</text>
                     {/* Flecha productos → pedidos */}
-                    <line x1="400" y1="108" x2="360" y2="108" stroke="rgba(240,160,80,0.7)" strokeWidth="1.5" strokeDasharray="4,3"/>
-                    <polygon points="364,104 356,108 364,112" fill="rgba(240,160,80,0.7)"/>
-
-                    {/* Label relaciones */}
-                    <text x="178" y="83" textAnchor="middle" fill="rgba(240,160,80,0.9)" fontSize="8" fontFamily="monospace">1:N</text>
-                    <text x="382" y="101" textAnchor="middle" fill="rgba(240,160,80,0.9)" fontSize="8" fontFamily="monospace">N:1</text>
+                    <line x1="400" y1="102" x2="360" y2="102" stroke="rgba(251,191,36,0.65)" strokeWidth="1.5" strokeDasharray="5,3"/>
+                    <polygon points="364,98 356,102 364,106" fill="rgba(251,191,36,0.75)"/>
+                    <text x="380" y="96" textAnchor="middle" fill="rgba(251,191,36,0.9)" fontSize="8" fontFamily="monospace">N:1</text>
                   </svg>
                 </div>
               )}
@@ -326,19 +384,19 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
                     {[
-                      ['📊', 'Analistas de datos', 'Extraen insights de millones de filas'],
-                      ['💻', 'Developers', 'Construyen apps que leen y guardan datos'],
-                      ['🔬', 'Data Scientists', 'Preparan datos para modelos de IA'],
-                      ['📈', 'Product Managers', 'Consultan métricas y KPIs del negocio'],
+                      ['📊','Analistas de datos','Extraen insights de millones de filas sin tocar una línea de código extra'],
+                      ['💻','Developers','Construyen apps que leen y guardan datos en tiempo real'],
+                      ['🔬','Data Scientists','Preparan y limpian datos para modelos de machine learning e IA'],
+                      ['📈','Product Managers','Consultan métricas, KPIs y tendencias del negocio de forma autónoma'],
                     ].map(([ico, title, desc]) => (
-                      <div key={title} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px' }}>
+                      <div key={title} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px' }}>
                         <div style={{ fontSize: '1.2rem', marginBottom: 6 }}>{ico}</div>
-                        <div style={{ fontSize: '0.8rem', fontWeight: 600, marginBottom: 3 }}>{title}</div>
-                        <div style={{ fontSize: '0.7rem', color: 'var(--sub)' }}>{desc}</div>
+                        <div style={{ fontSize: '0.8rem', fontWeight: 600, marginBottom: 4, color: 'var(--text)' }}>{title}</div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--sub)', lineHeight: 1.5 }}>{desc}</div>
                       </div>
                     ))}
                   </div>
-                  <div style={{ background: '#0b0d14', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 16px', fontFamily: 'DM Mono', fontSize: '0.8rem', lineHeight: 1.8 }}>
+                  <div style={{ background: '#0b0d14', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 16px', fontFamily: 'DM Mono', fontSize: '0.8rem', lineHeight: 2 }}>
                     <span style={{ color: '#93c5fd' }}>SELECT</span>
                     <span style={{ color: '#e2e8f0' }}> nombre, salario </span>
                     <span style={{ color: '#93c5fd' }}>FROM</span>
@@ -347,8 +405,9 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                     <span style={{ color: '#e2e8f0' }}> salario </span>
                     <span style={{ color: '#6ee7b7' }}>&gt; </span>
                     <span style={{ color: '#fbbf24' }}>80000</span>
-                    <span style={{ color: '#64748b' }}>; </span>
-                    <span style={{ color: '#475569', fontSize: '0.72rem' }}>-- Dame nombre y salario de empleados que ganen más de $80k</span>
+                    <span style={{ color: '#475569' }}>;</span>
+                    <br/>
+                    <span style={{ color: '#475569', fontSize: '0.72rem' }}>-- "Dame nombre y salario de los empleados que ganan más de $80k"</span>
                   </div>
                 </div>
               )}
@@ -357,45 +416,28 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               {slide.tipo === 'resumen' && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10, marginBottom: 16 }}>
                   {[
-                    ['🗄️','Base de datos','Contiene todas las tablas','var(--amber)'],
-                    ['📋','Tabla','Filas y columnas del mismo tipo','var(--nova)'],
-                    ['⬇️','Columna','Define qué tipo de dato se guarda','var(--green)'],
+                    ['🗄️','Base de datos','Contiene todas las tablas relacionadas','var(--amber)'],
+                    ['📋','Tabla','Filas y columnas del mismo tipo de dato','var(--nova)'],
+                    ['⬇️','Columna','Define qué tipo de información se guarda','var(--green)'],
                     ['➡️','Fila','Un registro completo de datos','#f472b6'],
-                    ['🔗','Relación','Las tablas se conectan entre sí','#a78bfa'],
-                    ['💬','SQL','El lenguaje para consultar todo','#22d3ee'],
+                    ['🔗','Relación','Las tablas se conectan mediante claves','#a78bfa'],
+                    ['💬','SQL','El lenguaje para consultar y manipular datos','#22d3ee'],
                   ].map(([ico,t,d,c]) => (
                     <div key={t} style={{ background: 'var(--bg2)', border: `1px solid ${c}30`, borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{ fontSize: '1.3rem', flexShrink: 0 }}>{ico}</div>
                       <div>
                         <div style={{ fontSize: '0.82rem', fontWeight: 600, color: c, marginBottom: 2 }}>{t}</div>
-                        <div style={{ fontSize: '0.7rem', color: 'var(--sub)' }}>{d}</div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--sub)', lineHeight: 1.4 }}>{d}</div>
                       </div>
                     </div>
                   ))}
-                </div>
-              )}
-
-              {/* SVG genérico (slide 1) */}
-              {slide.tipo === 'svg' && (
-                <div style={{ background: 'var(--bg2)', borderRadius: 10, padding: 20, marginBottom: 16, textAlign: 'center' }}>
-                  <svg viewBox="0 0 200 100" style={{ width: '100%', maxWidth: 280, height: 'auto' }} xmlns="http://www.w3.org/2000/svg">
-                    <rect x="10" y="10" width="180" height="80" rx="10" fill="rgba(77,166,255,0.07)" stroke="rgba(77,166,255,0.3)" strokeWidth="1.5"/>
-                    <rect x="20" y="20" width="75" height="60" rx="6" fill="rgba(77,166,255,0.1)" stroke="rgba(77,166,255,0.25)" strokeWidth="1"/>
-                    <text x="57" y="54" textAnchor="middle" fill="#4da6ff" fontSize="9" fontFamily="monospace">clientes</text>
-                    <rect x="105" y="20" width="75" height="60" rx="6" fill="rgba(62,207,142,0.1)" stroke="rgba(62,207,142,0.25)" strokeWidth="1"/>
-                    <text x="142" y="54" textAnchor="middle" fill="#3ecf8e" fontSize="9" fontFamily="monospace">productos</text>
-                    <text x="100" y="96" textAnchor="middle" fill="rgba(77,166,255,0.5)" fontSize="7" fontFamily="monospace">Base de datos</text>
-                  </svg>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--sub)', marginTop: 8 }}>Una colección organizada de tablas relacionadas</div>
                 </div>
               )}
             </div>
 
             {/* Subtítulo y navegación */}
             <div style={{ padding: '0 20px 20px' }}>
-              <div style={{ fontSize: '0.92rem', color: '#c8d8f0', lineHeight: 1.75, background: 'rgba(77,166,255,0.06)', borderLeft: '3px solid rgba(77,166,255,0.5)', borderRadius: '0 10px 10px 0', padding: '14px 16px', marginBottom: 18 }}>
-                {slide.subtitulo}
-              </div>
+              <div style={subtituloStyle}>{slide.subtitulo}</div>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                 {curSlide > 0 && (
                   <button onClick={() => setCurSlide(s => s - 1)} style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 9, padding: '9px 16px', color: 'var(--sub)', cursor: 'pointer', fontSize: '0.84rem' }}>← Anterior</button>
@@ -478,8 +520,8 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
           </div>
         )}
 
-        {/* Teoría — mejorada visualmente */}
-        <div style={{ background: 'rgba(77,166,255,0.06)', borderLeft: '3px solid rgba(77,166,255,0.6)', borderRadius: '0 10px 10px 0', padding: '14px 18px', marginBottom: 18, fontSize: '0.9rem', color: '#c8d8f0', lineHeight: 1.8 }}
+        {/* Teoría */}
+        <div style={{ background: 'rgba(77,166,255,0.06)', borderLeft: '3px solid rgba(77,166,255,0.6)', borderRadius: '0 10px 10px 0', padding: '14px 18px', marginBottom: 18, fontSize: '0.9rem', color: '#c8d8f0', lineHeight: 1.8, textAlign: 'justify' }}
           dangerouslySetInnerHTML={{ __html: l.teoria }} />
 
         {/* Tarjeta ejercicio */}
@@ -490,11 +532,9 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
           </div>
 
           <div style={{ padding: '18px 17px' }}>
-            {/* Enunciado */}
             <div style={{ fontSize: '0.97rem', fontWeight: 500, letterSpacing: '-0.01em', lineHeight: 1.6, marginBottom: 15, color: 'var(--text)' }}
               dangerouslySetInnerHTML={{ __html: l.enunciado.replace(/\n/g, '<br/>') }} />
 
-            {/* Dataset toggle */}
             <div onClick={() => setDataOpen(!dataOpen)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: '0.77rem', color: 'var(--sub)', cursor: 'pointer', marginBottom: 12, padding: '4px 9px', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 7 }}>
               📋 Ver tabla: <strong style={{ color: 'var(--nova)' }}>{l.tabla}</strong> {dataOpen ? '▴' : '▾'}
             </div>
@@ -511,7 +551,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               </div>
             )}
 
-            {/* Editor completar */}
             {l.tipo === 'completar' && l.template && l.blanks ? (
               <div style={{ fontFamily: 'DM Mono', fontSize: '0.88rem', lineHeight: 2.4, padding: '13px 15px', background: '#0b0d14', border: '1px solid var(--border2)', borderRadius: 11, marginBottom: 13 }}>
                 {l.template.split('___').map((part, i) => (
@@ -529,7 +568,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                 ))}
               </div>
             ) : (
-              /* Editor escribir / debugging */
               <div style={{ background: '#0b0d14', border: '1px solid var(--border2)', borderRadius: 11, overflow: 'hidden', marginBottom: 13 }}>
                 <div style={{ background: '#0e1018', padding: '6px 11px', display: 'flex', alignItems: 'center', gap: 5, borderBottom: '1px solid var(--border)' }}>
                   {['#ff5f57','#ffbd2e','#28c840'].map(c => <div key={c} style={{ width: 7, height: 7, borderRadius: '50%', background: c }} />)}
@@ -544,7 +582,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               </div>
             )}
 
-            {/* Acciones */}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <button onClick={runQuery} style={{ background: 'var(--nova2)', color: '#fff', border: 'none', borderRadius: 9, padding: '9px 17px', fontWeight: 600, cursor: 'pointer', fontSize: '0.84rem' }}>▶ Ejecutar</button>
               <button onClick={() => setHintOpen(!hintOpen)} style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 9, padding: '8px 15px', color: hintOpen ? 'var(--amber)' : 'var(--sub)', cursor: 'pointer', fontSize: '0.84rem' }}>💡 Pista</button>
@@ -555,7 +592,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               )}
             </div>
 
-            {/* Pista */}
             {hintOpen && (
               <div style={{ marginTop: 11, background: 'rgba(232,168,56,0.045)', border: '1px solid rgba(232,168,56,0.16)', borderRadius: 9, padding: '11px 14px' }}>
                 <div style={{ fontSize: '0.68rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--amber)', marginBottom: 4 }}>Pista</div>
@@ -563,7 +599,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               </div>
             )}
 
-            {/* Resultado */}
             {(result || resultError) && (
               <div style={{ marginTop: 15 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 9 }}>
@@ -585,7 +620,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               </div>
             )}
 
-            {/* Éxito — solo se muestra si acaba de responder bien O si ya estaba completada y no hay resultado nuevo */}
             {answered && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 13, marginTop: 15, background: 'rgba(62,207,142,0.05)', border: '1px solid rgba(62,207,142,0.18)', borderRadius: 12, padding: '15px 17px' }}>
                 <span style={{ fontSize: '1.5rem' }}>✅</span>
