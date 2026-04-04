@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation'
 import { sb } from '@/lib/supabase'
 import { LECCIONES_M1, INTRO_SLIDES, DATASET_SQL } from '@/lib/curriculum'
 
+type Prog = Record<string, { completada: boolean; xp_ganado: number }>
+
 export default function LeccionClient({ moduloId }: { moduloId: number }) {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
