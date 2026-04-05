@@ -395,7 +395,7 @@ export const LECCIONES_M4: Leccion[] = [
     solucion: 'SELECT SUM(importe) AS total_ingresos FROM pedidos_restaurante' },
   { id: '04-03', num: 3, titulo: 'Promedio con AVG', tipo: 'escribir', dificultad: 'principiante', xp: 15, tabla: 'pedidos_restaurante',
     teoria: '<strong>AVG(columna)</strong> calcula el promedio de los valores de una columna numérica. Como SUM, ignora los NULLs en el cálculo. Muy útil para métricas como ticket promedio, calificación promedio o precio medio.',
-    enunciado: 'Querés saber cuál es el importe promedio de los pedidos en el restaurante.\n\nUsá <strong>AVG</strong> sobre la columna <strong>importe</strong> de <strong>pedidos_restaurante</strong>.A la columna resultante renombrala como 'promedio' usando AS.',
+    enunciado: 'Querés saber cuál es el importe promedio de los pedidos en el restaurante.\n\nUsá <strong>AVG</strong> sobre la columna <strong>importe</strong> de <strong>pedidos_restaurante</strong>.A la columna resultante renombrala como promedio usando AS.',
     pista: 'SELECT AVG(importe) AS promedio FROM pedidos_restaurante',
     solucion: 'SELECT AVG(importe) AS promedio FROM pedidos_restaurante' },
   { id: '04-04', num: 4, titulo: 'Máximo y mínimo', tipo: 'completar', dificultad: 'principiante', xp: 15, tabla: 'pedidos_restaurante',
