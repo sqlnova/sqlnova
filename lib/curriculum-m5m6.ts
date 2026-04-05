@@ -96,7 +96,7 @@ export const LECCIONES_M5: Leccion[] = [
     dificultad: 'avanzado', xp: 40, tabla: 'transacciones_cuentas',
     teoria: 'Combiná todo lo aprendido en el módulo. Los analistas de riesgo necesitan detectar cuentas con comportamiento inusual: muchas transacciones rechazadas o montos muy altos. Recordá que podés combinar múltiples condiciones en el HAVING con OR.',
     enunciado: 'Identificá <strong>cuentas de riesgo</strong>.\n\nDe transacciones + cuentas, mostrá titular, total de transacciones, porcentaje de rechazadas (ROUND a 1 decimal) y monto máximo. Filtrá con HAVING donde el porcentaje de rechazadas supere el <strong>20%</strong> O el monto máximo supere <strong>$80.000</strong>. Ordenado por porcentaje de rechazadas DESC.',
-    pista: "JOIN cuentas, GROUP BY titular, HAVING pct_rechazadas > 20 OR MAX(monto) > 80000",
+    pista: "SELECT cuentas.titular, COUNT(*) AS total_tx, ROUND(COUNT(CASE WHEN estado='rechazada' THEN 1 END)*100.0/NULLIF(COUNT(*),0),1) AS pct_rechazadas, MAX(transacciones.monto) AS monto_maximo FROM transacciones INNER JOIN cuentas ON transacciones.cuenta_id=cuentas.cuenta_id GROUP BY cuentas.titular HAVING pct_rechazadas > 20 OR monto_maximo > 80000 ORDER BY pct_rechazadas DESC",
     solucion: "SELECT cuentas.titular, COUNT(*) AS total_tx, ROUND(COUNT(CASE WHEN estado='rechazada' THEN 1 END)*100.0/NULLIF(COUNT(*),0),1) AS pct_rechazadas, MAX(transacciones.monto) AS monto_maximo FROM transacciones INNER JOIN cuentas ON transacciones.cuenta_id=cuentas.cuenta_id GROUP BY cuentas.titular HAVING pct_rechazadas > 20 OR monto_maximo > 80000 ORDER BY pct_rechazadas DESC",
   },
 ]
