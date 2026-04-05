@@ -1404,14 +1404,17 @@ function TopBar({ title, module: mod, prog, onBack }: { title: string; module: s
   )
 }
 
-function BottomBar({ label, pct }: { label: string; pct: number }) {
-  return (
-    <div style={{ background: 'rgba(8,9,13,0.95)', borderTop: '1px solid var(--border)', backdropFilter: 'blur(8px)', padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 11, position: 'sticky', bottom: 0, zIndex: 50 }}>
-      <div style={{ fontSize: '0.74rem', color: 'var(--sub)', whiteSpace: 'nowrap', flexShrink: 0 }}>{label}</div>
-      <div style={{ flex: 1, height: 4, background: 'var(--bg3)', borderRadius: 4, overflow: 'hidden' }}>
-        <div className="level-fill" style={{ height: '100%', borderRadius: 4, width: `${pct}%`, transition: 'width 0.4s ease' }} />
-      </div>
-      <div style={{ fontSize: '0.74rem', color: 'var(--nova)', fontFamily: 'DM Mono', flexShrink: 0 }}>{pct}%</div>
-    </div>
-  )
+export const RESUMEN_M6: ResumenModulo = {
+  titulo: 'Lo que aprendiste en Subqueries',
+  puntos: [
+    'Una subquery es un SELECT dentro de otro SELECT, entre paréntesis.',
+    'Subquery escalar: devuelve un valor → usala con =, >, <.',
+    'Subquery con IN: devuelve múltiples valores → nunca uses = con IN.',
+    'Tabla derivada: subquery en el FROM, requiere alias obligatorio.',
+    'EXISTS: verdadero si la subquery retorna al menos una fila.',
+    'NOT EXISTS: verdadero si la subquery NO retorna filas.',
+    'Subquery correlacionada: referencia columnas del query externo.',
+    'Muchas subqueries se pueden reescribir como JOINs y viceversa.',
+  ],
+  sintaxis: '-- Subquery en WHERE\nSELECT * FROM tabla\nWHERE col IN (SELECT col FROM otra WHERE condicion)\n\n-- Tabla derivada\nSELECT * FROM\n  (SELECT col, COUNT(*) AS n FROM tabla GROUP BY col) AS sub\nWHERE sub.n > 5\n\n-- EXISTS\nSELECT * FROM a\nWHERE EXISTS (SELECT 1 FROM b WHERE b.a_id = a.id)',
 }

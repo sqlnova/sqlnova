@@ -72,7 +72,7 @@ export const LECCIONES_M8: Leccion[] = [
   {
     id: '08-01', num: 1, titulo: 'Qué es una Window Function', tipo: 'escribir',
     dificultad: 'intermedio', xp: 25, tabla: 'ventas',
-    teoria: 'Una <strong>Window Function</strong> calcula un valor para cada fila usando un conjunto de filas relacionadas (la "ventana"), <strong>sin colapsar las filas</strong> como hace GROUP BY. La cláusula <strong>OVER()</strong> define la ventana. Con OVER() vacío, la ventana es toda la tabla.',
+    teoria: 'Una <strong>Window Function</strong> calcula un valor para cada fila usando un conjunto de filas relacionadas (la "ventana"), <strong>sin colapsar las filas</strong> como hace GROUP BY. La cláusula <strong>OVER()</strong> define la ventana. Con OVER() vacío, la ventana es toda la tabla. La diferencia clave con GROUP BY: cada fila sigue existiendo en el resultado, solo gana una columna extra con el cálculo.',
     enunciado: 'Trabajás en el área de ventas. Querés ver cada venta junto con el <strong>total global</strong> de todas las ventas como columna adicional.\n\nUsá <strong>SUM(monto) OVER()</strong> para agregar el total global a cada fila de la tabla <strong>ventas</strong>.',
     pista: 'SELECT id, vendedor_id, monto, SUM(monto) OVER() AS total_global FROM ventas',
     solucion: 'SELECT id, vendedor_id, monto, SUM(monto) OVER() AS total_global FROM ventas',
@@ -80,7 +80,7 @@ export const LECCIONES_M8: Leccion[] = [
   {
     id: '08-02', num: 2, titulo: 'PARTITION BY — ventanas por grupo', tipo: 'escribir',
     dificultad: 'intermedio', xp: 25, tabla: 'ventas',
-    teoria: '<strong>PARTITION BY</strong> dentro del OVER() divide las filas en grupos y aplica la función a cada grupo por separado. Es como un GROUP BY pero sin colapsar las filas — cada fila mantiene su identidad y además ve el resultado de su grupo.',
+    teoria: '<strong>PARTITION BY</strong> dentro del OVER() divide las filas en grupos y aplica la función a cada grupo por separado. Es como un GROUP BY pero sin colapsar las filas — cada fila mantiene su identidad y además ve el resultado de su grupo. Ejemplo: si hay 3 ventas de zona Norte de $100, $200 y $300, cada una va a mostrar total_zona = $600.',
     enunciado: 'Querés ver cada venta junto con el <strong>total de ventas de ese mismo vendedor</strong>.\n\nUsá <strong>SUM(monto) OVER(PARTITION BY vendedor_id)</strong> para calcular el total por vendedor sin colapsar las filas.',
     pista: 'SELECT id, vendedor_id, monto, SUM(monto) OVER(PARTITION BY vendedor_id) AS total_vendedor FROM ventas',
     solucion: 'SELECT id, vendedor_id, monto, SUM(monto) OVER(PARTITION BY vendedor_id) AS total_vendedor FROM ventas',
@@ -88,7 +88,7 @@ export const LECCIONES_M8: Leccion[] = [
   {
     id: '08-03', num: 3, titulo: 'ROW_NUMBER — numerar filas', tipo: 'escribir',
     dificultad: 'intermedio', xp: 25, tabla: 'ventas',
-    teoria: '<strong>ROW_NUMBER() OVER(ORDER BY columna)</strong> asigna un número secuencial a cada fila según el orden indicado. Con PARTITION BY podés numerar dentro de cada grupo por separado. Es muy útil para rankings y paginación.',
+    teoria: '<strong>ROW_NUMBER() OVER(ORDER BY columna)</strong> asigna un número secuencial a cada fila según el orden indicado. Con PARTITION BY podés numerar dentro de cada grupo por separado — la numeración reinicia en cada grupo. Es la función más usada para rankings y para el patrón "top N por grupo".',
     enunciado: 'Numerá todas las ventas de mayor a menor monto.\n\nMostrá <strong>id</strong>, <strong>vendedor_id</strong>, <strong>monto</strong> y una columna <strong>ranking</strong> con el número de fila ordenado por monto DESC.',
     pista: 'SELECT id, vendedor_id, monto, ROW_NUMBER() OVER(ORDER BY monto DESC) AS ranking FROM ventas',
     solucion: 'SELECT id, vendedor_id, monto, ROW_NUMBER() OVER(ORDER BY monto DESC) AS ranking FROM ventas',
@@ -96,7 +96,7 @@ export const LECCIONES_M8: Leccion[] = [
   {
     id: '08-04', num: 4, titulo: 'RANK y DENSE_RANK', tipo: 'completar',
     dificultad: 'intermedio', xp: 25, tabla: 'ventas',
-    teoria: '<strong>RANK()</strong> asigna el mismo número a filas empatadas pero deja huecos (1,1,3). <strong>DENSE_RANK()</strong> también asigna el mismo número a empatados pero sin huecos (1,1,2). La diferencia importa cuando hay empates y querés el "puesto real" vs el "puesto sin huecos".',
+    teoria: '<strong>RANK()</strong> asigna el mismo número a filas empatadas pero deja huecos (1,1,3). <strong>DENSE_RANK()</strong> también asigna el mismo número a empatados pero sin huecos (1,1,2). Ejemplo con montos 500, 500, 300: RANK() devuelve 1, 1, 3 (deja un hueco). DENSE_RANK() devuelve 1, 1, 2 (sin huecos). Usá RANK para el "puesto real", DENSE_RANK para la posición relativa sin huecos.',
     enunciado: 'Mostrá el ranking de ventas por monto usando <strong>DENSE_RANK</strong> (sin huecos en caso de empate).\n\nMostrá <strong>id</strong>, <strong>monto</strong> y una columna <strong>puesto</strong> con DENSE_RANK ordenado por monto DESC.',
     pista: 'SELECT id, monto, DENSE_RANK() OVER(ORDER BY monto DESC) AS puesto FROM ventas',
     solucion: 'SELECT id, monto, DENSE_RANK() OVER(ORDER BY monto DESC) AS puesto FROM ventas',
@@ -106,7 +106,7 @@ export const LECCIONES_M8: Leccion[] = [
   {
     id: '08-05', num: 5, titulo: 'TOP N por grupo', tipo: 'escribir',
     dificultad: 'avanzado', xp: 30, tabla: 'ventas',
-    teoria: 'Una técnica muy poderosa es usar <strong>ROW_NUMBER() con PARTITION BY</strong> para numerar filas dentro de cada grupo, y luego filtrar con un CTE para quedarte con el top N de cada grupo. Es el patrón clásico de "mejor resultado por categoría".',
+    teoria: 'El patrón "top N por grupo" es una de las consultas más pedidas en entrevistas. La técnica: 1) Usás <strong>ROW_NUMBER()</strong> con <strong>PARTITION BY</strong> para numerar filas dentro de cada grupo. 2) Envolvés todo en un CTE. 3) Filtrás <strong>WHERE rn = 1</strong> (o rn &lt;= 3 para top 3). No podés filtrar directamente sobre window functions — siempre necesitás el CTE intermedio.',
     enunciado: 'Querés la <strong>venta más alta de cada zona</strong>.\n\nUsá un CTE con ROW_NUMBER() OVER(PARTITION BY zona ORDER BY monto DESC) y luego filtrá donde el número de fila sea 1. Mostrá vendedor_id, zona y monto.',
     pista: 'WITH ranked AS (SELECT *, ROW_NUMBER() OVER(PARTITION BY zona ORDER BY monto DESC) AS rn FROM ventas) SELECT vendedor_id, zona, monto FROM ranked WHERE rn = 1',
     solucion: 'WITH ranked AS (SELECT *, ROW_NUMBER() OVER(PARTITION BY zona ORDER BY monto DESC) AS rn FROM ventas) SELECT vendedor_id, zona, monto FROM ranked WHERE rn = 1',
@@ -114,15 +114,15 @@ export const LECCIONES_M8: Leccion[] = [
   {
     id: '08-06', num: 6, titulo: 'LAG — comparar con fila anterior', tipo: 'escribir',
     dificultad: 'avanzado', xp: 30, tabla: 'ventas',
-    teoria: '<strong>LAG(columna, n)</strong> devuelve el valor de la columna n filas antes de la fila actual (dentro de la ventana). <strong>LEAD(columna, n)</strong> devuelve el valor n filas después. Son perfectas para calcular variaciones entre períodos.',
+    teoria: '<strong>LAG(columna, n)</strong> devuelve el valor de la columna n filas antes de la fila actual (dentro de la ventana). <strong>LEAD(columna, n)</strong> devuelve el valor n filas después. Si no existe fila anterior, devuelve NULL (o el valor default si lo especificás). El uso más común: <code>monto - LAG(monto) OVER(ORDER BY fecha)</code> te da la diferencia con la venta anterior.',
     enunciado: 'Querés ver la evolución de ventas de cada vendedor comparando cada venta con la anterior.\n\nMostrá <strong>id</strong>, <strong>vendedor_id</strong>, <strong>monto</strong> y el monto de la venta anterior del mismo vendedor (<strong>LAG</strong>), ordenado por fecha.',
-    pista: 'SELECT id, vendedor_id, monto, LAG(monto) OVER(PARTITION BY vendedor_id ORDER BY fecha) AS monto_anterior FROM ventas',
+    pista: 'SELECT id, vendedor_id, monto, LAG(monto) OVER(PARTITION BY vendedor_id ORDER BY fecha) AS monto_anterior FROM ventas ORDER BY vendedor_id, fecha',
     solucion: 'SELECT id, vendedor_id, monto, LAG(monto) OVER(PARTITION BY vendedor_id ORDER BY fecha) AS monto_anterior FROM ventas ORDER BY vendedor_id, fecha',
   },
   {
     id: '08-07', num: 7, titulo: 'SUM acumulado', tipo: 'escribir',
     dificultad: 'avanzado', xp: 30, tabla: 'ventas',
-    teoria: 'Cuando usás <strong>SUM() OVER(ORDER BY fecha)</strong>, obtenés una suma acumulada (running total). Cada fila muestra la suma de todos los valores hasta ese punto en el orden indicado. Es ideal para ver tendencias de crecimiento.',
+    teoria: 'Cuando usás <strong>SUM() OVER(ORDER BY fecha)</strong>, obtenés una suma acumulada (running total). Cada fila muestra la suma de todos los valores hasta ese punto en el orden indicado. Internamente SQL usa <code>ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</code> — desde la primera fila hasta la actual. Es ideal para ver crecimiento acumulado de ventas o ingresos.',
     enunciado: 'Calculá el <strong>total acumulado de ventas</strong> ordenado por fecha.\n\nMostrá <strong>fecha</strong>, <strong>monto</strong> y una columna <strong>acumulado</strong> con SUM(monto) OVER(ORDER BY fecha). Ordená por fecha.',
     pista: 'SELECT fecha, monto, SUM(monto) OVER(ORDER BY fecha) AS acumulado FROM ventas ORDER BY fecha',
     solucion: 'SELECT fecha, monto, SUM(monto) OVER(ORDER BY fecha) AS acumulado FROM ventas ORDER BY fecha',
@@ -140,16 +140,16 @@ export const LECCIONES_M8: Leccion[] = [
     dificultad: 'intermedio', xp: 20, tabla: 'ventas',
     teoria: 'Los errores más comunes en window functions son: olvidar los paréntesis en OVER(), filtrar con WHERE sobre el resultado de una window function (debe ir en subquery o CTE), o no incluir ORDER BY cuando la función lo requiere.',
     enunciado: 'Este query tiene un error. Encontralo y corregilo:\n\n<code>SELECT vendedor_id, monto, RANK() OVER ORDER BY monto DESC AS ranking FROM ventas</code>',
-    pista: 'Falta el paréntesis en OVER(). La sintaxis correcta es RANK() OVER(ORDER BY monto DESC).',
+    pista: 'SELECT vendedor_id, monto, RANK() OVER(ORDER BY monto DESC) AS ranking FROM ventas',
     solucion: 'SELECT vendedor_id, monto, RANK() OVER(ORDER BY monto DESC) AS ranking FROM ventas',
     errorQuery: 'SELECT vendedor_id, monto, RANK() OVER ORDER BY monto DESC AS ranking FROM ventas',
   },
   {
     id: '08-10', num: 10, titulo: 'Porcentaje del total', tipo: 'escribir',
     dificultad: 'avanzado', xp: 30, tabla: 'ventas',
-    teoria: 'Una combinación muy útil es calcular qué porcentaje representa cada fila respecto al total. La fórmula es: <code>monto * 100.0 / SUM(monto) OVER()</code>. Con PARTITION BY obtenés el porcentaje dentro del grupo.',
+    teoria: 'Una combinación muy útil es calcular qué porcentaje representa cada fila respecto al total. La fórmula es: <code>monto * 100.0 / SUM(monto) OVER()</code>. El <strong>100.0</strong> (con decimal) es importante para evitar división entera. Con PARTITION BY zona obtenés el porcentaje dentro de cada zona. Sin PARTITION BY obtenés el porcentaje del total global.',
     enunciado: 'Calculá qué <strong>porcentaje del total de ventas</strong> representa cada venta.\n\nMostrá <strong>id</strong>, <strong>vendedor_id</strong>, <strong>monto</strong> y <strong>pct_del_total</strong> redondeado a 1 decimal. Usá SUM(monto) OVER() para el total global.',
-    pista: 'ROUND(monto * 100.0 / SUM(monto) OVER(), 1) AS pct_del_total',
+    pista: 'SELECT id, vendedor_id, monto, ROUND(monto * 100.0 / SUM(monto) OVER(), 1) AS pct_del_total FROM ventas',
     solucion: 'SELECT id, vendedor_id, monto, ROUND(monto * 100.0 / SUM(monto) OVER(), 1) AS pct_del_total FROM ventas',
   },
   {
@@ -165,7 +165,7 @@ export const LECCIONES_M8: Leccion[] = [
     dificultad: 'avanzado', xp: 45, tabla: 'ventas',
     teoria: 'Los dashboards de ventas reales combinan múltiples window functions en un mismo query. Podés tener varias funciones OVER() con distintas ventanas en el mismo SELECT — cada una define su propia lógica de agrupamiento y orden.',
     enunciado: 'Armá el dashboard completo de ventas con estas 4 columnas calculadas:\n- <strong>ranking_zona</strong>: RANK por zona (mayor monto primero)\n- <strong>total_zona</strong>: suma de ventas de la zona\n- <strong>pct_zona</strong>: porcentaje de la venta sobre el total de su zona (ROUND 1 decimal)\n- <strong>cuartil</strong>: NTILE 4 global por monto\n\nMostrá vendedor_id, zona, monto y las 4 columnas. Ordená por zona y ranking_zona.',
-    pista: 'Cuatro OVER() distintos: RANK OVER(PARTITION BY zona ORDER BY monto DESC), SUM OVER(PARTITION BY zona), monto*100/SUM OVER(PARTITION BY zona), NTILE(4) OVER(ORDER BY monto)',
+    pista: 'SELECT vendedor_id, zona, monto, RANK() OVER(PARTITION BY zona ORDER BY monto DESC) AS ranking_zona, SUM(monto) OVER(PARTITION BY zona) AS total_zona, ROUND(monto * 100.0 / SUM(monto) OVER(PARTITION BY zona), 1) AS pct_zona, NTILE(4) OVER(ORDER BY monto) AS cuartil FROM ventas ORDER BY zona, ranking_zona',
     solucion: 'SELECT vendedor_id, zona, monto, RANK() OVER(PARTITION BY zona ORDER BY monto DESC) AS ranking_zona, SUM(monto) OVER(PARTITION BY zona) AS total_zona, ROUND(monto * 100.0 / SUM(monto) OVER(PARTITION BY zona), 1) AS pct_zona, NTILE(4) OVER(ORDER BY monto) AS cuartil FROM ventas ORDER BY zona, ranking_zona',
   },
 ]
