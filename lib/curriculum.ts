@@ -612,6 +612,30 @@ INSERT INTO ventas VALUES
 (15,104,'Este',16700,'2024-02-03'),(16,102,'Sur',13400,'2024-02-05'),
 (17,105,'Oeste',8900,'2024-02-07'),(18,103,'Norte',11300,'2024-02-09'),
 (19,101,'Norte',19600,'2024-02-11'),(20,104,'Este',5800,'2024-02-13');
+
+CREATE TABLE usuarios(id INTEGER PRIMARY KEY,nombre TEXT,username TEXT,email TEXT,pais TEXT,es_premium INTEGER DEFAULT 0,verificado INTEGER DEFAULT 0);
+INSERT INTO usuarios VALUES
+(1,'Ana Garcia','anagarcia','ana@mail.com','Argentina',1,1),(2,'Luis Perez','luisperez','luis@mail.com','Mexico',0,0),
+(3,'Maria Lopez','marialopez','maria@mail.com','Argentina',0,1),(4,'Carlos Ruiz','carlosruiz','carlos@mail.com','Espana',1,1),
+(5,'Sofia Torres','sofiatorres','sofia@mail.com','Argentina',0,0),(6,'Diego Martin','diegomartin','diego@mail.com','Mexico',1,0),
+(7,'Laura Sanchez','laurasanchez','laura@mail.com','Espana',0,1),(8,'Andres Gomez','andresgomez','ana@mail.com','Argentina',0,0);
+
+CREATE TABLE posts(id INTEGER PRIMARY KEY,usuario_id INTEGER,titulo TEXT,descripcion TEXT,categoria TEXT,cantidad_likes INTEGER,fecha TEXT);
+INSERT INTO posts VALUES
+(1,1,'Mi primer post','Hola mundo','Tech',1200,'2024-01-05'),(2,1,'SQL es increible',NULL,'Tech',890,'2024-01-15'),
+(3,2,'Viajando por Mexico','Un viaje increible','Travel',450,'2024-01-20'),(4,3,'Recetas saludables','Comer bien','Food',2100,'2024-01-22'),
+(5,4,'Optimizacion SQL','Tips de performance','Tech',3400,'2024-01-25'),(6,1,'Window functions',NULL,'Tech',780,'2024-02-03'),
+(7,5,'Mi gato','Fotos del gato','Lifestyle',120,'2024-02-05'),(8,2,'Cancun en fotos','Hermoso','Travel',1800,'2024-02-08'),
+(9,3,'Pasta casera','Receta italiana','Food',560,'2024-02-10'),(10,4,'Indices en bases de datos','Tutorial avanzado','Tech',4200,'2024-02-12'),
+(11,6,'Ciudad de Mexico','Turismo','Travel',890,'2024-02-15'),(12,1,'CTEs explicados','Guia completa','Tech',1100,'2024-03-01'),
+(13,7,'Yoga en casa','Rutina matutina','Lifestyle',340,'2024-03-03'),(14,4,'JOIN tipos','Inner, Left, Right','Tech',2800,'2024-03-05'),
+(15,3,'Tarta de manzana','Postre casero','Food',1500,'2024-03-08');
+
+CREATE TABLE metricas_red(id INTEGER PRIMARY KEY,mes TEXT,plataforma TEXT,likes INTEGER,compartidos INTEGER);
+INSERT INTO metricas_red VALUES
+(1,'2024-01','Instagram',45200,1200),(2,'2024-01','Twitter',18900,890),(3,'2024-01','Facebook',12400,560),
+(4,'2024-02','Instagram',52100,1450),(5,'2024-02','Twitter',21300,1020),(6,'2024-02','Facebook',14800,680),
+(7,'2024-03','Instagram',61800,1890),(8,'2024-03','Twitter',19700,870),(9,'2024-03','Facebook',11200,490);
 `
 
 export const INTRO_SLIDES = [
