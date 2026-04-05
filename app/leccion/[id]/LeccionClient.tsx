@@ -8,6 +8,11 @@ import {
   GLOSARIO_M1, GLOSARIO_M2, GLOSARIO_M3, GLOSARIO_M4,
   RESUMEN_M1, RESUMEN_M2, RESUMEN_M3, RESUMEN_M4,
 } from '@/lib/curriculum'
+import {
+  LECCIONES_M5, LECCIONES_M6,
+  GLOSARIO_M5, GLOSARIO_M6,
+  RESUMEN_M5, RESUMEN_M6,
+} from '@/lib/curriculum-m5m6'
 
 type Prog = Record<string, { completada: boolean; xp_ganado: number }>
 type Vista = 'leccion' | 'resumen' | 'glosario' | 'intro-joins'
@@ -30,6 +35,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
   const [loading, setLoading] = useState(true)
   const [rachaAnimate, setRachaAnimate] = useState(false)
   const [vista, setVista] = useState<Vista>('leccion')
+  const [intentos, setIntentos] = useState(0)
   const [glosarioSearch, setGlosarioSearch] = useState('')
   const sqlDbRef = useRef<any>(null)
 
@@ -38,6 +44,8 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     if (moduloId === 2) return LECCIONES_M2
     if (moduloId === 3) return LECCIONES_M3
     if (moduloId === 4) return LECCIONES_M4
+    if (moduloId === 5) return LECCIONES_M5
+    if (moduloId === 6) return LECCIONES_M6
     return []
   }
 
@@ -46,6 +54,8 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     if (moduloId === 2) return GLOSARIO_M2
     if (moduloId === 3) return GLOSARIO_M3
     if (moduloId === 4) return GLOSARIO_M4
+    if (moduloId === 5) return GLOSARIO_M5
+    if (moduloId === 6) return GLOSARIO_M6
     return []
   }
 
@@ -54,6 +64,8 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     if (moduloId === 2) return RESUMEN_M2
     if (moduloId === 3) return RESUMEN_M3
     if (moduloId === 4) return RESUMEN_M4
+    if (moduloId === 5) return RESUMEN_M5
+    if (moduloId === 6) return RESUMEN_M6
     return null
   }
 
@@ -62,6 +74,8 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     if (moduloId === 2) return 'Módulo 2 · WHERE & Filtros'
     if (moduloId === 3) return 'Módulo 3 · JOINs'
     if (moduloId === 4) return 'Módulo 4 · GROUP BY & Agregados'
+    if (moduloId === 5) return 'Módulo 5 · Funciones de Agregación'
+    if (moduloId === 6) return 'Módulo 6 · Subqueries'
     return `Módulo ${moduloId}`
   }
 
@@ -125,6 +139,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     setResultError('')
     setQueryText('')
     setRachaAnimate(false)
+    setIntentos(0)
     const lecciones = getLecciones()
     if (lecciones.length > 0 && lecciones[curIdx]) {
       const l = lecciones[curIdx]
@@ -207,6 +222,8 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
           if (!prog[l.id]?.completada) {
             await saveProg(l.id, moduloId, l.xp, hintOpen)
           }
+        } else {
+          setIntentos(prev => prev + 1)
         }
       }
     } catch (e: any) {
@@ -466,7 +483,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
   }
 
   // ── MÓDULOS NO DISPONIBLES ──
-  if (![1,2,3,4].includes(moduloId)) {
+  if (![1,2,3,4,5,6].includes(moduloId)) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', flexDirection: 'column', gap: 16 }}>
         <div style={{ fontSize: '2rem' }}>🚧</div>
@@ -727,6 +744,11 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     pedidos: { cols: ['id','cliente_id','producto_id','total','estado'], rows: [[1,1,1,85000,'completado'],[2,1,2,4500,'completado'],[3,2,3,32000,'pendiente']] },
     productos: { cols: ['id','nombre','categoria','precio','stock'], rows: [[1,'Notebook Pro','Electrónica',85000,15],[2,'Mouse Inalámbrico','Electrónica',4500,80],[3,'Silla Ergonómica','Muebles',32000,20]] },
     pedidos_restaurante: { cols: ['id','mesa','categoria','importe','turno'], rows: [[1,1,'Entradas',850,'noche'],[2,1,'Principal',3200,'noche'],[3,2,'Principal',2800,'mediodia']] },
+    transacciones: { cols: ['id','cuenta_id','tipo','monto','estado','fecha'], rows: [[1,1,'debito',1500,'aprobada','2024-01-05'],[2,1,'credito',85000,'aprobada','2024-01-10'],[3,2,'debito',3200,'aprobada','2024-01-15']] },
+    cuentas: { cols: ['cuenta_id','titular','email','tipo_cuenta','saldo'], rows: [[1,'Lucía Fernández','lucia@banco.com','caja_ahorro',18500],[2,'Martín García','martin@banco.com','cuenta_corriente',42000]] },
+    medicos: { cols: ['id','nombre','especialidad','anios_experiencia'], rows: [[1,'Dr. Carlos Méndez','Cardiología',15],[2,'Dra. Ana Ramos','Pediatría',8],[3,'Dr. Luis Torres','Neurología',22]] },
+    pacientes: { cols: ['id','nombre','edad','medico_id','diagnostico_principal'], rows: [[1,'Roberto Alvarez',62,1,'Hipertensión'],[2,'Carmen Soto',45,2,'Control rutinario'],[3,'Pablo Herrera',71,3,'Parkinson']] },
+    consultas: { cols: ['id','paciente_id','medico_id','diagnostico','costo'], rows: [[1,1,1,'Hipertensión controlada',4500],[2,2,2,'Vacunación',2800],[3,3,3,'Control Parkinson',6200]] },
   }
 
   const pv = PREVIEW[l.tabla] || PREVIEW.peliculas
@@ -868,6 +890,9 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <button onClick={runQuery} style={{ background: 'var(--nova2)', color: '#fff', border: 'none', borderRadius: 9, padding: '9px 17px', fontWeight: 600, cursor: 'pointer', fontSize: '0.84rem' }}>▶ Ejecutar</button>
               <button onClick={() => setHintOpen(!hintOpen)} style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 9, padding: '8px 15px', color: hintOpen ? 'var(--amber)' : 'var(--sub)', cursor: 'pointer', fontSize: '0.84rem' }}>💡 Pista</button>
+              {(intentos >= 2 || l.dificultad === 'avanzado') && !answered && (
+                <button onClick={nextLesson} style={{ background: 'transparent', border: '1px solid rgba(100,116,139,0.4)', borderRadius: 9, padding: '8px 15px', color: 'var(--sub)', cursor: 'pointer', fontSize: '0.84rem', opacity: 0.8 }} title="Podés continuar sin completar esta lección">Saltar →</button>
+              )}
               {curIdx > 0 && (
                 <button onClick={() => goToLesson(curIdx - 1)} style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 9, padding: '8px 15px', color: 'var(--sub)', cursor: 'pointer', fontSize: '0.84rem' }}>← Anterior</button>
               )}
