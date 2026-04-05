@@ -18,6 +18,11 @@ import {
   GLOSARIO_M7, GLOSARIO_M8,
   RESUMEN_M7, RESUMEN_M8,
 } from '@/lib/curriculum-m7m8'
+import {
+  LECCIONES_M9, LECCIONES_M10,
+  GLOSARIO_M9, GLOSARIO_M10,
+  RESUMEN_M9, RESUMEN_M10,
+} from '@/lib/curriculum-m9m10'
 
 type Prog = Record<string, { completada: boolean; xp_ganado: number }>
 type Vista = 'leccion' | 'resumen' | 'glosario' | 'intro-joins' | 'intro-windows'
@@ -53,6 +58,8 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     if (moduloId === 6) return LECCIONES_M6
     if (moduloId === 7) return LECCIONES_M7
     if (moduloId === 8) return LECCIONES_M8
+    if (moduloId === 9) return LECCIONES_M9
+    if (moduloId === 10) return LECCIONES_M10
     return []
   }
 
@@ -65,6 +72,8 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     if (moduloId === 6) return GLOSARIO_M6
     if (moduloId === 7) return GLOSARIO_M7
     if (moduloId === 8) return GLOSARIO_M8
+    if (moduloId === 9) return GLOSARIO_M9
+    if (moduloId === 10) return GLOSARIO_M10
     return []
   }
 
@@ -77,6 +86,8 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     if (moduloId === 6) return RESUMEN_M6
     if (moduloId === 7) return RESUMEN_M7
     if (moduloId === 8) return RESUMEN_M8
+    if (moduloId === 9) return RESUMEN_M9
+    if (moduloId === 10) return RESUMEN_M10
     return null
   }
 
@@ -89,6 +100,8 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     if (moduloId === 6) return 'Módulo 6 · Subqueries'
     if (moduloId === 7) return 'Módulo 7 · CTEs'
     if (moduloId === 8) return 'Módulo 8 · Window Functions'
+    if (moduloId === 9) return 'Módulo 9 · Optimización'
+    if (moduloId === 10) return 'Módulo 10 · Modo Entrevista'
     return `Módulo ${moduloId}`
   }
 
@@ -508,7 +521,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
   }
 
   // ── MÓDULOS NO DISPONIBLES ──
-  if (![1,2,3,4,5,6,7,8].includes(moduloId)) {
+  if (![1,2,3,4,5,6,7,8,9,10].includes(moduloId)) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', flexDirection: 'column', gap: 16 }}>
         <div style={{ fontSize: '2rem' }}>🚧</div>
@@ -833,6 +846,9 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     choferes: { cols: ['id','nombre','zona','antiguedad_anios'], rows: [[1,'Carlos Díaz','Norte',8],[2,'Laura Martínez','Sur',5],[3,'Miguel Torres','Norte',12]] },
     envios: { cols: ['id','chofer_id','zona','peso_kg','estado'], rows: [[1,1,'Norte',45.5,'completado'],[2,1,'Norte',78.2,'completado'],[3,2,'Sur',23.1,'completado']] },
     ventas: { cols: ['id','vendedor_id','zona','monto','fecha'], rows: [[1,101,'Norte',8500,'2024-01-03'],[2,102,'Sur',12300,'2024-01-05'],[3,103,'Norte',6200,'2024-01-07']] },
+    usuarios: { cols: ['id','nombre','username','email','pais','es_premium'], rows: [[1,'Ana Garcia','anagarcia','ana@mail.com','Argentina',1],[2,'Luis Perez','luisperez','luis@mail.com','Mexico',0]] },
+    posts: { cols: ['id','usuario_id','titulo','categoria','cantidad_likes','fecha'], rows: [[1,1,'Mi primer post','Tech',1200,'2024-01-05'],[2,1,'SQL es increible','Tech',890,'2024-01-15'],[3,2,'Viajando por Mexico','Travel',450,'2024-01-20']] },
+    metricas_red: { cols: ['id','mes','plataforma','likes'], rows: [[1,'2024-01','Instagram',45200],[2,'2024-01','Twitter',18900],[3,'2024-01','Facebook',12400]] },
   }
 
   const pv = PREVIEW[l.tabla] || PREVIEW.peliculas
