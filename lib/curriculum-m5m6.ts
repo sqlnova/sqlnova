@@ -1,15 +1,238 @@
-import LeccionClient from './LeccionClient'
+import type { Leccion, GlosarioItem, ResumenModulo } from './curriculum'
 
-export function generateStaticParams() {
-  return Array.from({ length: 11 }, (_, i) => ({ id: String(i) }))
+export const LECCIONES_M5: Leccion[] = [
+  {
+    id: '05-00', num: 1, titulo: 'CASE WHEN — lógica condicional', tipo: 'escribir',
+    dificultad: 'principiante', xp: 15, tabla: 'transacciones',
+    teoria: '<strong>CASE WHEN</strong> es la forma de escribir lógica condicional en SQL. Funciona como un if/else: evalúa condiciones en orden y devuelve el primer valor cuya condición sea verdadera. La sintaxis es: <code>CASE WHEN condicion1 THEN valor1 WHEN condicion2 THEN valor2 ELSE valor_default END</code>. El ELSE es opcional pero recomendado para no devolver NULL en casos no contemplados.',
+    enunciado: 'Trabajás en el área de analytics de un banco. Necesitás clasificar cada transacción por su monto: <strong>"Alto"</strong> si supera los $10.000, <strong>"Medio"</strong> si está entre $1.000 y $10.000, <strong>"Bajo"</strong> si es menor.\n\nMostrá <strong>id</strong>, <strong>monto</strong> y una columna <strong>categoria</strong> calculada con CASE WHEN desde la tabla <strong>transacciones</strong>.',
+    pista: "CASE WHEN monto > 10000 THEN 'Alto' WHEN monto >= 1000 THEN 'Medio' ELSE 'Bajo' END AS categoria",
+    solucion: "SELECT id, monto, CASE WHEN monto > 10000 THEN 'Alto' WHEN monto >= 1000 THEN 'Medio' ELSE 'Bajo' END AS categoria FROM transacciones",
+  },
+  {
+    id: '05-01', num: 2, titulo: 'COUNT con condición', tipo: 'escribir',
+    dificultad: 'principiante', xp: 15, tabla: 'transacciones',
+    teoria: 'Ya conocés <strong>COUNT(*)</strong>. Ahora podés combinarla con <strong>CASE WHEN</strong> para contar solo los registros que cumplen una condición específica. La sintaxis es: <code>COUNT(CASE WHEN condicion THEN 1 END)</code>. Esto cuenta solo las filas donde la condición es verdadera, ignorando el resto.',
+    enunciado: 'Trabajás en el área de analytics de un banco. Necesitás saber cuántas transacciones fueron de tipo <strong>débito</strong> y cuántas de <strong>crédito</strong> en una sola consulta. Llamá las columnas <strong>"debitos"</strong> y <strong>"creditos"</strong>.\n\nUsá COUNT con CASE WHEN desde la tabla <strong>transacciones</strong>.',
+    pista: "COUNT(CASE WHEN tipo = 'debito' THEN 1 END) AS debitos, COUNT(CASE WHEN tipo = 'credito' THEN 1 END) AS creditos",
+    solucion: "SELECT COUNT(CASE WHEN tipo = 'debito' THEN 1 END) AS debitos, COUNT(CASE WHEN tipo = 'credito' THEN 1 END) AS creditos FROM transacciones",
+  },
+  {
+    id: '05-02', num: 3, titulo: 'SUM condicional', tipo: 'escribir',
+    dificultad: 'principiante', xp: 15, tabla: 'transacciones',
+    teoria: 'De la misma forma que COUNT, podés usar <strong>SUM con CASE WHEN</strong> para sumar solo los valores que cumplen una condición. Esto permite calcular subtotales en una sola consulta sin necesitar múltiples queries.',
+    enunciado: 'El equipo de riesgo necesita ver el monto total de las transacciones <strong>aprobadas</strong> versus las <strong>rechazadas</strong> en una sola fila. Llamá las columnas <strong>"aprobadas"</strong> y <strong>"rechazadas"</strong>.\n\nUsá SUM con CASE WHEN sobre la columna <strong>monto</strong> según el <strong>estado</strong> de cada transacción.',
+    pista: "SUM(CASE WHEN estado = 'aprobada' THEN monto END) AS aprobadas, SUM(CASE WHEN estado = 'rechazada' THEN monto END) AS rechazadas",
+    solucion: "SELECT SUM(CASE WHEN estado = 'aprobada' THEN monto END) AS aprobadas, SUM(CASE WHEN estado = 'rechazada' THEN monto END) AS rechazadas FROM transacciones",
+  },
+  {
+    id: '05-03', num: 4, titulo: 'ROUND — redondear decimales', tipo: 'escribir',
+    dificultad: 'principiante', xp: 15, tabla: 'transacciones',
+    teoria: '<strong>ROUND(numero, decimales)</strong> redondea un número a la cantidad de decimales indicada. Es muy útil cuando AVG devuelve muchos decimales. <code>ROUND(AVG(monto), 2)</code> devuelve el promedio con solo 2 decimales.',
+    enunciado: 'El reporte financiero necesita el monto promedio de las transacciones redondeado a <strong>2 decimales</strong>.\n\nUsá <strong>ROUND</strong> junto con <strong>AVG</strong> sobre la columna <strong>monto</strong> de la tabla <strong>transacciones</strong>. No hace falta un alias específico.',
+    pista: 'SELECT ROUND(AVG(monto), 2) FROM transacciones',
+    solucion: 'SELECT ROUND(AVG(monto), 2) FROM transacciones',
+  },
+  {
+    id: '05-04', num: 5, titulo: 'COALESCE — manejar NULLs', tipo: 'escribir',
+    dificultad: 'principiante', xp: 20, tabla: 'transacciones',
+    teoria: '<strong>COALESCE(valor1, valor2, ...)</strong> devuelve el primer valor que no sea NULL. Es la forma estándar de reemplazar NULLs con un valor por defecto. Por ejemplo, <code>COALESCE(descripcion, "Sin descripción")</code> devuelve "Sin descripción" cuando descripcion es NULL.',
+    enunciado: 'Algunas transacciones no tienen descripción cargada (NULL). Mostrá el <strong>id</strong>, <strong>monto</strong> y <strong>descripción</strong> de cada transacción, pero donde la descripción sea NULL mostrá el texto <strong>"Sin descripción"</strong>.\n\nUsá <strong>COALESCE</strong>.',
+    pista: "COALESCE(descripcion, 'Sin descripción') AS descripcion",
+    solucion: "SELECT id, monto, COALESCE(descripcion, 'Sin descripción') AS descripcion FROM transacciones",
+  },
+
+  {
+    id: '05-06', num: 6, titulo: 'LENGTH y UPPER — funciones de texto', tipo: 'escribir',
+    dificultad: 'intermedio', xp: 20, tabla: 'cuentas',
+    teoria: 'SQL tiene funciones para manipular texto. <strong>LENGTH(texto)</strong> devuelve la cantidad de caracteres. <strong>UPPER(texto)</strong> convierte a mayúsculas. <strong>LOWER(texto)</strong> a minúsculas. <strong>SUBSTR(texto, inicio, largo)</strong> extrae una parte del texto.',
+    enunciado: 'Necesitás un reporte de cuentas con el nombre del titular en mayúsculas y la cantidad de caracteres de su email.\n\nMostrá <strong>cuenta_id</strong>, <strong>UPPER(titular)</strong> como titular y <strong>LENGTH(email)</strong> como largo_email desde la tabla <strong>cuentas</strong>.',
+    pista: 'SELECT cuenta_id, UPPER(titular) AS titular, LENGTH(email) AS largo_email FROM cuentas',
+    solucion: 'SELECT cuenta_id, UPPER(titular) AS titular, LENGTH(email) AS largo_email FROM cuentas',
+  },
+  {
+    id: '05-07', num: 7, titulo: 'Funciones de fecha', tipo: 'escribir',
+    dificultad: 'intermedio', xp: 25, tabla: 'transacciones',
+    teoria: 'SQL tiene funciones para trabajar con fechas. <strong>DATE(fecha)</strong> extrae solo la fecha sin la hora. <strong>strftime(formato, fecha)</strong> formatea una fecha. En SQLite: <code>strftime(\'%Y\', fecha)</code> extrae el año, <code>strftime(\'%m\', fecha)</code> el mes.',
+    enunciado: 'Querés analizar las transacciones por año. Mostrá el <strong>año</strong> de cada transacción y el <strong>total de montos</strong> de ese año, agrupando por año.\n\nUsá <strong>strftime(\'%Y\', fecha)</strong> para extraer el año de la columna <strong>fecha</strong> de transacciones.',
+    pista: "SELECT strftime('%Y', fecha) AS anio, SUM(monto) AS total FROM transacciones GROUP BY anio ORDER BY anio",
+    solucion: "SELECT strftime('%Y', fecha) AS anio, SUM(monto) AS total FROM transacciones GROUP BY anio ORDER BY anio",
+  },
+  {
+    id: '05-08', num: 8, titulo: 'Encontrá el error', tipo: 'debugging',
+    dificultad: 'intermedio', xp: 20, tabla: 'transacciones',
+    teoria: 'Los errores más comunes con funciones de agregación son: usar el alias en el WHERE (no se puede), olvidar el GROUP BY cuando hay columnas no agregadas, o mezclar funciones de agregación con columnas normales sin agrupar.',
+    enunciado: 'Este query tiene un error. Encontralo y corregilo:\n\n<code>SELECT tipo, COUNT(*) AS total FROM transacciones WHERE total > 10</code>',
+    pista: 'No podés usar el alias "total" en el WHERE — el WHERE se evalúa antes de que el alias exista. El filtro sobre un COUNT debe ir en HAVING, después del GROUP BY.',
+    solucion: 'SELECT tipo, COUNT(*) AS total FROM transacciones GROUP BY tipo HAVING COUNT(*) > 10',
+    errorQuery: 'SELECT tipo, COUNT(*) AS total FROM transacciones WHERE total > 10',
+  },
+  {
+    id: '05-09', num: 9, titulo: 'Reporte financiero completo', tipo: 'escribir',
+    dificultad: 'avanzado', xp: 30, tabla: 'transacciones',
+    teoria: 'En la práctica, los reportes financieros combinan múltiples funciones de agregación en una sola consulta. Podés mezclar <strong>COUNT</strong>, <strong>SUM</strong>, <strong>AVG</strong>, <strong>ROUND</strong>, <strong>MAX</strong> y <strong>MIN</strong> en el mismo SELECT junto con GROUP BY.',
+    enunciado: 'El gerente pide un resumen por <strong>tipo</strong> de transacción.\n\nDe la tabla <strong>transacciones</strong> mostrá: tipo, cantidad de transacciones (llamala <strong>"cantidad"</strong>), monto total (<strong>"total"</strong>), promedio redondeado a 2 decimales (<strong>"promedio"</strong>) y el máximo monto (<strong>"maximo"</strong>). Agrupado por tipo.',
+    pista: 'SELECT tipo, COUNT(*) AS cantidad, SUM(monto) AS total, ROUND(AVG(monto), 2) AS promedio, MAX(monto) AS maximo FROM transacciones GROUP BY tipo',
+    solucion: 'SELECT tipo, COUNT(*) AS cantidad, SUM(monto) AS total, ROUND(AVG(monto), 2) AS promedio, MAX(monto) AS maximo FROM transacciones GROUP BY tipo',
+  },
+  {
+    id: '05-10', num: 10, titulo: 'NULLIF — evitar división por cero', tipo: 'escribir',
+    dificultad: 'intermedio', xp: 20, tabla: 'transacciones',
+    teoria: '<strong>NULLIF(a, b)</strong> devuelve NULL si a = b, o devuelve a si son distintos. Su uso más práctico es evitar el error "división por cero". En vez de escribir <code>monto / cantidad</code> (que rompe si cantidad = 0), escribís <code>monto / NULLIF(cantidad, 0)</code>. Si cantidad es 0, el resultado es NULL en vez de un error.',
+    enunciado: 'En la tabla transacciones hay registros por tipo. Calculá el <strong>monto promedio por tipo</strong> de forma segura, usando <code>ROUND(SUM(monto) / NULLIF(COUNT(*), 0), 2)</code> para evitar divisiones por cero.\n\nAgrupá por tipo y llamá al resultado <strong>"promedio_seguro"</strong>.',
+    pista: 'SELECT tipo, ROUND(SUM(monto) / NULLIF(COUNT(*), 0), 2) AS promedio_seguro FROM transacciones GROUP BY tipo',
+    solucion: 'SELECT tipo, ROUND(SUM(monto) / NULLIF(COUNT(*), 0), 2) AS promedio_seguro FROM transacciones GROUP BY tipo',
+  },
+  {
+    id: '05-11', num: 11, titulo: 'Dashboard bancario completo', tipo: 'escribir',
+    dificultad: 'avanzado', xp: 35, tabla: 'transacciones_cuentas',
+    teoria: 'Un dashboard real combina JOINs, funciones de agregación y CASE WHEN. La clave es construirlo por capas: primero el JOIN, luego las columnas calculadas, después el GROUP BY y finalmente el ORDER BY.',
+    enunciado: 'Armá el dashboard mensual del banco.\n\nUnís <strong>transacciones</strong> con <strong>cuentas</strong>. Mostrá el titular, cantidad de transacciones, suma total y clasificá como <strong>"Cliente VIP"</strong> si el total supera $50.000 o <strong>"Regular"</strong> si no, con CASE WHEN. Agrupá por titular y ordená por total DESC.',
+    pista: "SELECT cuentas.titular, SUM(transacciones.monto) AS total, CASE WHEN SUM(transacciones.monto) > 50000 THEN 'Cliente VIP' ELSE 'Regular' END AS categoria FROM transacciones INNER JOIN cuentas ON transacciones.cuenta_id = cuentas.cuenta_id GROUP BY cuentas.titular ORDER BY total DESC",
+    solucion: "SELECT cuentas.titular, SUM(transacciones.monto) AS total, CASE WHEN SUM(transacciones.monto) > 50000 THEN 'Cliente VIP' ELSE 'Regular' END AS categoria FROM transacciones INNER JOIN cuentas ON transacciones.cuenta_id = cuentas.cuenta_id GROUP BY cuentas.titular ORDER BY total DESC",
+  },
+  {
+    id: '05-12', num: 12, titulo: 'Desafío final: análisis de riesgo', tipo: 'escribir',
+    dificultad: 'avanzado', xp: 40, tabla: 'transacciones_cuentas',
+    teoria: 'Combiná todo lo aprendido en el módulo. Los analistas de riesgo necesitan detectar cuentas con comportamiento inusual: muchas transacciones rechazadas o montos muy altos. Recordá que podés combinar múltiples condiciones en el HAVING con OR.',
+    enunciado: 'Identificá <strong>cuentas de riesgo</strong>.\n\nDe transacciones + cuentas, mostrá titular, total de transacciones, porcentaje de rechazadas (ROUND a 1 decimal) y monto máximo. Filtrá con HAVING donde el porcentaje de rechazadas supere el <strong>20%</strong> O el monto máximo supere <strong>$80.000</strong>. Ordenado por porcentaje de rechazadas DESC.',
+    pista: "SELECT cuentas.titular, COUNT(*) AS total_tx, ROUND(COUNT(CASE WHEN estado='rechazada' THEN 1 END)*100.0/NULLIF(COUNT(*),0),1) AS pct_rechazadas, MAX(transacciones.monto) AS monto_maximo FROM transacciones INNER JOIN cuentas ON transacciones.cuenta_id=cuentas.cuenta_id GROUP BY cuentas.titular HAVING pct_rechazadas > 20 OR monto_maximo > 80000 ORDER BY pct_rechazadas DESC",
+    solucion: "SELECT cuentas.titular, COUNT(*) AS total_tx, ROUND(COUNT(CASE WHEN estado='rechazada' THEN 1 END)*100.0/NULLIF(COUNT(*),0),1) AS pct_rechazadas, MAX(transacciones.monto) AS monto_maximo FROM transacciones INNER JOIN cuentas ON transacciones.cuenta_id=cuentas.cuenta_id GROUP BY cuentas.titular HAVING pct_rechazadas > 20 OR monto_maximo > 80000 ORDER BY pct_rechazadas DESC",
+  },
+]
+
+export const LECCIONES_M6: Leccion[] = [
+  {
+    id: '06-01', num: 1, titulo: 'Qué es una subquery', tipo: 'escribir',
+    dificultad: 'principiante', xp: 20, tabla: 'medicos',
+    teoria: 'Una <strong>subquery</strong> es un SELECT dentro de otro SELECT, siempre entre paréntesis. SQL la ejecuta primero y usa su resultado en el query principal.\n\n<strong>Estructura:</strong>\n<code>SELECT columnas FROM tabla\nWHERE columna IN (\n  SELECT columna FROM otra_tabla\n  WHERE condicion\n);</code>\n\n<strong>Cómo se resuelve:</strong>\n1. SQL ejecuta la subquery → obtiene una lista de valores\n2. Usa esa lista en el WHERE del query externo\n3. Devuelve las filas que coinciden',
+    enunciado: 'Trabajás en el sistema de un hospital. Necesitás ver los médicos con más de <strong>5 años de experiencia</strong> que además tienen consultas registradas.\n\nUsá una subquery en el WHERE para obtener primero los ids de médicos de la tabla consultas, y luego filtrá los médicos con anios_experiencia > 5. Mostrá nombre y especialidad.',
+    pista: 'SELECT nombre, especialidad FROM medicos WHERE anios_experiencia > 5 AND id IN (SELECT medico_id FROM consultas)',
+    solucion: 'SELECT nombre, especialidad FROM medicos WHERE anios_experiencia > 5 AND id IN (SELECT medico_id FROM consultas)',
+  },
+  {
+    id: '06-02', num: 2, titulo: 'Subquery escalar', tipo: 'escribir',
+    dificultad: 'principiante', xp: 20, tabla: 'medicos',
+    teoria: 'Cuando una subquery devuelve un solo valor (una fila, una columna), se llama <strong>subquery escalar</strong>. Podés usarla con =, >, <, etc. Por ejemplo: <code>WHERE anios_experiencia > (SELECT AVG(anios_experiencia) FROM medicos)</code> filtra los médicos con más experiencia que el promedio.',
+    enunciado: 'Querés ver los médicos con más años de experiencia que el <strong>promedio del hospital</strong>.\n\nUsá una subquery escalar en el WHERE que calcule el promedio de anios_experiencia, y filtrá los médicos que lo superen. Mostrá nombre, especialidad y anios_experiencia, ordenados de mayor a menor.',
+    pista: 'WHERE anios_experiencia > (SELECT AVG(anios_experiencia) FROM medicos)',
+    solucion: 'SELECT nombre, especialidad, anios_experiencia FROM medicos WHERE anios_experiencia > (SELECT AVG(anios_experiencia) FROM medicos) ORDER BY anios_experiencia DESC',
+  },
+  {
+    id: '06-03', num: 3, titulo: 'Subquery en el FROM', tipo: 'escribir',
+    dificultad: 'intermedio', xp: 25, tabla: 'medicos_consultas',
+    teoria: 'Una subquery en el <strong>FROM</strong> actúa como una tabla temporal. Requiere alias obligatorio.\n\n<strong>Estructura:</strong>\n<code>SELECT col FROM\n  (SELECT col1, COUNT(*) AS n\n   FROM tabla GROUP BY col1) AS sub\nWHERE sub.n > 5;</code>\n\nUsala cuando necesitás calcular algo primero y luego filtrar o agrupar sobre ese resultado — algo imposible con WHERE directo sobre agregaciones.',
+    enunciado: 'Querés ver el promedio de consultas por especialidad médica.\n\nResolvelo en dos pasos dentro del query:\n1. Una subquery en el FROM que cuente consultas por medico_id (alias <strong>sub</strong>)\n2. JOIN con medicos y GROUP BY especialidad\n\nMostrá especialidad y promedio_consultas redondeado a 1 decimal.',
+    pista: 'FROM (SELECT medico_id, COUNT(*) AS total FROM consultas GROUP BY medico_id) AS sub INNER JOIN medicos ON sub.medico_id = medicos.id GROUP BY especialidad',
+    solucion: 'SELECT medicos.especialidad, ROUND(AVG(sub.total), 1) AS promedio_consultas FROM (SELECT medico_id, COUNT(*) AS total FROM consultas GROUP BY medico_id) AS sub INNER JOIN medicos ON sub.medico_id = medicos.id GROUP BY medicos.especialidad',
+  },
+  {
+    id: '06-04', num: 4, titulo: 'EXISTS — verificar existencia', tipo: 'escribir',
+    dificultad: 'intermedio', xp: 25, tabla: 'medicos',
+    teoria: '<strong>EXISTS</strong> devuelve verdadero si la subquery encuentra al menos una fila. En cuanto encuentra la primera, se detiene — por eso es más eficiente que IN.\n\n<strong>Estructura:</strong>\n<code>SELECT columnas FROM tabla_a\nWHERE EXISTS (\n  SELECT 1 FROM tabla_b\n  WHERE tabla_b.fk = tabla_a.id\n);</code>\n\nSe usa SELECT 1 porque solo importa si hay al menos una fila, no el valor en sí.',
+    enunciado: 'Querés ver los médicos que tienen al menos una consulta registrada (no importa cuándo).\n\nUsá <strong>EXISTS</strong> para filtrar los médicos que tengan al menos una fila en <strong>consultas</strong>. Mostrá nombre y especialidad.',
+    pista: 'WHERE EXISTS (SELECT 1 FROM consultas WHERE consultas.medico_id = medicos.id)',
+    solucion: 'SELECT medicos.nombre, medicos.especialidad FROM medicos WHERE EXISTS (SELECT 1 FROM consultas WHERE consultas.medico_id = medicos.id)',
+  },
+  {
+    id: '06-05', num: 5, titulo: 'NOT EXISTS — verificar ausencia', tipo: 'escribir',
+    dificultad: 'intermedio', xp: 25, tabla: 'medicos',
+    teoria: '<strong>NOT EXISTS</strong> devuelve verdadero cuando la subquery NO encuentra ninguna fila. Es el patrón para encontrar registros sin relación.\n\n<strong>Ejemplo visual:</strong>\nMédicos: [Dr. García, Dra. López, Dr. Torres]\nConsultas: [Dr. García ✓, Dr. Torres ✓]\n→ NOT EXISTS devuelve: [Dra. López] (la que no tiene coincidencia)\n\nEquivalente a LEFT JOIN + IS NULL, pero más legible.',
+    enunciado: 'Necesitás identificar los médicos que <strong>no tienen ninguna consulta</strong> registrada en absoluto.\n\nUsá <strong>NOT EXISTS</strong> para filtrar los médicos sin ninguna fila en consultas. Mostrá nombre y especialidad.',
+    pista: 'WHERE NOT EXISTS (SELECT 1 FROM consultas WHERE consultas.medico_id = medicos.id)',
+    solucion: 'SELECT medicos.nombre, medicos.especialidad FROM medicos WHERE NOT EXISTS (SELECT 1 FROM consultas WHERE consultas.medico_id = medicos.id)',
+  },
+  {
+    id: '06-06', num: 6, titulo: 'Subquery correlacionada', tipo: 'escribir',
+    dificultad: 'avanzado', xp: 30, tabla: 'medicos',
+    teoria: 'Una <strong>subquery correlacionada</strong> referencia columnas del query externo y se ejecuta una vez por cada fila.\n\n<strong>Ejemplo:</strong>\n<code>SELECT nombre,\n  (SELECT COUNT(*) FROM pedidos\n   WHERE pedidos.cliente_id = clientes.id) AS total\nFROM clientes;</code>\n\nPara cada cliente, SQL ejecuta la subquery con ese id específico. Son más lentas que los JOINs pero muy expresivas para calcular valores por fila.',
+    enunciado: 'Querés ver cada médico junto con el <strong>total de ingresos</strong> que generó en consultas.\n\nUsá una subquery correlacionada en el SELECT para calcular el total de costo de consultas de cada médico. Mostrá nombre, especialidad y total_generado. Ordená por total_generado DESC.',
+    pista: 'SELECT nombre, (SELECT SUM(costo) FROM consultas WHERE consultas.medico_id = medicos.id) AS total_generado FROM medicos',
+    solucion: 'SELECT medicos.nombre, medicos.especialidad, (SELECT SUM(costo) FROM consultas WHERE consultas.medico_id = medicos.id) AS total_generado FROM medicos ORDER BY total_generado DESC',
+  },
+  {
+    id: '06-07', num: 7, titulo: 'Subquery vs JOIN', tipo: 'escribir',
+    dificultad: 'intermedio', xp: 25, tabla: 'pacientes',
+    teoria: 'Muchas veces podés resolver el mismo problema con una subquery IN o con un INNER JOIN. La diferencia práctica: el JOIN puede duplicar filas si hay múltiples coincidencias (un paciente con varias consultas aparece varias veces). Por eso se agrega DISTINCT. Los JOINs suelen ser más eficientes en tablas grandes.',
+    enunciado: 'Este query usa una subquery. Reescribilo usando un <strong>JOIN</strong> que devuelva el mismo resultado:\n\n<code>SELECT nombre FROM pacientes WHERE id IN (SELECT paciente_id FROM consultas WHERE diagnostico = \'Hipertensión\')</code>',
+    pista: "Reemplazá el IN (subquery) por INNER JOIN consultas ON pacientes.id = consultas.paciente_id WHERE diagnostico = 'Hipertensión'. Usá DISTINCT para evitar duplicados.",
+    solucion: "SELECT DISTINCT pacientes.nombre FROM pacientes INNER JOIN consultas ON pacientes.id = consultas.paciente_id WHERE consultas.diagnostico = 'Hipertensión'",
+  },
+  {
+    id: '06-08', num: 8, titulo: 'Encontrá el error', tipo: 'debugging',
+    dificultad: 'intermedio', xp: 20, tabla: 'medicos',
+    teoria: 'Los errores más comunes en subqueries son: olvidar el alias en subqueries del FROM, usar = cuando la subquery devuelve múltiples filas (debe ser IN), o referenciar columnas que no existen en el scope correcto.',
+    enunciado: 'Este query tiene un error. Encontralo y corregilo:\n\n<code>SELECT * FROM medicos WHERE id = (SELECT id FROM consultas WHERE costo > 1000)</code>',
+    pista: 'La subquery devuelve múltiples ids, no uno solo. No podés usar = con una subquery que retorna varias filas. Cambiá = por IN, y también corregí el nombre de columna.',
+    solucion: 'SELECT * FROM medicos WHERE id IN (SELECT medico_id FROM consultas WHERE costo > 1000)',
+    errorQuery: 'SELECT * FROM medicos WHERE id = (SELECT id FROM consultas WHERE costo > 1000)',
+  },
+  {
+    id: '06-09', num: 9, titulo: 'Clasificación de pacientes', tipo: 'escribir',
+    dificultad: 'avanzado', xp: 30, tabla: 'pacientes',
+    teoria: 'Podés combinar subqueries correlacionadas con CASE WHEN para crear columnas calculadas complejas. La subquery en el SELECT calcula un valor por cada fila del query externo, y CASE WHEN lo clasifica según el resultado.',
+    enunciado: 'Armá un reporte de pacientes con su nivel de atención según cantidad de consultas:\n<strong>"Frecuente"</strong> si tiene más de 3 consultas, <strong>"Normal"</strong> si tiene entre 1 y 3, <strong>"Nuevo"</strong> si no tiene consultas.\n\nUsá una subquery correlacionada con CASE WHEN.',
+    pista: 'CASE WHEN (SELECT COUNT(*) FROM consultas WHERE paciente_id = pacientes.id) > 3 THEN "Frecuente" ...',
+    solucion: "SELECT pacientes.nombre, CASE WHEN (SELECT COUNT(*) FROM consultas WHERE consultas.paciente_id = pacientes.id) > 3 THEN 'Frecuente' WHEN (SELECT COUNT(*) FROM consultas WHERE consultas.paciente_id = pacientes.id) >= 1 THEN 'Normal' ELSE 'Nuevo' END AS nivel FROM pacientes",
+  },
+  {
+    id: '06-10', num: 10, titulo: 'Desafío final: reporte hospitalario', tipo: 'escribir',
+    dificultad: 'avanzado', xp: 40, tabla: 'medicos',
+    teoria: 'Los reportes hospitalarios reales combinan múltiples técnicas. Recordá el orden correcto y construí el query por partes: primero identificá qué tablas necesitás, luego los JOINs, después las funciones de agregación y finalmente los filtros.',
+    enunciado: 'El director médico pide un reporte completo por <strong>especialidad</strong>.\n\nMostrá: especialidad, cantidad de médicos, total de consultas, costo promedio (ROUND a 2 decimales) y una columna <strong>"rendimiento"</strong> que sea <strong>"Alto"</strong> si el promedio supera $5000 o <strong>"Normal"</strong> si no. Ordenado por total de consultas DESC.',
+    pista: "JOIN medicos + consultas, GROUP BY especialidad, CASE WHEN AVG(costo) > 5000 THEN 'Alto' ELSE 'Normal' END",
+    solucion: "SELECT medicos.especialidad, COUNT(DISTINCT medicos.id) AS cantidad_medicos, COUNT(consultas.id) AS total_consultas, ROUND(AVG(consultas.costo), 2) AS costo_promedio, CASE WHEN AVG(consultas.costo) > 5000 THEN 'Alto' ELSE 'Normal' END AS rendimiento FROM medicos LEFT JOIN consultas ON medicos.id = consultas.medico_id GROUP BY medicos.especialidad ORDER BY total_consultas DESC",
+  },
+]
+
+export const GLOSARIO_M5: GlosarioItem[] = [
+  { termino: 'CASE WHEN', descripcion: 'Crea una columna con valores calculados según condiciones. Similar a un if/else.', ejemplo: "CASE WHEN monto > 10000 THEN 'Alta' WHEN monto >= 1000 THEN 'Media' ELSE 'Baja' END" },
+  { termino: 'ROUND()', descripcion: 'Redondea un número a la cantidad de decimales indicada.', ejemplo: 'SELECT ROUND(AVG(monto), 2) AS promedio FROM transacciones' },
+  { termino: 'COALESCE()', descripcion: 'Devuelve el primer valor no NULL de la lista. Útil para valores por defecto.', ejemplo: "COALESCE(descripcion, 'Sin descripción')" },
+  { termino: 'NULLIF()', descripcion: 'Devuelve NULL si ambos argumentos son iguales. Evita divisiones por cero.', ejemplo: 'monto / NULLIF(cantidad, 0)' },
+  { termino: 'COUNT + CASE', descripcion: 'Cuenta solo los registros que cumplen una condición.', ejemplo: "COUNT(CASE WHEN tipo = 'debito' THEN 1 END)" },
+  { termino: 'SUM + CASE', descripcion: 'Suma solo los valores que cumplen una condición.', ejemplo: "SUM(CASE WHEN estado = 'aprobada' THEN monto END)" },
+  { termino: 'LENGTH()', descripcion: 'Devuelve la cantidad de caracteres de un texto.', ejemplo: 'SELECT LENGTH(email) FROM cuentas' },
+  { termino: 'UPPER() / LOWER()', descripcion: 'Convierte texto a mayúsculas o minúsculas.', ejemplo: 'SELECT UPPER(titular) FROM cuentas' },
+  { termino: 'strftime()', descripcion: 'Formatea una fecha. %Y = año, %m = mes, %d = día (SQLite).', ejemplo: "strftime('%Y', fecha) AS anio" },
+]
+
+export const GLOSARIO_M6: GlosarioItem[] = [
+  { termino: 'Subquery', descripcion: 'Un SELECT dentro de otro SELECT. Siempre va entre paréntesis.', ejemplo: 'WHERE id IN (SELECT medico_id FROM consultas WHERE costo > 1000)' },
+  { termino: 'Subquery escalar', descripcion: 'Subquery que devuelve exactamente un valor. Se puede usar con =, >, <.', ejemplo: 'WHERE salario > (SELECT AVG(salario) FROM empleados)' },
+  { termino: 'Tabla derivada', descripcion: 'Subquery en el FROM que actúa como tabla. Requiere alias obligatorio.', ejemplo: 'FROM (SELECT medico_id, COUNT(*) AS total FROM consultas GROUP BY medico_id) AS sub' },
+  { termino: 'EXISTS', descripcion: 'Devuelve verdadero si la subquery retorna al menos una fila. Usa SELECT 1 adentro.', ejemplo: 'WHERE EXISTS (SELECT 1 FROM consultas WHERE consultas.medico_id = medicos.id)' },
+  { termino: 'NOT EXISTS', descripcion: 'Devuelve verdadero si la subquery NO retorna ninguna fila.', ejemplo: 'WHERE NOT EXISTS (SELECT 1 FROM pedidos WHERE pedidos.cliente_id = clientes.id)' },
+  { termino: 'Subquery correlacionada', descripcion: 'Subquery que referencia columnas del query externo. Se ejecuta por cada fila.', ejemplo: '(SELECT SUM(costo) FROM consultas WHERE consultas.medico_id = medicos.id)' },
+  { termino: 'IN vs EXISTS', descripcion: 'IN evalúa todos los resultados. EXISTS se detiene en la primera coincidencia — más eficiente para tablas grandes.', ejemplo: 'WHERE id IN (...) vs WHERE EXISTS (SELECT 1 ...)' },
+]
+
+export const RESUMEN_M5: ResumenModulo = {
+  titulo: 'Lo que aprendiste en Funciones de Agregación',
+  puntos: [
+    'ROUND(numero, decimales) redondea resultados numéricos.',
+    'COALESCE(val1, val2) devuelve el primer valor no NULL.',
+    'NULLIF(a, b) devuelve NULL si a=b — evita divisiones por cero.',
+    'CASE WHEN crea columnas calculadas con lógica condicional.',
+    'COUNT y SUM con CASE WHEN hacen conteos/sumas condicionales.',
+    'LENGTH(), UPPER(), LOWER() manipulan texto.',
+    'strftime() formatea fechas en SQLite.',
+    'Podés combinar todas estas funciones con GROUP BY y HAVING.',
+  ],
+  sintaxis: "SELECT tipo,\n  COUNT(*) AS total,\n  ROUND(AVG(monto), 2) AS promedio,\n  SUM(CASE WHEN estado='aprobada' THEN monto END) AS aprobado,\n  CASE WHEN AVG(monto) > 5000 THEN 'Alto' ELSE 'Normal' END AS nivel\nFROM transacciones\nGROUP BY tipo\nHAVING COUNT(*) > 5",
 }
 
-export default async function LeccionPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
-  const { id } = await params
-  const moduloId = parseInt(id)
-  return <LeccionClient moduloId={moduloId} />
+export const RESUMEN_M6: ResumenModulo = {
+  titulo: 'Lo que aprendiste en Subqueries',
+  puntos: [
+    'Una subquery es un SELECT dentro de otro SELECT, entre paréntesis.',
+    'Subquery escalar: devuelve un valor → usala con =, >, <.',
+    'Subquery con IN: devuelve múltiples valores → nunca uses = con IN.',
+    'Tabla derivada: subquery en el FROM, requiere alias obligatorio.',
+    'EXISTS: verdadero si la subquery retorna al menos una fila.',
+    'NOT EXISTS: verdadero si la subquery NO retorna filas.',
+    'Subquery correlacionada: referencia columnas del query externo.',
+    'Muchas subqueries se pueden reescribir como JOINs y viceversa.',
+  ],
+  sintaxis: '-- Subquery en WHERE\nSELECT * FROM tabla\nWHERE col IN (SELECT col FROM otra WHERE condicion)\n\n-- Tabla derivada\nSELECT * FROM\n  (SELECT col, COUNT(*) AS n FROM tabla GROUP BY col) AS sub\nWHERE sub.n > 5\n\n-- EXISTS\nSELECT * FROM a\nWHERE EXISTS (SELECT 1 FROM b WHERE b.a_id = a.id)',
 }
