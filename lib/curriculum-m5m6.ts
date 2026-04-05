@@ -37,9 +37,9 @@ export const LECCIONES_M5: Leccion[] = [
     id: '05-04', num: 5, titulo: 'COALESCE — manejar NULLs', tipo: 'escribir',
     dificultad: 'principiante', xp: 20, tabla: 'transacciones',
     teoria: '<strong>COALESCE(valor1, valor2, ...)</strong> devuelve el primer valor que no sea NULL. Es la forma estándar de reemplazar NULLs con un valor por defecto. Por ejemplo, <code>COALESCE(descripcion, "Sin descripción")</code> devuelve "Sin descripción" cuando descripcion es NULL.',
-    enunciado: 'Algunas transacciones no tienen descripción cargada (NULL). Mostrá el <strong>id</strong>, <strong>monto</strong> y <strong>descripción</strong> de cada transacción, pero donde la descripción sea NULL mostrá el texto <strong>"Sin descripción"</strong>.\n\nUsá <strong>COALESCE</strong>.',
-    pista: "COALESCE(descripcion, 'Sin descripción') AS descripcion",
-    solucion: "SELECT id, monto, COALESCE(descripcion, 'Sin descripción') AS descripcion FROM transacciones",
+    enunciado: 'Algunas transacciones no tienen el tipo cargado (NULL). Mostrá el <strong>id</strong>, <strong>monto</strong> y <strong>tipo</strong> de cada transacción, pero donde el tipo de transaccion sea NULL mostrá el texto <strong>"Sin tipo"</strong>.\n\nUsá <strong>COALESCE</strong>.',
+    pista: "COALESCE(tipo, 'Sin tipo') AS tipo",
+    solucion: "SELECT id, monto, COALESCE(tipo, 'Sin tipo') AS tipo FROM transacciones",
   },
 
   {
