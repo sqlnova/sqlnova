@@ -518,6 +518,69 @@ INSERT INTO pedidos_restaurante VALUES
 (13,3,'Bebidas','Cerveza artesanal',650,'mediodia','2024-01-13'),
 (14,1,'Principal','Salmón grillado',4200,'noche','2024-01-13'),
 (15,4,'Principal','Pollo al limón',2600,'noche','2024-01-13');
+CREATE TABLE transacciones(id INTEGER PRIMARY KEY,cuenta_id INTEGER,tipo TEXT,monto REAL,estado TEXT,descripcion TEXT,fecha TEXT);
+INSERT INTO transacciones VALUES
+(1,1,'debito',1500.00,'aprobada','Supermercado','2024-01-05'),
+(2,1,'credito',85000.00,'aprobada','Sueldo enero','2024-01-10'),
+(3,2,'debito',3200.50,'aprobada','Alquiler','2024-01-15'),
+(4,2,'debito',450.00,'rechazada',NULL,'2024-01-18'),
+(5,3,'credito',12000.00,'aprobada','Transferencia recibida','2024-01-20'),
+(6,3,'debito',980.00,'aprobada','Farmacia','2024-01-22'),
+(7,1,'debito',67000.00,'aprobada','Auto','2024-02-01'),
+(8,2,'credito',95000.00,'aprobada','Sueldo febrero','2024-02-10'),
+(9,4,'debito',2100.00,'rechazada',NULL,'2024-02-12'),
+(10,4,'debito',560.00,'rechazada',NULL,'2024-02-14'),
+(11,1,'debito',890.00,'aprobada','Restaurant','2024-02-20'),
+(12,3,'debito',15000.00,'aprobada','Electrónica','2024-02-25'),
+(13,5,'credito',120000.00,'aprobada','Sueldo febrero','2024-02-28'),
+(14,5,'debito',4500.00,'aprobada',NULL,'2024-03-05'),
+(15,2,'debito',78000.00,'rechazada',NULL,'2024-03-10');
+
+CREATE TABLE cuentas(cuenta_id INTEGER PRIMARY KEY,titular TEXT,email TEXT,tipo_cuenta TEXT,saldo REAL);
+INSERT INTO cuentas VALUES
+(1,'Lucía Fernández','lucia@banco.com','caja_ahorro',18500.00),
+(2,'Martín García','martin@banco.com','cuenta_corriente',42000.00),
+(3,'Valentina Ruiz','vale@banco.com','caja_ahorro',97500.00),
+(4,'Diego López','diego@banco.com','cuenta_corriente',3200.00),
+(5,'Sofía Martínez','sofia@banco.com','caja_ahorro',215000.00);
+
+CREATE TABLE medicos(id INTEGER PRIMARY KEY,nombre TEXT,especialidad TEXT,anios_experiencia INTEGER,email TEXT);
+INSERT INTO medicos VALUES
+(1,'Dr. Carlos Méndez','Cardiología',15,'cmendez@hospital.com'),
+(2,'Dra. Ana Ramos','Pediatría',8,'aramos@hospital.com'),
+(3,'Dr. Luis Torres','Neurología',22,'ltorres@hospital.com'),
+(4,'Dra. María Silva','Traumatología',4,'msilva@hospital.com'),
+(5,'Dr. Jorge Paz','Cardiología',11,'jpaz@hospital.com'),
+(6,'Dra. Elena Vega','Pediatría',3,'evega@hospital.com');
+
+CREATE TABLE pacientes(id INTEGER PRIMARY KEY,nombre TEXT,edad INTEGER,medico_id INTEGER,diagnostico_principal TEXT);
+INSERT INTO pacientes VALUES
+(1,'Roberto Alvarez',62,1,'Hipertensión'),
+(2,'Carmen Soto',45,2,'Control rutinario'),
+(3,'Pablo Herrera',71,3,'Parkinson'),
+(4,'Marta Iglesias',38,1,'Arritmia'),
+(5,'Fernando Cruz',29,4,'Fractura tobillo'),
+(6,'Gabriela Mora',55,2,'Diabetes'),
+(7,'Héctor Ríos',48,5,'Hipertensión'),
+(8,'Silvia Gómez',33,6,'Control rutinario');
+
+CREATE TABLE consultas(id INTEGER PRIMARY KEY,paciente_id INTEGER,medico_id INTEGER,fecha TEXT,diagnostico TEXT,costo REAL);
+INSERT INTO consultas VALUES
+(1,1,1,'2024-01-08','Hipertensión controlada',4500.00),
+(2,2,2,'2024-01-10','Vacunación',2800.00),
+(3,3,3,'2024-01-12','Control Parkinson',6200.00),
+(4,4,1,'2024-01-15','Arritmia leve',4500.00),
+(5,1,1,'2024-02-05','Hipertensión',4500.00),
+(6,5,4,'2024-02-08','Fractura consolidando',3100.00),
+(7,6,2,'2024-02-10','Diabetes tipo 2',2800.00),
+(8,7,5,'2024-02-12','Hipertensión severa',4800.00),
+(9,3,3,'2024-02-15','Parkinson avanzado',6200.00),
+(10,1,1,'2024-03-01','Hipertensión',4500.00),
+(11,8,6,'2024-03-05','Control anual',2500.00),
+(12,4,1,'2024-03-08','Arritmia controlada',4500.00),
+(13,7,5,'2024-03-10','Hipertensión',4800.00),
+(14,2,2,'2024-03-12','Control desarrollo',2800.00),
+(15,6,2,'2024-03-15','Diabetes controlada',2800.00);
 `
 
 export const INTRO_SLIDES = [
