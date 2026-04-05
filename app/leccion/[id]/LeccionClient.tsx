@@ -857,26 +857,11 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div>
                 <div style={{ fontSize: '0.72rem', color: '#ef4444', marginBottom: 6, fontWeight: 600 }}>❌ Subquery anidada</div>
-                <div style={{ background: '#0b0d14', borderRadius: 6, padding: '8px 10px', fontFamily: 'DM Mono', fontSize: '0.68rem', color: '#94a3b8', lineHeight: 1.8 }}>{'SELECT zona, total
-FROM (
-  SELECT zona,
-  SUM(peso_kg) AS total
-  FROM envios
-  GROUP BY zona
-)
-WHERE total > 500'}</div>
+                <pre style={{ background: '#0b0d14', borderRadius: 6, padding: '8px 10px', fontFamily: 'DM Mono', fontSize: '0.68rem', color: '#94a3b8', lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap' }}>{'SELECT zona, total\nFROM (\n  SELECT zona,\n  SUM(peso_kg) AS total\n  FROM envios\n  GROUP BY zona\n)\nWHERE total > 500'}</pre>
               </div>
               <div>
                 <div style={{ fontSize: '0.72rem', color: '#10b981', marginBottom: 6, fontWeight: 600 }}>✓ Con CTE</div>
-                <div style={{ background: '#0b0d14', borderRadius: 6, padding: '8px 10px', fontFamily: 'DM Mono', fontSize: '0.68rem', color: '#6ee7b7', lineHeight: 1.8 }}>{'WITH totales AS (
-  SELECT zona,
-  SUM(peso_kg) AS total
-  FROM envios
-  GROUP BY zona
-)
-SELECT zona, total
-FROM totales
-WHERE total > 500'}</div>
+                <pre style={{ background: '#0b0d14', borderRadius: 6, padding: '8px 10px', fontFamily: 'DM Mono', fontSize: '0.68rem', color: '#6ee7b7', lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap' }}>{'WITH totales AS (\n  SELECT zona,\n  SUM(peso_kg) AS total\n  FROM envios\n  GROUP BY zona\n)\nSELECT zona, total\nFROM totales\nWHERE total > 500'}</pre>
               </div>
             </div>
           </div>
