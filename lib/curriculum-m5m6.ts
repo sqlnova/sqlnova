@@ -5,10 +5,7 @@ export const LECCIONES_M5: Leccion[] = [
     id: '05-00', num: 1, titulo: 'CASE WHEN — lógica condicional', tipo: 'escribir',
     dificultad: 'principiante', xp: 15, tabla: 'transacciones',
     teoria: '<strong>CASE WHEN</strong> es la forma de escribir lógica condicional en SQL. Funciona como un if/else: evalúa condiciones en orden y devuelve el primer valor cuya condición sea verdadera. La sintaxis es: <code>CASE WHEN condicion1 THEN valor1 WHEN condicion2 THEN valor2 ELSE valor_default END</code>. El ELSE es opcional pero recomendado para no devolver NULL en casos no contemplados.',
-    enunciado: 'Trabajás en el área de analytics de un banco. Necesitás clasificar cada transacción por su monto:
-<strong>"Alto"</strong> si supera los $10.000, <strong>"Medio"</strong> si está entre $1.000 y $10.000, <strong>"Bajo"</strong> si es menor.
-
-Mostrá <strong>id</strong>, <strong>monto</strong> y una columna <strong>categoria</strong> calculada con CASE WHEN desde la tabla <strong>transacciones</strong>.',
+    enunciado: 'Trabajás en el área de analytics de un banco. Necesitás clasificar cada transacción por su monto: <strong>"Alto"</strong> si supera los $10.000, <strong>"Medio"</strong> si está entre $1.000 y $10.000, <strong>"Bajo"</strong> si es menor.\n\nMostrá <strong>id</strong>, <strong>monto</strong> y una columna <strong>categoria</strong> calculada con CASE WHEN desde la tabla <strong>transacciones</strong>.',
     pista: "CASE WHEN monto > 10000 THEN 'Alto' WHEN monto >= 1000 THEN 'Medio' ELSE 'Bajo' END AS categoria",
     solucion: "SELECT id, monto, CASE WHEN monto > 10000 THEN 'Alto' WHEN monto >= 1000 THEN 'Medio' ELSE 'Bajo' END AS categoria FROM transacciones",
   },
