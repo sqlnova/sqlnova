@@ -385,17 +385,17 @@ export const LECCIONES_M3: Leccion[] = [
 export const LECCIONES_M4: Leccion[] = [
   { id: '04-01', num: 1, titulo: 'Contar filas con COUNT', tipo: 'escribir', dificultad: 'principiante', xp: 15, tabla: 'pedidos_restaurante',
     teoria: '<strong>COUNT(*)</strong> cuenta cuántas filas hay en una tabla o grupo. Es la función de agregación más básica. Podés usarla sola para contar todo, o combinada con GROUP BY para contar por categoría.',
-    enunciado: 'Trabajás en el sistema de un restaurante. Querés saber cuántos pedidos hay en total.\n\nUsá <strong>COUNT(*)</strong> para contar todos los registros de la tabla <strong>pedidos_restaurante</strong>, esa nueva columna se deberá llamar total_pedidos.',
+    enunciado: 'Trabajás en el sistema de un restaurante. Querés saber cuántos pedidos hay en total.\n\nUsá <strong>COUNT(*)</strong> para contar todos los registros de la tabla <strong>pedidos_restaurante</strong>.',
     pista: 'SELECT COUNT(*) AS total_pedidos FROM pedidos_restaurante',
     solucion: 'SELECT COUNT(*) AS total_pedidos FROM pedidos_restaurante' },
   { id: '04-02', num: 2, titulo: 'Sumar con SUM', tipo: 'escribir', dificultad: 'principiante', xp: 15, tabla: 'pedidos_restaurante',
     teoria: '<strong>SUM(columna)</strong> suma todos los valores de una columna numérica. Muy útil para calcular totales de ventas, ingresos o cantidades. Si hay NULLs en la columna, SUM los ignora automáticamente.',
-    enunciado: 'El dueño del restaurante quiere saber cuánto dinero entró en total.\n\nUsá <strong>SUM</strong> para calcular el total de la columna <strong>importe</strong> de <strong>pedidos_restaurante</strong>.Renombrala como total_ingresos.',
+    enunciado: 'El dueño del restaurante quiere saber cuánto dinero entró en total.\n\nUsá <strong>SUM</strong> para calcular el total de la columna <strong>importe</strong> de <strong>pedidos_restaurante</strong>.',
     pista: 'SELECT SUM(importe) AS total_ingresos FROM pedidos_restaurante',
     solucion: 'SELECT SUM(importe) AS total_ingresos FROM pedidos_restaurante' },
   { id: '04-03', num: 3, titulo: 'Promedio con AVG', tipo: 'escribir', dificultad: 'principiante', xp: 15, tabla: 'pedidos_restaurante',
     teoria: '<strong>AVG(columna)</strong> calcula el promedio de los valores de una columna numérica. Como SUM, ignora los NULLs en el cálculo. Muy útil para métricas como ticket promedio, calificación promedio o precio medio.',
-    enunciado: 'Querés saber cuál es el importe promedio de los pedidos en el restaurante.\n\nUsá <strong>AVG</strong> sobre la columna <strong>importe</strong> de <strong>pedidos_restaurante</strong>.A la columna resultante renombrala como promedio usando AS.',
+    enunciado: 'Querés saber cuál es el importe promedio de los pedidos en el restaurante.\n\nUsá <strong>AVG</strong> sobre la columna <strong>importe</strong> de <strong>pedidos_restaurante</strong>.',
     pista: 'SELECT AVG(importe) AS promedio FROM pedidos_restaurante',
     solucion: 'SELECT AVG(importe) AS promedio FROM pedidos_restaurante' },
   { id: '04-04', num: 4, titulo: 'Máximo y mínimo', tipo: 'completar', dificultad: 'principiante', xp: 15, tabla: 'pedidos_restaurante',
@@ -407,27 +407,27 @@ export const LECCIONES_M4: Leccion[] = [
     blanks: ['MAX', 'MIN'] },
   { id: '04-05', num: 5, titulo: 'Agrupar con GROUP BY', tipo: 'escribir', dificultad: 'intermedio', xp: 20, tabla: 'pedidos_restaurante',
     teoria: '<strong>GROUP BY</strong> agrupa los registros por los valores de una columna y aplica una función de agregación a cada grupo. La columna del GROUP BY debe aparecer en el SELECT.',
-    enunciado: 'Querés saber cuántos pedidos se hicieron por cada <strong>mesa</strong>.\n\nUsá <strong>COUNT(*) AS pedidos</strong> agrupado por la columna <strong>mesa</strong> de <strong>pedidos_restaurante</strong>.',
+    enunciado: 'Querés saber cuántos pedidos se hicieron por cada <strong>mesa</strong>.\n\nUsá <strong>COUNT(*)</strong> agrupado por la columna <strong>mesa</strong> de <strong>pedidos_restaurante</strong>. Llamá el conteo <strong>"pedidos"</strong>.',
     pista: 'SELECT mesa, COUNT(*) AS pedidos FROM pedidos_restaurante GROUP BY mesa',
     solucion: 'SELECT mesa, COUNT(*) AS pedidos FROM pedidos_restaurante GROUP BY mesa' },
   { id: '04-06', num: 6, titulo: 'GROUP BY con SUM', tipo: 'escribir', dificultad: 'intermedio', xp: 20, tabla: 'pedidos_restaurante',
     teoria: 'Podés combinar GROUP BY con cualquier función de agregación. El resultado es una fila por cada valor único de la columna agrupada, con el resultado de la función aplicada a ese grupo.',
-    enunciado: 'El gerente quiere ver cuánto facturó el restaurante por cada <strong>categoría</strong> de plato.\n\nUsá <strong>SUM(importe)</strong> agrupado por <strong>categoria</strong> de <strong>pedidos_restaurante</strong>.',
+    enunciado: 'El gerente quiere ver cuánto facturó el restaurante por cada <strong>categoría</strong> de plato.\n\nUsá <strong>SUM(importe)</strong> agrupado por <strong>categoria</strong> de <strong>pedidos_restaurante</strong>. Llamá la suma <strong>"total"</strong>.',
     pista: 'SELECT categoria, SUM(importe) AS total FROM pedidos_restaurante GROUP BY categoria',
     solucion: 'SELECT categoria, SUM(importe) AS total FROM pedidos_restaurante GROUP BY categoria' },
   { id: '04-07', num: 7, titulo: 'Filtrar grupos con HAVING', tipo: 'escribir', dificultad: 'intermedio', xp: 25, tabla: 'pedidos_restaurante',
     teoria: '<strong>HAVING</strong> filtra grupos después de que se aplica el GROUP BY. Es como un WHERE pero para grupos. No podés usar WHERE para filtrar resultados de funciones de agregación — tenés que usar HAVING. Siempre va después del GROUP BY.',
-    enunciado: 'Querés ver solo las mesas que generaron más de <strong>$3.000</strong> en total.\n\nAgrupá por <strong>mesa</strong>, sumá el <strong>importe</strong> y filtrá con <strong>HAVING</strong> los grupos cuyo total supere 3000.',
+    enunciado: 'Querés ver solo las mesas que generaron más de <strong>$3.000</strong> en total.\n\nAgrupá por <strong>mesa</strong>, sumá el <strong>importe</strong> (llamalo <strong>"total"</strong>) y filtrá con <strong>HAVING</strong> los grupos cuyo total supere 3000.',
     pista: 'GROUP BY mesa HAVING SUM(importe) > 3000',
     solucion: 'SELECT mesa, SUM(importe) AS total FROM pedidos_restaurante GROUP BY mesa HAVING SUM(importe) > 3000' },
   { id: '04-08', num: 8, titulo: 'WHERE vs HAVING', tipo: 'escribir', dificultad: 'intermedio', xp: 25, tabla: 'pedidos_restaurante',
     teoria: 'La diferencia clave: <strong>WHERE</strong> filtra filas <em>antes</em> de agrupar. <strong>HAVING</strong> filtra grupos <em>después</em> de agrupar. Podés usarlos juntos: WHERE reduce las filas que entran al GROUP BY, y HAVING filtra los grupos resultantes.',
     enunciado: 'Querés analizar solo los pedidos del <strong>turno noche</strong> y ver qué mesas superaron los <strong>$2.000</strong>.\n\nFiltrá primero con <strong>WHERE turno = "noche"</strong>, agrupá por mesa y usá <strong>HAVING</strong> para filtrar los grupos.',
-    pista: "SELECT mesa, SUM(importe) AS total FROM pedidos_restaurante WHERE turno = 'noche' GROUP BY mesa HAVING SUM(importe) > 2000",
+    pista: "WHERE turno = 'noche' GROUP BY mesa HAVING SUM(importe) > 2000",
     solucion: "SELECT mesa, SUM(importe) AS total FROM pedidos_restaurante WHERE turno = 'noche' GROUP BY mesa HAVING SUM(importe) > 2000" },
   { id: '04-09', num: 9, titulo: 'Ranking con ORDER BY', tipo: 'escribir', dificultad: 'intermedio', xp: 20, tabla: 'pedidos_restaurante',
     teoria: 'Podés ordenar los resultados de un GROUP BY con ORDER BY. El ORDER BY se aplica al final, después del GROUP BY y el HAVING. Podés ordenar por la columna agrupada o por el resultado de la función de agregación.',
-    enunciado: 'Querés un ranking de categorías por ingresos, de mayor a menor.\n\nAgrupá por <strong>categoria</strong>, sumá el <strong>importe</strong>, renombralo como <strong>total</strong> y ordená el resultado de <strong>mayor a menor</strong> por el total.',
+    enunciado: 'Querés un ranking de categorías por ingresos, de mayor a menor.\n\nAgrupá por <strong>categoria</strong>, sumá el <strong>importe</strong> (llamalo <strong>"total"</strong>) y ordená el resultado de mayor a menor por ese total.',
     pista: 'GROUP BY categoria ORDER BY total DESC — podés usar el alias en el ORDER BY',
     solucion: 'SELECT categoria, SUM(importe) AS total FROM pedidos_restaurante GROUP BY categoria ORDER BY total DESC' },
   { id: '04-10', num: 10, titulo: 'Desafío final: reporte mensual', tipo: 'escribir', dificultad: 'avanzado', xp: 35, tabla: 'pedidos_restaurante',
@@ -581,6 +581,37 @@ INSERT INTO consultas VALUES
 (13,7,5,'2024-03-10','Hipertensión',4800.00),
 (14,2,2,'2024-03-12','Control desarrollo',2800.00),
 (15,6,2,'2024-03-15','Diabetes controlada',2800.00);
+
+CREATE TABLE choferes(id INTEGER PRIMARY KEY,nombre TEXT,zona TEXT,antiguedad_anios INTEGER);
+INSERT INTO choferes VALUES
+(1,'Carlos Díaz','Norte',8),(2,'Laura Martínez','Sur',5),(3,'Miguel Torres','Norte',12),
+(4,'Sofía Ruiz','Este',3),(5,'Pablo García','Sur',9),(6,'Ana López','Oeste',6);
+
+CREATE TABLE envios(id INTEGER PRIMARY KEY,chofer_id INTEGER,zona TEXT,peso_kg REAL,estado TEXT,fecha TEXT);
+INSERT INTO envios VALUES
+(1,1,'Norte',45.5,'completado','2024-01-05'),(2,1,'Norte',78.2,'completado','2024-01-06'),
+(3,2,'Sur',23.1,'completado','2024-01-07'),(4,3,'Norte',95.0,'completado','2024-01-08'),
+(5,3,'Norte',110.5,'completado','2024-01-09'),(6,4,'Este',34.8,'pendiente','2024-01-10'),
+(7,2,'Sur',67.3,'completado','2024-01-11'),(8,5,'Sur',88.9,'completado','2024-01-12'),
+(9,1,'Norte',52.4,'completado','2024-01-13'),(10,6,'Oeste',41.2,'completado','2024-01-14'),
+(11,3,'Norte',73.6,'completado','2024-01-15'),(12,4,'Este',29.9,'completado','2024-01-16'),
+(13,5,'Sur',91.4,'completado','2024-01-17'),(14,2,'Sur',44.7,'pendiente','2024-01-18'),
+(15,6,'Oeste',58.3,'completado','2024-01-19'),(16,1,'Norte',82.1,'completado','2024-01-20'),
+(17,3,'Norte',66.8,'completado','2024-01-21'),(18,5,'Sur',77.2,'completado','2024-01-22'),
+(19,4,'Este',55.0,'completado','2024-01-23'),(20,6,'Oeste',93.7,'completado','2024-01-24');
+
+CREATE TABLE ventas(id INTEGER PRIMARY KEY,vendedor_id INTEGER,zona TEXT,monto REAL,fecha TEXT);
+INSERT INTO ventas VALUES
+(1,101,'Norte',8500,'2024-01-03'),(2,102,'Sur',12300,'2024-01-05'),
+(3,103,'Norte',6200,'2024-01-07'),(4,101,'Norte',15800,'2024-01-10'),
+(5,104,'Este',9400,'2024-01-12'),(6,102,'Sur',7100,'2024-01-14'),
+(7,103,'Norte',18200,'2024-01-16'),(8,105,'Oeste',11600,'2024-01-18'),
+(9,101,'Norte',6800,'2024-01-20'),(10,104,'Este',14200,'2024-01-22'),
+(11,102,'Sur',9800,'2024-01-24'),(12,105,'Oeste',7500,'2024-01-26'),
+(13,103,'Norte',21000,'2024-01-28'),(14,101,'Norte',4300,'2024-02-01'),
+(15,104,'Este',16700,'2024-02-03'),(16,102,'Sur',13400,'2024-02-05'),
+(17,105,'Oeste',8900,'2024-02-07'),(18,103,'Norte',11300,'2024-02-09'),
+(19,101,'Norte',19600,'2024-02-11'),(20,104,'Este',5800,'2024-02-13');
 `
 
 export const INTRO_SLIDES = [

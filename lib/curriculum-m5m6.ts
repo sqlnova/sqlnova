@@ -2,45 +2,49 @@ import type { Leccion, GlosarioItem, ResumenModulo } from './curriculum'
 
 export const LECCIONES_M5: Leccion[] = [
   {
-    id: '05-01', num: 1, titulo: 'COUNT con condición', tipo: 'escribir',
+    id: '05-00', num: 1, titulo: 'CASE WHEN — lógica condicional', tipo: 'escribir',
+    dificultad: 'principiante', xp: 15, tabla: 'transacciones',
+    teoria: '<strong>CASE WHEN</strong> es la forma de escribir lógica condicional en SQL. Funciona como un if/else: evalúa condiciones en orden y devuelve el primer valor cuya condición sea verdadera. La sintaxis es: <code>CASE WHEN condicion1 THEN valor1 WHEN condicion2 THEN valor2 ELSE valor_default END</code>. El ELSE es opcional pero recomendado para no devolver NULL en casos no contemplados.',
+    enunciado: 'Trabajás en el área de analytics de un banco. Necesitás clasificar cada transacción por su monto:
+<strong>"Alto"</strong> si supera los $10.000, <strong>"Medio"</strong> si está entre $1.000 y $10.000, <strong>"Bajo"</strong> si es menor.
+
+Mostrá <strong>id</strong>, <strong>monto</strong> y una columna <strong>categoria</strong> calculada con CASE WHEN desde la tabla <strong>transacciones</strong>.',
+    pista: "CASE WHEN monto > 10000 THEN 'Alto' WHEN monto >= 1000 THEN 'Medio' ELSE 'Bajo' END AS categoria",
+    solucion: "SELECT id, monto, CASE WHEN monto > 10000 THEN 'Alto' WHEN monto >= 1000 THEN 'Medio' ELSE 'Bajo' END AS categoria FROM transacciones",
+  },
+  {
+    id: '05-01', num: 2, titulo: 'COUNT con condición', tipo: 'escribir',
     dificultad: 'principiante', xp: 15, tabla: 'transacciones',
     teoria: 'Ya conocés <strong>COUNT(*)</strong>. Ahora podés combinarla con <strong>CASE WHEN</strong> para contar solo los registros que cumplen una condición específica. La sintaxis es: <code>COUNT(CASE WHEN condicion THEN 1 END)</code>. Esto cuenta solo las filas donde la condición es verdadera, ignorando el resto.',
-    enunciado: 'Trabajás en el área de analytics de un banco. Necesitás saber cuántas transacciones fueron de tipo <strong>débito</strong> y cuántas de <strong>crédito</strong> en una sola consulta.\n\nUsá COUNT con CASE WHEN para mostrar ambos conteos desde la tabla <strong>transacciones</strong>.',
+    enunciado: 'Trabajás en el área de analytics de un banco. Necesitás saber cuántas transacciones fueron de tipo <strong>débito</strong> y cuántas de <strong>crédito</strong> en una sola consulta. Llamá las columnas <strong>"debitos"</strong> y <strong>"creditos"</strong>.\n\nUsá COUNT con CASE WHEN desde la tabla <strong>transacciones</strong>.',
     pista: "COUNT(CASE WHEN tipo = 'debito' THEN 1 END) AS debitos, COUNT(CASE WHEN tipo = 'credito' THEN 1 END) AS creditos",
     solucion: "SELECT COUNT(CASE WHEN tipo = 'debito' THEN 1 END) AS debitos, COUNT(CASE WHEN tipo = 'credito' THEN 1 END) AS creditos FROM transacciones",
   },
   {
-    id: '05-02', num: 2, titulo: 'SUM condicional', tipo: 'escribir',
+    id: '05-02', num: 3, titulo: 'SUM condicional', tipo: 'escribir',
     dificultad: 'principiante', xp: 15, tabla: 'transacciones',
     teoria: 'De la misma forma que COUNT, podés usar <strong>SUM con CASE WHEN</strong> para sumar solo los valores que cumplen una condición. Esto permite calcular subtotales en una sola consulta sin necesitar múltiples queries.',
-    enunciado: 'El equipo de riesgo necesita ver el monto total de las transacciones <strong>aprobadas</strong> versus las <strong>rechazadas</strong> en una sola fila.\n\nUsá SUM con CASE WHEN sobre la columna <strong>monto</strong> según el <strong>estado</strong> de cada transacción.',
+    enunciado: 'El equipo de riesgo necesita ver el monto total de las transacciones <strong>aprobadas</strong> versus las <strong>rechazadas</strong> en una sola fila. Llamá las columnas <strong>"aprobadas"</strong> y <strong>"rechazadas"</strong>.\n\nUsá SUM con CASE WHEN sobre la columna <strong>monto</strong> según el <strong>estado</strong> de cada transacción.',
     pista: "SUM(CASE WHEN estado = 'aprobada' THEN monto END) AS aprobadas, SUM(CASE WHEN estado = 'rechazada' THEN monto END) AS rechazadas",
     solucion: "SELECT SUM(CASE WHEN estado = 'aprobada' THEN monto END) AS aprobadas, SUM(CASE WHEN estado = 'rechazada' THEN monto END) AS rechazadas FROM transacciones",
   },
   {
-    id: '05-03', num: 3, titulo: 'ROUND — redondear decimales', tipo: 'escribir',
+    id: '05-03', num: 4, titulo: 'ROUND — redondear decimales', tipo: 'escribir',
     dificultad: 'principiante', xp: 15, tabla: 'transacciones',
     teoria: '<strong>ROUND(numero, decimales)</strong> redondea un número a la cantidad de decimales indicada. Es muy útil cuando AVG devuelve muchos decimales. <code>ROUND(AVG(monto), 2)</code> devuelve el promedio con solo 2 decimales.',
-    enunciado: 'El reporte financiero necesita el monto promedio de las transacciones redondeado a <strong>2 decimales</strong>.\n\nUsá <strong>ROUND</strong> junto con <strong>AVG</strong> sobre la columna <strong>monto</strong> de la tabla <strong>transacciones</strong>.',
-    pista: 'SELECT ROUND(AVG(monto), 2) AS promedio FROM transacciones',
-    solucion: 'SELECT ROUND(AVG(monto), 2) AS promedio FROM transacciones',
+    enunciado: 'El reporte financiero necesita el monto promedio de las transacciones redondeado a <strong>2 decimales</strong>.\n\nUsá <strong>ROUND</strong> junto con <strong>AVG</strong> sobre la columna <strong>monto</strong> de la tabla <strong>transacciones</strong>. No hace falta un alias específico.',
+    pista: 'SELECT ROUND(AVG(monto), 2) FROM transacciones',
+    solucion: 'SELECT ROUND(AVG(monto), 2) FROM transacciones',
   },
   {
-    id: '05-04', num: 4, titulo: 'COALESCE — manejar NULLs', tipo: 'escribir',
+    id: '05-04', num: 5, titulo: 'COALESCE — manejar NULLs', tipo: 'escribir',
     dificultad: 'principiante', xp: 20, tabla: 'transacciones',
     teoria: '<strong>COALESCE(valor1, valor2, ...)</strong> devuelve el primer valor que no sea NULL. Es la forma estándar de reemplazar NULLs con un valor por defecto. Por ejemplo, <code>COALESCE(descripcion, "Sin descripción")</code> devuelve "Sin descripción" cuando descripcion es NULL.',
     enunciado: 'Algunas transacciones no tienen descripción cargada (NULL). Mostrá el <strong>id</strong>, <strong>monto</strong> y <strong>descripción</strong> de cada transacción, pero donde la descripción sea NULL mostrá el texto <strong>"Sin descripción"</strong>.\n\nUsá <strong>COALESCE</strong>.',
     pista: "COALESCE(descripcion, 'Sin descripción') AS descripcion",
     solucion: "SELECT id, monto, COALESCE(descripcion, 'Sin descripción') AS descripcion FROM transacciones",
   },
-  {
-    id: '05-05', num: 5, titulo: 'CASE WHEN — columna calculada', tipo: 'escribir',
-    dificultad: 'intermedio', xp: 20, tabla: 'transacciones',
-    teoria: '<strong>CASE WHEN</strong> permite crear una columna nueva con valores calculados según condiciones. Es como un if/else en SQL. La sintaxis completa es: <code>CASE WHEN condicion1 THEN valor1 WHEN condicion2 THEN valor2 ELSE valor_default END</code>.',
-    enunciado: 'Necesitás clasificar cada transacción por su monto:\n<strong>"Alta"</strong> si supera los $10.000, <strong>"Media"</strong> si está entre $1.000 y $10.000, <strong>"Baja"</strong> si es menor.\n\nMostrá <strong>id</strong>, <strong>monto</strong> y una columna llamada <strong>categoria</strong> calculada con CASE WHEN.',
-    pista: "CASE WHEN monto > 10000 THEN 'Alta' WHEN monto >= 1000 THEN 'Media' ELSE 'Baja' END AS categoria",
-    solucion: "SELECT id, monto, CASE WHEN monto > 10000 THEN 'Alta' WHEN monto >= 1000 THEN 'Media' ELSE 'Baja' END AS categoria FROM transacciones",
-  },
+
   {
     id: '05-06', num: 6, titulo: 'LENGTH y UPPER — funciones de texto', tipo: 'escribir',
     dificultad: 'intermedio', xp: 20, tabla: 'cuentas',
@@ -70,7 +74,7 @@ export const LECCIONES_M5: Leccion[] = [
     id: '05-09', num: 9, titulo: 'Reporte financiero completo', tipo: 'escribir',
     dificultad: 'avanzado', xp: 30, tabla: 'transacciones',
     teoria: 'En la práctica, los reportes financieros combinan múltiples funciones de agregación en una sola consulta. Podés mezclar <strong>COUNT</strong>, <strong>SUM</strong>, <strong>AVG</strong>, <strong>ROUND</strong>, <strong>MAX</strong> y <strong>MIN</strong> en el mismo SELECT junto con GROUP BY.',
-    enunciado: 'El gerente pide un resumen por <strong>tipo</strong> de transacción.\n\nDe la tabla <strong>transacciones</strong> mostrá: tipo, cantidad de transacciones (COUNT), monto total (SUM), promedio redondeado a 2 decimales (ROUND + AVG) y el máximo monto (MAX). Agrupado por tipo.',
+    enunciado: 'El gerente pide un resumen por <strong>tipo</strong> de transacción.\n\nDe la tabla <strong>transacciones</strong> mostrá: tipo, cantidad de transacciones (llamala <strong>"cantidad"</strong>), monto total (<strong>"total"</strong>), promedio redondeado a 2 decimales (<strong>"promedio"</strong>) y el máximo monto (<strong>"maximo"</strong>). Agrupado por tipo.',
     pista: 'SELECT tipo, COUNT(*) AS cantidad, SUM(monto) AS total, ROUND(AVG(monto), 2) AS promedio, MAX(monto) AS maximo FROM transacciones GROUP BY tipo',
     solucion: 'SELECT tipo, COUNT(*) AS cantidad, SUM(monto) AS total, ROUND(AVG(monto), 2) AS promedio, MAX(monto) AS maximo FROM transacciones GROUP BY tipo',
   },

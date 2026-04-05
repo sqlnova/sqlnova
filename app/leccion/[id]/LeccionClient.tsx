@@ -13,9 +13,14 @@ import {
   GLOSARIO_M5, GLOSARIO_M6,
   RESUMEN_M5, RESUMEN_M6,
 } from '@/lib/curriculum-m5m6'
+import {
+  LECCIONES_M7, LECCIONES_M8,
+  GLOSARIO_M7, GLOSARIO_M8,
+  RESUMEN_M7, RESUMEN_M8,
+} from '@/lib/curriculum-m7m8'
 
 type Prog = Record<string, { completada: boolean; xp_ganado: number }>
-type Vista = 'leccion' | 'resumen' | 'glosario' | 'intro-joins'
+type Vista = 'leccion' | 'resumen' | 'glosario' | 'intro-joins' | 'intro-windows'
 
 export default function LeccionClient({ moduloId }: { moduloId: number }) {
   const router = useRouter()
@@ -46,6 +51,8 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     if (moduloId === 4) return LECCIONES_M4
     if (moduloId === 5) return LECCIONES_M5
     if (moduloId === 6) return LECCIONES_M6
+    if (moduloId === 7) return LECCIONES_M7
+    if (moduloId === 8) return LECCIONES_M8
     return []
   }
 
@@ -56,6 +63,8 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     if (moduloId === 4) return GLOSARIO_M4
     if (moduloId === 5) return GLOSARIO_M5
     if (moduloId === 6) return GLOSARIO_M6
+    if (moduloId === 7) return GLOSARIO_M7
+    if (moduloId === 8) return GLOSARIO_M8
     return []
   }
 
@@ -66,6 +75,8 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     if (moduloId === 4) return RESUMEN_M4
     if (moduloId === 5) return RESUMEN_M5
     if (moduloId === 6) return RESUMEN_M6
+    if (moduloId === 7) return RESUMEN_M7
+    if (moduloId === 8) return RESUMEN_M8
     return null
   }
 
@@ -76,6 +87,8 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     if (moduloId === 4) return 'Módulo 4 · GROUP BY & Agregados'
     if (moduloId === 5) return 'Módulo 5 · Funciones de Agregación'
     if (moduloId === 6) return 'Módulo 6 · Subqueries'
+    if (moduloId === 7) return 'Módulo 7 · CTEs'
+    if (moduloId === 8) return 'Módulo 8 · Window Functions'
     return `Módulo ${moduloId}`
   }
 
@@ -122,6 +135,9 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
         setCurIdx(Math.min(done, lecciones.length - 1))
         if (moduloId === 3 && done === 0) {
           setVista('intro-joins')
+        }
+        if (moduloId === 8 && done === 0) {
+          setVista('intro-windows')
         }
       }
 
@@ -213,10 +229,17 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
         const sRows = JSON.stringify(solRes[0].values)
         const uCols = JSON.stringify(res[0].columns.map((c: string) => c.toLowerCase()))
         const sCols = JSON.stringify(solRes[0].columns.map((c: string) => c.toLowerCase()))
-        const exact = uRows === sRows && uCols === sCols
-        const normMatch = normalize(q) === normalize(l.solucion)
 
-        if (exact || normMatch) {
+        // Coincidencia exacta: mismos valores Y mismos nombres de columna
+        const exact = uRows === sRows && uCols === sCols
+        // Coincidencia de texto normalizado
+        const normMatch = normalize(q) === normalize(l.solucion)
+        // Coincidencia flexible: mismos valores, misma cantidad de columnas
+        // (acepta aliases distintos — el usuario no tiene por qué saber el alias exacto)
+        const sameColCount = res[0].columns.length === solRes[0].columns.length
+        const flexMatch = uRows === sRows && sameColCount
+
+        if (exact || normMatch || flexMatch) {
           setAnswered(true)
           setJustAnswered(true)
           if (!prog[l.id]?.completada) {
@@ -485,7 +508,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
   }
 
   // ── MÓDULOS NO DISPONIBLES ──
-  if (![1,2,3,4,5,6].includes(moduloId)) {
+  if (![1,2,3,4,5,6,7,8].includes(moduloId)) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', flexDirection: 'column', gap: 16 }}>
         <div style={{ fontSize: '2rem' }}>🚧</div>
@@ -501,6 +524,62 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
   const total = lecciones.length
   const l = lecciones[curIdx]
   const pct = Math.round(((curIdx + 1) / total) * 100)
+
+  // ── VISTA INTRO WINDOWS ──
+  if (vista === 'intro-windows') {
+    const concepts = [
+      { nombre: 'OVER()', color: '#3b82f6', desc: 'Define la ventana. OVER() vacío = todas las filas. No colapsa el resultado como GROUP BY.', ej: 'SUM(monto) OVER()' },
+      { nombre: 'PARTITION BY', color: '#10b981', desc: 'Divide la ventana en grupos. Cada fila mantiene su identidad y ve el resultado de su grupo.', ej: 'SUM(monto) OVER(PARTITION BY zona)' },
+      { nombre: 'ORDER BY en OVER', color: '#f59e0b', desc: 'Define el orden dentro de la ventana. Habilita rankings y sumas acumuladas.', ej: 'ROW_NUMBER() OVER(ORDER BY monto DESC)' },
+      { nombre: 'ROWS BETWEEN', color: '#a78bfa', desc: 'Ventana deslizante. ROWS BETWEEN 2 PRECEDING AND CURRENT ROW = fila actual + 2 anteriores.', ej: 'AVG(monto) OVER(ORDER BY fecha ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)' },
+    ]
+    const funcs = [
+      ['ROW_NUMBER()', 'Número único por fila', '1, 2, 3, 4...'],
+      ['RANK()', 'Ranking con huecos en empates', '1, 1, 3, 4...'],
+      ['DENSE_RANK()', 'Ranking sin huecos', '1, 1, 2, 3...'],
+      ['LAG(col)', 'Valor de la fila anterior', 'NULL, 100, 200...'],
+      ['LEAD(col)', 'Valor de la fila siguiente', '200, 300, NULL...'],
+      ['NTILE(n)', 'Divide en n grupos iguales', '1, 1, 2, 2, 3...'],
+    ]
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
+        <TopBar title="Tipos de Window Functions" module={getModuloLabel()} prog="Intro" onBack={() => router.replace('/dashboard')} />
+        <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 26px) clamp(14px, 4vw, 20px)', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
+          <div style={{ background: 'rgba(77,166,255,0.06)', borderLeft: '3px solid rgba(77,166,255,0.6)', borderRadius: '0 10px 10px 0', padding: '14px 18px', marginBottom: 20, fontSize: '0.9rem', color: '#c8d8f0', lineHeight: 1.8, textAlign: 'justify' }}>
+            Las <strong>Window Functions</strong> calculan valores sobre un conjunto de filas relacionadas <strong>sin eliminar filas del resultado</strong>. A diferencia de GROUP BY que colapsa las filas en una por grupo, las window functions agregan una columna calculada a cada fila existente.
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 20 }}>
+            {concepts.map(c => (
+              <div key={c.nombre} style={{ background: 'var(--card)', border: `1px solid ${c.color}30`, borderRadius: 12, overflow: 'hidden' }}>
+                <div style={{ background: `${c.color}15`, padding: '8px 14px', borderBottom: `1px solid ${c.color}20` }}>
+                  <div style={{ fontFamily: 'DM Mono', fontSize: '0.8rem', fontWeight: 700, color: c.color }}>{c.nombre}</div>
+                </div>
+                <div style={{ padding: '12px 14px' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#c8d8f0', lineHeight: 1.6, marginBottom: 8, textAlign: 'justify' }}>{c.desc}</div>
+                  <div style={{ background: '#0b0d14', borderRadius: 6, padding: '6px 10px', fontFamily: 'DM Mono', fontSize: '0.72rem', color: '#6ee7b7' }}>{c.ej}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden', marginBottom: 20 }}>
+            <div style={{ padding: '10px 16px', borderBottom: '1px solid var(--border)', fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--sub)' }}>Funciones disponibles</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)' }}>
+              {funcs.map(([fn, desc, ej], i) => (
+                <div key={fn} style={{ padding: '10px 14px', borderBottom: i < funcs.length - 2 ? '1px solid var(--border)' : 'none', borderRight: i % 2 === 0 ? '1px solid var(--border)' : 'none' }}>
+                  <div style={{ fontFamily: 'DM Mono', fontSize: '0.78rem', fontWeight: 700, color: 'var(--nova)', marginBottom: 3 }}>{fn}</div>
+                  <div style={{ fontSize: '0.73rem', color: '#c8d8f0', marginBottom: 2 }}>{desc}</div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--sub)', fontFamily: 'DM Mono' }}>{ej}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <button onClick={() => { setVista('leccion'); setCurIdx(0) }} style={{ background: 'var(--nova2)', color: '#fff', border: 'none', borderRadius: 9, padding: '11px 24px', fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem', width: '100%' }}>
+            Empezar las lecciones →
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   // ── VISTA INTRO JOINS ──
   if (vista === 'intro-joins') {
@@ -751,6 +830,9 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     medicos: { cols: ['id','nombre','especialidad','anios_experiencia'], rows: [[1,'Dr. Carlos Méndez','Cardiología',15],[2,'Dra. Ana Ramos','Pediatría',8],[3,'Dr. Luis Torres','Neurología',22]] },
     pacientes: { cols: ['id','nombre','edad','medico_id','diagnostico_principal'], rows: [[1,'Roberto Alvarez',62,1,'Hipertensión'],[2,'Carmen Soto',45,2,'Control rutinario'],[3,'Pablo Herrera',71,3,'Parkinson']] },
     consultas: { cols: ['id','paciente_id','medico_id','diagnostico','costo'], rows: [[1,1,1,'Hipertensión controlada',4500],[2,2,2,'Vacunación',2800],[3,3,3,'Control Parkinson',6200]] },
+    choferes: { cols: ['id','nombre','zona','antiguedad_anios'], rows: [[1,'Carlos Díaz','Norte',8],[2,'Laura Martínez','Sur',5],[3,'Miguel Torres','Norte',12]] },
+    envios: { cols: ['id','chofer_id','zona','peso_kg','estado'], rows: [[1,1,'Norte',45.5,'completado'],[2,1,'Norte',78.2,'completado'],[3,2,'Sur',23.1,'completado']] },
+    ventas: { cols: ['id','vendedor_id','zona','monto','fecha'], rows: [[1,101,'Norte',8500,'2024-01-03'],[2,102,'Sur',12300,'2024-01-05'],[3,103,'Norte',6200,'2024-01-07']] },
   }
 
   const pv = PREVIEW[l.tabla] || PREVIEW.peliculas
@@ -786,11 +868,11 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               </button>
             )
           })}
-          {moduloId === 3 && (
+          {(moduloId === 3 || moduloId === 8) && (
             <button
-              onClick={() => setVista('intro-joins')}
+              onClick={() => setVista(moduloId === 3 ? 'intro-joins' : 'intro-windows')}
               style={{ padding: '0 10px', height: 32, borderRadius: 8, border: '1px solid rgba(77,166,255,0.3)', background: 'rgba(77,166,255,0.08)', color: 'var(--nova)', fontSize: '0.75rem', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}
-            >⬤⬤ JOINs</button>
+            >{moduloId === 3 ? '⬤⬤ JOINs' : '⬤ OVER()'}</button>
           )}
           <div style={{ marginLeft: 'auto', flexShrink: 0 }}>
             <button
