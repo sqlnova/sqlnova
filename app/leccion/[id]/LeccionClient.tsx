@@ -296,7 +296,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
         <TopBar title={slide.titulo} module="Módulo 0 · Introducción" prog={`${curSlide + 1} / ${total}`} onBack={() => router.replace('/dashboard')} />
-        <div style={{ flex: 1, padding: '28px 20px', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
+        <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 28px) clamp(14px, 4vw, 20px)', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
           <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 15, overflow: 'hidden' }}>
             <div style={{ padding: '20px 20px 0' }}>
 
@@ -332,12 +332,14 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
 
               {/* Apps grid */}
               {slide.tipo === 'apps' && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginBottom: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10, marginBottom: 16 }}>
                   {[['🏦','Bancos','Movimientos y saldos'],['🛒','Tiendas online','Productos y pedidos'],['📱','Redes sociales','Perfiles y posts'],['🏥','Hospitales','Historias clínicas']].map(([ico,n,d]) => (
-                    <div key={n} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 10px', textAlign: 'center' }}>
-                      <div style={{ fontSize: '1.5rem', marginBottom: 8 }}>{ico}</div>
-                      <div style={{ fontSize: '0.82rem', fontWeight: 600, marginBottom: 4 }}>{n}</div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--sub)' }}>{d}</div>
+                    <div key={n} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 12px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ fontSize: '1.8rem', flexShrink: 0 }}>{ico}</div>
+                      <div>
+                        <div style={{ fontSize: '0.84rem', fontWeight: 600, marginBottom: 2 }}>{n}</div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--sub)' }}>{d}</div>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -403,7 +405,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               {/* SQL slide */}
               {slide.tipo === 'sql' && (
                 <div style={{ marginBottom: 16 }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 14 }}>
                     {[
                       ['📊','Analistas de datos','Extraen insights de millones de filas sin tocar una línea de código extra'],
                       ['💻','Developers','Construyen apps que leen y guardan datos en tiempo real'],
@@ -435,20 +437,20 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
 
               {/* Resumen final */}
               {slide.tipo === 'resumen' && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10, marginBottom: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 8, marginBottom: 16 }}>
                   {[
-                    ['🗄️','Base de datos','Contiene todas las tablas relacionadas','var(--amber)'],
-                    ['📋','Tabla','Filas y columnas del mismo tipo de dato','var(--nova)'],
-                    ['⬇️','Columna','Define qué tipo de información se guarda','var(--green)'],
-                    ['➡️','Fila','Un registro completo de datos','#f472b6'],
-                    ['🔗','Relación','Las tablas se conectan mediante claves','#a78bfa'],
-                    ['💬','SQL','El lenguaje para consultar y manipular datos','#22d3ee'],
+                    ['🗄️','Base de datos','Contiene todas las tablas','var(--amber)'],
+                    ['📋','Tabla','Filas y columnas del mismo tipo','var(--nova)'],
+                    ['⬇️','Columna','Define el tipo de dato guardado','var(--green)'],
+                    ['➡️','Fila','Un registro completo','#f472b6'],
+                    ['🔗','Relación','Las tablas se conectan entre sí','#a78bfa'],
+                    ['💬','SQL','El lenguaje para consultar datos','#22d3ee'],
                   ].map(([ico,t,d,c]) => (
-                    <div key={t} style={{ background: 'var(--bg2)', border: `1px solid ${c}30`, borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ fontSize: '1.3rem', flexShrink: 0 }}>{ico}</div>
+                    <div key={t} style={{ background: 'var(--bg2)', border: `1px solid ${c}30`, borderRadius: 10, padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ fontSize: '1.1rem', flexShrink: 0 }}>{ico}</div>
                       <div>
-                        <div style={{ fontSize: '0.82rem', fontWeight: 600, color: c, marginBottom: 2 }}>{t}</div>
-                        <div style={{ fontSize: '0.7rem', color: 'var(--sub)', lineHeight: 1.4 }}>{d}</div>
+                        <div style={{ fontSize: '0.78rem', fontWeight: 600, color: c, marginBottom: 1 }}>{t}</div>
+                        <div style={{ fontSize: '0.67rem', color: 'var(--sub)', lineHeight: 1.3 }}>{d}</div>
                       </div>
                     </div>
                   ))}
@@ -584,13 +586,13 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
         <TopBar title="Tipos de JOIN" module={getModuloLabel()} prog="Intro" onBack={() => router.replace('/dashboard')} />
-        <div style={{ flex: 1, padding: '26px 20px', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
+        <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 26px) clamp(14px, 4vw, 20px)', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
 
           <div style={{ background: 'rgba(77,166,255,0.06)', borderLeft: '3px solid rgba(77,166,255,0.6)', borderRadius: '0 10px 10px 0', padding: '14px 18px', marginBottom: 20, fontSize: '0.9rem', color: '#c8d8f0', lineHeight: 1.8, textAlign: 'justify' }}>
             Un <strong>JOIN</strong> combina filas de dos tablas basándose en una columna relacionada. La diferencia entre los tipos de JOIN está en <strong>qué filas incluye</strong> cuando no hay coincidencia. Pensá en cada tabla como un círculo: el resultado del JOIN es la parte del diagrama que está coloreada.
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 20 }}>
             {joins.map(j => (
               <div key={j.nombre} style={{ background: 'var(--card)', border: `1px solid ${j.color}30`, borderRadius: 14, overflow: 'hidden' }}>
                 <div style={{ background: j.colorBg, borderBottom: `1px solid ${j.color}20`, padding: '10px 14px' }}>
@@ -610,8 +612,8 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
             <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--sub)' }}>
               Comparativa rápida
             </div>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'DM Mono', fontSize: '0.78rem' }}>
+            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              <table style={{ width: '100%', minWidth: 420, borderCollapse: 'collapse', fontFamily: 'DM Mono', fontSize: '0.75rem' }}>
                 <thead>
                   <tr style={{ background: 'var(--bg3)' }}>
                     {['JOIN', 'Filas de A', 'Filas de B', 'Solo coincidencias'].map(h => (
@@ -654,7 +656,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
         <TopBar title="Resumen del módulo" module={getModuloLabel()} prog="✓ Completado" onBack={() => router.replace('/dashboard')} />
-        <div style={{ flex: 1, padding: '28px 20px', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
+        <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 28px) clamp(14px, 4vw, 20px)', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
           <div style={{ background: 'rgba(62,207,142,0.05)', border: '1px solid rgba(62,207,142,0.2)', borderRadius: 15, padding: '24px', marginBottom: 20 }}>
             <div style={{ fontSize: '1.5rem', marginBottom: 8 }}>🏆</div>
             <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--green)', marginBottom: 4 }}>{resumen.titulo}</div>
@@ -695,7 +697,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
         <TopBar title="Glosario" module={getModuloLabel()} prog={`${glosario.length} términos`} onBack={() => setVista('leccion')} />
-        <div style={{ flex: 1, padding: '28px 20px', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
+        <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 28px) clamp(14px, 4vw, 20px)', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
           <input
             value={glosarioSearch}
             onChange={e => setGlosarioSearch(e.target.value)}
@@ -763,7 +765,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
       <div style={{ flex: 1, padding: '26px 20px', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
 
         {/* Navegación entre lecciones */}
-        <div style={{ display: 'flex', gap: 6, marginBottom: 16, overflowX: 'auto', paddingBottom: 4 }}>
+        <div style={{ display: 'flex', gap: 6, marginBottom: 16, overflowX: 'auto', paddingBottom: 4, WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
           {lecciones.map((lec, i) => {
             const completada = prog[lec.id]?.completada
             const esActual = i === curIdx
@@ -772,7 +774,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                 key={lec.id}
                 onClick={() => goToLesson(i)}
                 style={{
-                  minWidth: 32, height: 32, borderRadius: 8, border: 'none',
+                  minWidth: 28, height: 28, borderRadius: 7, border: 'none',
                   background: esActual ? 'var(--nova2)' : completada ? 'rgba(62,207,142,0.15)' : 'var(--bg3)',
                   color: esActual ? '#fff' : completada ? 'var(--green)' : 'var(--sub)',
                   fontSize: '0.75rem', fontWeight: esActual ? 700 : 400, cursor: 'pointer',
@@ -790,10 +792,12 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               style={{ padding: '0 10px', height: 32, borderRadius: 8, border: '1px solid rgba(77,166,255,0.3)', background: 'rgba(77,166,255,0.08)', color: 'var(--nova)', fontSize: '0.75rem', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}
             >⬤⬤ JOINs</button>
           )}
-          <button
-            onClick={() => setVista('glosario')}
-            style={{ marginLeft: moduloId === 3 ? 0 : 'auto', padding: '0 12px', height: 32, borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--sub)', fontSize: '0.75rem', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}
-          >📖 Glosario</button>
+          <div style={{ marginLeft: 'auto', flexShrink: 0 }}>
+            <button
+              onClick={() => setVista('glosario')}
+              style={{ padding: '0 12px', height: 32, borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--sub)', fontSize: '0.75rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+            >📖</button>
+          </div>
         </div>
 
         {/* Banner racha */}
@@ -883,12 +887,13 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                   value={queryText}
                   onChange={e => setQueryText(e.target.value)}
                   onKeyDown={e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); runQuery() } }}
+                  style={{ minHeight: 80 }}
                 />
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button onClick={runQuery} style={{ background: 'var(--nova2)', color: '#fff', border: 'none', borderRadius: 9, padding: '9px 17px', fontWeight: 600, cursor: 'pointer', fontSize: '0.84rem' }}>▶ Ejecutar</button>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+              <button onClick={runQuery} style={{ background: 'var(--nova2)', color: '#fff', border: 'none', borderRadius: 9, padding: '9px 17px', fontWeight: 600, cursor: 'pointer', fontSize: '0.84rem', flexShrink: 0 }}>▶ Ejecutar</button>
               <button onClick={() => setHintOpen(!hintOpen)} style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 9, padding: '8px 15px', color: hintOpen ? 'var(--amber)' : 'var(--sub)', cursor: 'pointer', fontSize: '0.84rem' }}>💡 Pista</button>
               {(intentos >= 2 || l.dificultad === 'avanzado') && !answered && (
                 <button onClick={nextLesson} style={{ background: 'transparent', border: '1px solid rgba(100,116,139,0.4)', borderRadius: 9, padding: '8px 15px', color: 'var(--sub)', cursor: 'pointer', fontSize: '0.84rem', opacity: 0.8 }} title="Podés continuar sin completar esta lección">Saltar →</button>
@@ -954,25 +959,25 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
 
 function TopBar({ title, module: mod, prog, onBack }: { title: string; module: string; prog: string; onBack: () => void }) {
   return (
-    <div style={{ background: 'rgba(8,9,13,0.88)', borderBottom: '1px solid var(--border)', backdropFilter: 'blur(14px)', padding: '0 20px', height: 50, display: 'flex', alignItems: 'center', gap: 12, position: 'sticky', top: 0, zIndex: 100 }}>
-      <button onClick={onBack} style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 8, padding: '5px 12px', color: 'var(--sub)', fontSize: '0.81rem', fontWeight: 500, cursor: 'pointer' }}>← Volver</button>
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: '0.68rem', color: 'var(--nova)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.07em' }}>{mod}</div>
-        <div style={{ fontSize: '0.88rem', fontWeight: 600, letterSpacing: '-0.02em' }}>{title}</div>
+    <div style={{ background: 'rgba(8,9,13,0.88)', borderBottom: '1px solid var(--border)', backdropFilter: 'blur(14px)', padding: '0 12px', height: 52, display: 'flex', alignItems: 'center', gap: 8, position: 'sticky', top: 0, zIndex: 100 }}>
+      <button onClick={onBack} style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 8, padding: '5px 10px', color: 'var(--sub)', fontSize: '0.78rem', fontWeight: 500, cursor: 'pointer', flexShrink: 0 }}>←</button>
+      <div style={{ flex: 1, overflow: 'hidden' }}>
+        <div style={{ fontSize: '0.62rem', color: 'var(--nova)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>{mod}</div>
+        <div style={{ fontSize: 'clamp(0.76rem, 2.8vw, 0.88rem)', fontWeight: 600, letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</div>
       </div>
-      <div style={{ fontSize: '0.76rem', color: 'var(--sub)', fontFamily: 'DM Mono' }}>{prog}</div>
+      <div style={{ fontSize: '0.72rem', color: 'var(--sub)', fontFamily: 'DM Mono', flexShrink: 0 }}>{prog}</div>
     </div>
   )
 }
 
 function BottomBar({ label, pct }: { label: string; pct: number }) {
   return (
-    <div style={{ background: 'rgba(8,9,13,0.9)', borderTop: '1px solid var(--border)', backdropFilter: 'blur(8px)', padding: '9px 20px', display: 'flex', alignItems: 'center', gap: 11 }}>
-      <div style={{ fontSize: '0.74rem', color: 'var(--sub)', whiteSpace: 'nowrap' }}>{label}</div>
-      <div style={{ flex: 1, height: 3, background: 'var(--bg3)', borderRadius: 3, overflow: 'hidden' }}>
-        <div className="level-fill" style={{ height: '100%', borderRadius: 3, width: `${pct}%` }} />
+    <div style={{ background: 'rgba(8,9,13,0.95)', borderTop: '1px solid var(--border)', backdropFilter: 'blur(8px)', padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 11, position: 'sticky', bottom: 0, zIndex: 50 }}>
+      <div style={{ fontSize: '0.74rem', color: 'var(--sub)', whiteSpace: 'nowrap', flexShrink: 0 }}>{label}</div>
+      <div style={{ flex: 1, height: 4, background: 'var(--bg3)', borderRadius: 4, overflow: 'hidden' }}>
+        <div className="level-fill" style={{ height: '100%', borderRadius: 4, width: `${pct}%`, transition: 'width 0.4s ease' }} />
       </div>
-      <div style={{ fontSize: '0.74rem', color: 'var(--nova)', fontFamily: 'DM Mono' }}>{pct}%</div>
+      <div style={{ fontSize: '0.74rem', color: 'var(--nova)', fontFamily: 'DM Mono', flexShrink: 0 }}>{pct}%</div>
     </div>
   )
 }
