@@ -25,7 +25,7 @@ import {
 } from '@/lib/curriculum-m9m10'
 
 type Prog = Record<string, { completada: boolean; xp_ganado: number }>
-type Vista = 'leccion' | 'resumen' | 'glosario' | 'intro-joins' | 'intro-windows' | 'intro-subqueries' | 'intro-ctes' | 'intro-subqueries' | 'intro-ctes'
+type Vista = 'leccion' | 'resumen' | 'glosario' | 'intro-joins' | 'intro-windows' | 'intro-subqueries' | 'intro-ctes'
 
 export default function LeccionClient({ moduloId }: { moduloId: number }) {
   const router = useRouter()
@@ -836,14 +836,8 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
             <div style={{ padding: '16px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {[
-                  { paso: 'CTE 1', label: 'Filtrá o calculá algo', code: 'WITH paso1 AS (
-  SELECT zona, SUM(peso_kg) AS total_kg
-  FROM envios GROUP BY zona
-),', color: '#3b82f6' },
-                  { paso: 'CTE 2', label: 'Usá el resultado del CTE 1', code: 'paso2 AS (
-  SELECT zona, total_kg
-  FROM paso1 WHERE total_kg > 500
-)', color: '#10b981' },
+                  { paso: 'CTE 1', label: 'Filtrá o calculá algo', code: 'WITH paso1 AS (\n  SELECT zona, SUM(peso_kg) AS total_kg\n  FROM envios GROUP BY zona\n),', color: '#3b82f6' },
+                  { paso: 'CTE 2', label: 'Usá el resultado del CTE 1', code: 'paso2 AS (\n  SELECT zona, total_kg\n  FROM paso1 WHERE total_kg > 500\n)', color: '#10b981' },
                   { paso: 'Query final', label: 'Consultá el último CTE', code: 'SELECT * FROM paso2 ORDER BY total_kg DESC;', color: '#a78bfa' },
                 ].map(({ paso, label, code, color }) => (
                   <div key={paso} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
