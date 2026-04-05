@@ -88,8 +88,8 @@ export const LECCIONES_M5: Leccion[] = [
     dificultad: 'avanzado', xp: 35, tabla: 'transacciones_cuentas',
     teoria: 'Un dashboard real combina JOINs, funciones de agregación y CASE WHEN. La clave es construirlo por capas: primero el JOIN, luego las columnas calculadas, después el GROUP BY y finalmente el ORDER BY.',
     enunciado: 'Armá el dashboard mensual del banco.\n\nUnís <strong>transacciones</strong> con <strong>cuentas</strong>. Mostrá el titular, cantidad de transacciones, suma total y clasificá como <strong>"Cliente VIP"</strong> si el total supera $50.000 o <strong>"Regular"</strong> si no, con CASE WHEN. Agrupá por titular y ordená por total DESC.',
-    pista: "JOIN cuentas ON transacciones.cuenta_id = cuentas.cuenta_id, GROUP BY cuentas.titular, CASE WHEN SUM(monto) > 50000 THEN 'VIP' ELSE 'Regular' END",
-    solucion: "SELECT cuentas.titular, COUNT(*) AS transacciones, SUM(transacciones.monto) AS total, CASE WHEN SUM(transacciones.monto) > 50000 THEN 'Cliente VIP' ELSE 'Regular' END AS categoria FROM transacciones INNER JOIN cuentas ON transacciones.cuenta_id = cuentas.cuenta_id GROUP BY cuentas.titular ORDER BY total DESC",
+    pista: "SELECT cuentas.titular, SUM(transacciones.monto) AS total, CASE WHEN SUM(transacciones.monto) > 50000 THEN 'Cliente VIP' ELSE 'Regular' END AS categoria FROM transacciones INNER JOIN cuentas ON transacciones.cuenta_id = cuentas.cuenta_id GROUP BY cuentas.titular ORDER BY total DESC",
+    solucion: "SELECT cuentas.titular, SUM(transacciones.monto) AS total, CASE WHEN SUM(transacciones.monto) > 50000 THEN 'Cliente VIP' ELSE 'Regular' END AS categoria FROM transacciones INNER JOIN cuentas ON transacciones.cuenta_id = cuentas.cuenta_id GROUP BY cuentas.titular ORDER BY total DESC",
   },
   {
     id: '05-12', num: 12, titulo: 'Desafío final: análisis de riesgo', tipo: 'escribir',
