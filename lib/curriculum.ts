@@ -385,7 +385,7 @@ export const LECCIONES_M3: Leccion[] = [
 export const LECCIONES_M4: Leccion[] = [
   { id: '04-01', num: 1, titulo: 'Contar filas con COUNT', tipo: 'escribir', dificultad: 'principiante', xp: 15, tabla: 'pedidos_restaurante',
     teoria: '<strong>COUNT(*)</strong> cuenta cuántas filas hay en una tabla o grupo. Es la función de agregación más básica. Podés usarla sola para contar todo, o combinada con GROUP BY para contar por categoría.',
-    enunciado: 'Trabajás en el sistema de un restaurante. Querés saber cuántos pedidos hay en total.\n\nUsá <strong>COUNT(*)</strong> para contar todos los registros de la tabla <strong>pedidos_restaurante</strong>.',
+    enunciado: 'Trabajás en el sistema de un restaurante. Querés saber cuántos pedidos hay en total.\n\nUsá <strong>COUNT(*)</strong> para contar todos los registros de la tabla <strong>pedidos_restaurante, esa nueva columna se deberá llamar total_pedidos.</strong>.',
     pista: 'SELECT COUNT(*) AS total_pedidos FROM pedidos_restaurante',
     solucion: 'SELECT COUNT(*) AS total_pedidos FROM pedidos_restaurante' },
   { id: '04-02', num: 2, titulo: 'Sumar con SUM', tipo: 'escribir', dificultad: 'principiante', xp: 15, tabla: 'pedidos_restaurante',
