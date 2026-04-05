@@ -76,7 +76,6 @@ export const LECCIONES_M5: Leccion[] = [
     solucion: 'SELECT tipo, COUNT(*) AS cantidad, SUM(monto) AS total, ROUND(AVG(monto), 2) AS promedio, MAX(monto) AS maximo FROM transacciones GROUP BY tipo',
   },
   {
-  {
     id: '05-10', num: 10, titulo: 'NULLIF — evitar división por cero', tipo: 'escribir',
     dificultad: 'intermedio', xp: 20, tabla: 'transacciones',
     teoria: '<strong>NULLIF(a, b)</strong> devuelve NULL si a = b, o devuelve a si son distintos. Su uso más práctico es evitar el error "división por cero". En vez de escribir <code>monto / cantidad</code> (que rompe si cantidad = 0), escribís <code>monto / NULLIF(cantidad, 0)</code>. Si cantidad es 0, el resultado es NULL en vez de un error.',
