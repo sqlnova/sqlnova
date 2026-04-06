@@ -1094,10 +1094,10 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
   // ── VISTA LECCIÓN ──
   // Tablas a mostrar por lección — para JOINs y lecciones multi-tabla
   const TABLAS_JOIN: Record<string, string[]> = {
-    // M5 — lecciones que usan transacciones + cuentas
+    // M5
     '05-11': ['transacciones', 'cuentas'],
     '05-12': ['transacciones', 'cuentas'],
-    // M6 — lecciones que usan médicos + consultas + pacientes según el caso
+    // M6
     '06-01': ['medicos', 'consultas'],
     '06-02': ['medicos'],
     '06-03': ['consultas', 'medicos'],
@@ -1108,15 +1108,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     '06-08': ['medicos', 'consultas'],
     '06-09': ['pacientes', 'consultas'],
     '06-10': ['medicos', 'consultas'],
-    // M9
-    '09-10': ['posts', 'usuarios'],
-    // M10
-    '10-03': ['usuarios', 'posts'],
-    '10-05': ['posts'],
-    '10-06': ['posts'],
-    '10-08': ['ventas'],
-    '10-09': ['metricas_red'],
-    '10-10': ['usuarios', 'posts'],
+    // M3
     '03-01': ['pedidos', 'clientes'],
     '03-02': ['pedidos', 'clientes'],
     '03-03': ['pedidos', 'clientes', 'productos'],
@@ -1136,6 +1128,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     '10-05': ['posts'],
     '10-06': ['posts'],
     '10-08': ['ventas'],
+    '10-09': ['metricas_red'],
     '10-10': ['usuarios', 'posts'],
   }
 
