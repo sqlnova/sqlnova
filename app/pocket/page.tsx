@@ -41,36 +41,48 @@ export default function PocketPage() {
     init()
   }, [router])
 
-  const procesarCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !dbRef.current) return
-
-    setError('')
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        try {
-          const nombreTabla = file.name.replace(/\.[^/.]+$/, "").replace(/[^a-z0-9]/gi, '_').toLowerCase()
-          const columnas = Object.keys(results.data[0] as object)
-          
-          // Crear tabla en RAM
-          const sqlCreate = `CREATE TABLE "${nombreTabla}" (${columnas.map(c => `"${c}" TEXT`).join(', ')});`
-          dbRef.current.run(sqlCreate)
-
-          // Insertar datos
-          const sqlInsert = `INSERT INTO "${nombreTabla}" VALUES (${columnas.map(() => '?').join(', ')});`
-          results.data.forEach((fila: any) => {
-            dbRef.current.run(sqlInsert, Object.values(fila))
-          })
-
-          setTablas(prev => [...prev, { nombre: nombreTabla, columnas }])
-        } catch (err: any) {
-          setError("Error al procesar el archivo: " + err.message)
-        }
-      }
-    })
+const procesarCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  if (!dbRef.current) {
+    setError("El motor SQL no está listo. Reintentando...");
+    return;
   }
+
+  setError('');
+  console.log("Procesando:", file.name);
+
+  Papa.parse(file, {
+    header: true,
+    skipEmptyLines: true,
+    complete: (results) => {
+      try {
+        if (results.data.length === 0) throw new Error("El archivo está vacío.");
+
+        const nombreTabla = file.name.replace(/\.[^/.]+$/, "").replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const columnas = Object.keys(results.data[0] as object);
+        
+        // Crear tabla
+        dbRef.current.run(`DROP TABLE IF EXISTS "${nombreTabla}"`);
+        const sqlCreate = `CREATE TABLE "${nombreTabla}" (${columnas.map(c => `"${c}" TEXT`).join(', ')});`;
+        dbRef.current.run(sqlCreate);
+
+        // Insertar filas (una por una para evitar límites de strings largos)
+        const sqlInsert = `INSERT INTO "${nombreTabla}" VALUES (${columnas.map(() => '?').join(', ')});`;
+        results.data.forEach((fila: any) => {
+          dbRef.current.run(sqlInsert, Object.values(fila));
+        });
+
+        console.log("Tabla creada:", nombreTabla);
+        setTablas(prev => [...prev, { nombre: nombreTabla, columnas }]);
+        setQuery(`SELECT * FROM ${nombreTabla} LIMIT 10;`); // Query sugerida
+      } catch (err: any) {
+        console.error(err);
+        setError("Error: " + err.message);
+      }
+    }
+  });
+};
 
   const ejecutarSQL = () => {
     if (!dbRef.current || !query.trim()) return

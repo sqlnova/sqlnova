@@ -17,16 +17,18 @@ export default function PerfilPage() {
     const load = async () => {
       const { data: { session } } = await sb.auth.getSession()
       if (!session) { router.replace('/auth'); return }
+
       const { data: p } = await sb.from('perfiles').select('*').eq('id', session.user.id).single()
+      
       if (p) {
         setPerfil(p)
         setAlias(p.alias || '')
         setTema(p.tema || 'oscuro')
         setMostrarLeaderboard(p.mostrar_en_leaderboard ?? true)
         
-        // Sincronizar tema visual al cargar si no coincide
-        const localTema = p.tema || 'oscuro'
-        if (localTema === 'claro') {
+        // Aplicar tema guardado al cargar
+        const t = p.tema || 'oscuro'
+        if (t === 'claro') {
           document.documentElement.setAttribute('data-theme', 'claro')
         } else {
           document.documentElement.removeAttribute('data-theme')
@@ -37,11 +39,9 @@ export default function PerfilPage() {
     load()
   }, [router])
 
-  // Función para aplicar cambios visuales inmediatos
   const aplicarTemaVisual = (nuevoTema: 'oscuro' | 'claro') => {
     if (nuevoTema === 'claro') {
       document.documentElement.setAttribute('data-theme', 'claro')
-      // Cambiar color de barra de sistema (Android)
       document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#f8fafc')
     } else {
       document.documentElement.removeAttribute('data-theme')
@@ -56,6 +56,7 @@ export default function PerfilPage() {
       setMsg({ tipo: 'error', texto: 'Alias inválido (3-20 caracteres)' })
       return
     }
+    
     setSaving(true)
     setMsg(null)
 
@@ -70,7 +71,7 @@ export default function PerfilPage() {
       setMsg({ tipo: 'error', texto: 'Error al guardar. ¿Alias duplicado?' })
     } else {
       setMsg({ tipo: 'ok', texto: '¡Configuración guardada!' })
-      aplicarTemaVisual(tema) // Aplicar cambios visuales al confirmar
+      aplicarTemaVisual(tema)
     }
     setSaving(false)
   }
@@ -81,11 +82,13 @@ export default function PerfilPage() {
   }
 
   if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-      <div style={{ width: 28, height: 28, border: '2px solid var(--border2)', borderTopColor: 'var(--nova)', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'var(--bg)', gap: 16 }}>
+      <div style={{ width: 30, height: 30, border: '3px solid var(--border2)', borderTopColor: 'var(--nova)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      <div style={{ color: 'var(--sub)', fontSize: '0.85rem', fontFamily: 'DM Mono' }}>Cargando perfil...</div>
     </div>
   )
 
+  const esPremium = perfil?.es_premium || false
   const card: React.CSSProperties = { background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: '20px', marginBottom: 14 }
   const label: React.CSSProperties = { fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--sub)', marginBottom: 10, display: 'block' }
   const input: React.CSSProperties = { width: '100%', background: 'var(--bg2)', border: '1px solid var(--border2)', borderRadius: 9, padding: '10px 14px', color: 'var(--text)', fontSize: '0.9rem', outline: 'none' }
@@ -93,24 +96,14 @@ export default function PerfilPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1, background: 'var(--bg)' }}>
       
-      {/* TopBar CORREGIDA: Usa var(--nav-bg) */}
-      <div style={{ 
-        background: 'var(--nav-bg)', 
-        borderBottom: '1px solid var(--border)', 
-        backdropFilter: 'blur(14px)', 
-        padding: '0 16px', 
-        height: 52, 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: 10, 
-        position: 'sticky', 
-        top: 0, 
-        zIndex: 100 
-      }}>
+      {/* TopBar */}
+      <div style={{ background: 'var(--nav-bg)', borderBottom: '1px solid var(--border)', backdropFilter: 'blur(14px)', padding: '0 16px', height: 52, display: 'flex', alignItems: 'center', gap: 10, position: 'sticky', top: 0, zIndex: 100 }}>
         <button onClick={() => router.replace('/dashboard')} style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 8, padding: '5px 10px', color: 'var(--sub)', fontSize: '0.78rem', cursor: 'pointer' }}>←</button>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: '0.62rem', color: 'var(--nova)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>SQLNova</div>
-          <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text)' }}>Mi perfil</div>
+          <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+            Mi perfil {esPremium && <span>💎</span>}
+          </div>
         </div>
       </div>
 
@@ -141,19 +134,49 @@ export default function PerfilPage() {
             placeholder="ej: sqlmaster_99"
             maxLength={20}
           />
+          <div style={{ fontSize: '0.7rem', color: 'var(--dim)', marginTop: 8 }}>Este nombre aparecerá en el ranking global.</div>
         </div>
 
-        {/* Tema - Selector visual mejorado */}
+        {/* Leaderboard Toggle */}
+        <div style={card}>
+          <span style={label}>Privacidad</span>
+          <div 
+            onClick={() => setMostrarLeaderboard(!mostrarLeaderboard)}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+          >
+            <div style={{ fontSize: '0.88rem', fontWeight: 500, color: 'var(--text)' }}>
+              Mostrarme en el ranking
+            </div>
+            <div style={{ 
+              width: 42, 
+              height: 22, 
+              borderRadius: 20, 
+              background: mostrarLeaderboard ? 'var(--green)' : 'var(--bg3)', 
+              position: 'relative',
+              transition: '0.2s'
+            }}>
+              <div style={{ 
+                width: 18, 
+                height: 18, 
+                background: '#fff', 
+                borderRadius: '50%', 
+                position: 'absolute', 
+                top: 2, 
+                left: mostrarLeaderboard ? 22 : 2,
+                transition: '0.2s'
+              }} />
+            </div>
+          </div>
+        </div>
+
+        {/* Apariencia */}
         <div style={card}>
           <span style={label}>Apariencia</span>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             {(['oscuro', 'claro'] as const).map(t => (
               <button
                 key={t}
-                onClick={() => {
-                  setTema(t);
-                  aplicarTemaVisual(t); // Vista previa inmediata
-                }}
+                onClick={() => { setTema(t); aplicarTemaVisual(t); }}
                 style={{
                   background: tema === t ? 'rgba(77,166,255,0.08)' : 'var(--bg2)',
                   border: `2px solid ${tema === t ? 'var(--nova)' : 'var(--border)'}`,
@@ -169,17 +192,32 @@ export default function PerfilPage() {
           </div>
         </div>
 
-        {/* Cuenta */}
+        {/* Cuenta y Premium */}
         <div style={card}>
           <span style={label}>Cuenta</span>
-          <div style={{ fontSize: '0.86rem', color: 'var(--sub)', marginBottom: 14 }}>{perfil?.email}</div>
-          <button onClick={logout} style={{ background: 'transparent', border: '1px solid var(--red)', borderRadius: 9, padding: '8px 16px', color: 'var(--red)', cursor: 'pointer', fontSize: '0.84rem' }}>
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: '0.95rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+              {perfil?.nombre || 'Usuario'} 
+              {esPremium && <span style={{ background: 'var(--nova)', color: '#fff', fontSize: '0.55rem', padding: '2px 5px', borderRadius: 4 }}>PREMIUM</span>}
+            </div>
+            <div style={{ fontSize: '0.86rem', color: 'var(--sub)' }}>{perfil?.email}</div>
+          </div>
+          <button onClick={logout} style={{ background: 'transparent', border: '1px solid var(--red)', borderRadius: 9, padding: '8px 16px', color: 'var(--red)', cursor: 'pointer', fontSize: '0.84rem', fontWeight: 500 }}>
             Cerrar sesión
           </button>
         </div>
 
         {msg && (
-          <div style={{ padding: '12px', borderRadius: 10, marginBottom: 14, background: msg.tipo === 'ok' ? 'rgba(62,207,142,0.1)' : 'rgba(229,83,75,0.1)', border: `1px solid ${msg.tipo === 'ok' ? 'var(--green)' : 'var(--red)'}`, color: msg.tipo === 'ok' ? 'var(--green)' : 'var(--red)', textAlign: 'center', fontSize: '0.88rem' }}>
+          <div style={{ 
+            padding: '12px', 
+            borderRadius: 10, 
+            marginBottom: 14, 
+            background: msg.tipo === 'ok' ? 'rgba(62,207,142,0.1)' : 'rgba(229,83,75,0.1)', 
+            border: `1px solid ${msg.tipo === 'ok' ? 'var(--green)' : 'var(--red)'}`, 
+            color: msg.tipo === 'ok' ? 'var(--green)' : 'var(--red)', 
+            textAlign: 'center', 
+            fontSize: '0.88rem' 
+          }}>
             {msg.texto}
           </div>
         )}
@@ -187,7 +225,7 @@ export default function PerfilPage() {
         <button
           onClick={save}
           disabled={saving}
-          style={{ background: 'var(--nova2)', color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontWeight: 700, cursor: 'pointer', width: '100%', opacity: saving ? 0.7 : 1 }}
+          style={{ background: 'var(--nova2)', color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontWeight: 700, cursor: 'pointer', width: '100%', opacity: saving ? 0.7 : 1, marginBottom: 40 }}
         >
           {saving ? 'Guardando...' : 'Guardar configuración'}
         </button>
