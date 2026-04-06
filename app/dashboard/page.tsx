@@ -219,53 +219,97 @@ export default function Dashboard() {
           })}
         </div>
 
-        {/* PREMIUM SECTION ACTUALIZADA */}
-        <div style={{ marginBottom: 40 }}>
-          <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--sub)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Premium</div>
-          <div 
-            onClick={() => router.push('/pocket')}
-            style={{ 
-              background: 'var(--card)', 
-              border: `1px solid ${esPremium ? 'rgba(77,166,255,0.3)' : 'rgba(167,139,250,0.2)'}`, 
-              borderRadius: 13, 
-              padding: '20px 22px', 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 16,
-              cursor: 'pointer',
-              transition: 'transform 0.2s'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-            onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-          >
-            <div style={{ fontSize: '2.2rem', flexShrink: 0 }}>🗄️</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                <div style={{ fontSize: '0.95rem', fontWeight: 700 }}>Pocket Database</div>
-                <span style={{ 
-                  fontSize: '0.65rem', 
-                  fontWeight: 700, 
-                  padding: '2px 7px', 
-                  borderRadius: 5, 
-                  background: esPremium ? 'rgba(77,166,255,0.1)' : 'rgba(167,139,250,0.12)', 
-                  color: esPremium ? 'var(--nova)' : '#a78bfa', 
-                  border: `1px solid ${esPremium ? 'rgba(77,166,255,0.3)' : 'rgba(167,139,250,0.3)'}` 
-                }}>
-                  {esPremium ? 'ACTIVO ✨' : 'NUEVO'}
-                </span>
-              </div>
-              <div style={{ fontSize: '0.82rem', color: 'var(--sub)', lineHeight: 1.6 }}>
-                Subí tu propio CSV y explorá tus datos con SQL localmente. Privacidad total.
-              </div>
-            </div>
-            <div style={{ flexShrink: 0 }}>
-              <div style={{ background: 'var(--nova2)', color: '#fff', borderRadius: 9, padding: '8px 14px', fontSize: '0.78rem', fontWeight: 600 }}>
-                Entrar →
-              </div>
-            </div>
-          </div>
-        </div>
+{/* PREMIUM SECTION ACTUALIZADA Y CENTRADA */}
+<div style={{ marginBottom: 40 }}>
+  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--sub)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+    Premium
+  </div>
+  
+  <div 
+    onClick={() => router.push('/pocket')}
+    style={{ 
+      background: 'var(--card)', 
+      border: `1px solid ${esPremium ? 'rgba(77,166,255,0.3)' : 'rgba(167,139,250,0.2)'}`, 
+      borderRadius: 16, 
+      padding: '24px', 
+      display: 'flex', 
+      flexDirection: 'column', // Por defecto columna (mobile)
+      alignItems: 'center',    // Centrado en mobile
+      textAlign: 'center',     // Texto centrado en mobile
+      gap: 20,
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+      position: 'relative'
+    }}
+    className="group md:flex-row md:text-left md:align-start" // Usamos clases para el cambio a fila en pantallas grandes
+  >
+    {/* Estilo dinámico para el cambio a fila en Desktop vía Inline (para asegurar compatibilidad) */}
+    <style jsx>{`
+      @media (min-width: 640px) {
+        div.premium-card {
+          flex-direction: row !important;
+          text-align: left !important;
+          align-items: center !important;
+        }
+      }
+    `}</style>
+
+    {/* Icono con fondo sutil */}
+    <div style={{ 
+      fontSize: '2.5rem', 
+      background: esPremium ? 'rgba(77,166,255,0.1)' : 'rgba(167,139,250,0.1)', 
+      width: 80, 
+      height: 80, 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      borderRadius: 20,
+      flexShrink: 0
+    }}>
+      🗄️
+    </div>
+
+    {/* Texto Central */}
+    <div style={{ flex: 1 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 8 }} className="md:justify-start">
+        <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text)' }}>
+          Pocket Database
+        </h3>
+        <span style={{ 
+          fontSize: '0.65rem', 
+          fontWeight: 800, 
+          padding: '3px 8px', 
+          borderRadius: 6, 
+          background: esPremium ? 'var(--nova)' : 'rgba(167,139,250,0.15)', 
+          color: esPremium ? '#fff' : '#a78bfa',
+          whiteSpace: 'nowrap'
+        }}>
+          {esPremium ? 'ACTIVO ✨' : 'NUEVO'}
+        </span>
       </div>
+      
+      <p style={{ fontSize: '0.85rem', color: 'var(--sub)', lineHeight: 1.6, margin: 0, maxWidth: '400px' }}>
+        Subí tus propios CSV y explorá tus datos con SQL localmente. Privacidad total garantizada.
+      </p>
+    </div>
+
+    {/* Botón Inferior en mobile / Derecha en Desktop */}
+    <div style={{ width: '100%' }} className="md:w-auto">
+      <div style={{ 
+        background: esPremium ? 'var(--nova2)' : 'var(--bg3)', 
+        color: '#fff', 
+        borderRadius: 12, 
+        padding: '12px 24px', 
+        fontSize: '0.9rem', 
+        fontWeight: 700, 
+        textAlign: 'center',
+        transition: 'all 0.2s'
+      }}>
+        Entrar →
+      </div>
+    </div>
+  </div>
+</div>
 
       {/* MODAL RETOS */}
       {retoPopup && (
