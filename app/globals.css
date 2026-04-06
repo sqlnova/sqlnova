@@ -116,3 +116,15 @@ body::after {
 [data-theme="claro"] body {
   background: var(--bg);
 }
+
+/* Nav y elementos con fondo hardcodeado */
+[data-theme="claro"] nav,
+[data-theme="claro"] .sticky {
+  background: rgba(240,244,248,0.92) !important;
+  border-bottom-color: #cbd5e1 !important;
+}
+
+[data-theme="claro"] .sql-editor {
+  background: #f8fafc;
+  color: #0f172a;
+}
