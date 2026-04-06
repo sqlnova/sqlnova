@@ -34,6 +34,14 @@ export default function Dashboard() {
       }
       setPerfil(p)
 
+      // --- CORRECCIÓN DE TEMA ---
+      // Si el tema en Supabase es "claro", activamos el modo claro en toda la web
+      if (p?.tema === 'claro') {
+        document.documentElement.classList.add('light-mode')
+      } else {
+        document.documentElement.classList.remove('light-mode')
+      }
+
       const hoy = new Date().toLocaleDateString('sv-SE')
       const [progRes, retosRes] = await Promise.all([
         sb.from('progreso').select('*').eq('usuario_id', uid),
@@ -56,7 +64,7 @@ export default function Dashboard() {
   useEffect(() => { loadData() }, [loadData])
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="flex items-center justify-center min-h-screen bg-[var(--bg)]">
       <div className="w-8 h-8 border-2 border-white/10 border-t-blue-500 rounded-full animate-spin" />
     </div>
   )
@@ -69,9 +77,9 @@ export default function Dashboard() {
   const esPremium = (perfil as any)?.es_premium || false
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#08090d] text-white">
+    <div className="flex flex-col min-h-screen bg-[var(--bg)] text-[var(--text)]">
       {/* NAV */}
-      <nav className="h-[52px] border-b border-white/5 bg-[#08090d]/80 backdrop-blur-md sticky top-0 z-[100] px-4 flex items-center justify-between">
+      <nav className="h-[52px] border-b border-white/5 bg-[var(--bg)]/80 backdrop-blur-md sticky top-0 z-[100] px-4 flex items-center justify-between">
         <div className="font-bold text-lg tracking-tighter">SQL<span className="text-blue-500">Nova</span></div>
         
         <div className="flex items-center gap-2">
@@ -87,12 +95,12 @@ export default function Dashboard() {
               {iniciales}
             </div>
             {dropOpen && (
-              <div className="absolute right-0 top-10 bg-[#12141c] border border-white/10 rounded-xl p-2 min-w-[180px] shadow-2xl">
-                <div className="px-3 py-2 text-xs font-bold border-b border-white/5 mb-1 flex items-center gap-2">
+              <div className="absolute right-0 top-10 bg-[var(--card)] border border-white/10 rounded-xl p-2 min-w-[180px] shadow-2xl">
+                <div className="px-3 py-2 text-xs font-bold border-b border-white/5 mb-1 flex items-center gap-2 text-[var(--text)]">
                   {nombre} {esPremium && "💎"}
                 </div>
                 <div onClick={() => router.push('/pocket')} className="px-3 py-2 text-xs hover:bg-white/5 rounded-lg cursor-pointer text-blue-400 font-bold">🗄️ Pocket Database</div>
-                <div onClick={() => router.push('/perfil')} className="px-3 py-2 text-xs hover:bg-white/5 rounded-lg cursor-pointer">⚙️ Mi perfil</div>
+                <div onClick={() => router.push('/perfil')} className="px-3 py-2 text-xs hover:bg-white/5 rounded-lg cursor-pointer text-[var(--text)]">⚙️ Mi perfil</div>
                 <div onClick={() => sb.auth.signOut().then(() => router.replace('/auth'))} className="px-3 py-2 text-xs hover:bg-red-500/10 text-red-500 rounded-lg cursor-pointer mt-1">Cerrar sesión</div>
               </div>
             )}
@@ -103,7 +111,7 @@ export default function Dashboard() {
       <div className="flex-1 p-6 lg:p-10 max-w-5xl mx-auto w-full">
         {/* Header */}
         <header className="mb-8">
-          <h1 className="text-2xl font-bold tracking-tight">Hola, {nombre.split(' ')[0]} 👋</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-[var(--text)]">Hola, {nombre.split(' ')[0]} 👋</h1>
           <p className="text-slate-400 text-sm">Tu camino al dominio total de SQL.</p>
         </header>
 
@@ -115,11 +123,11 @@ export default function Dashboard() {
         </div>
 
         {/* Progress Bar */}
-        <div className="bg-[#12141c] border border-white/5 rounded-2xl p-5 mb-8">
+        <div className="bg-[var(--card)] border border-white/5 rounded-2xl p-5 mb-8">
           <div className="flex justify-between items-end mb-3">
             <div>
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Tu progreso actual</span>
-              <span className="text-sm font-bold text-white">Nivel {nivel}: {NIVELES[nivel]}</span>
+              <span className="text-sm font-bold text-[var(--text)]">Nivel {nivel}: {NIVELES[nivel]}</span>
             </div>
             <span className="text-[10px] font-mono text-slate-500">{xpEnNivel} / 500 XP</span>
           </div>
@@ -140,12 +148,12 @@ export default function Dashboard() {
                <div 
                 key={m.id} 
                 onClick={() => !locked && router.push(`/leccion/${m.id}`)}
-                className={`bg-[#12141c] border ${pct === 100 ? 'border-green-500/20' : 'border-white/5'} p-5 rounded-2xl cursor-pointer hover:border-white/20 transition-all ${locked && 'opacity-40 cursor-default'}`}
+                className={`bg-[var(--card)] border ${pct === 100 ? 'border-green-500/20' : 'border-white/5'} p-5 rounded-2xl cursor-pointer hover:border-white/20 transition-all ${locked && 'opacity-40 cursor-default'}`}
                >
                  <div className="flex items-center gap-4 mb-4">
                     <span className="text-2xl">{m.icono}</span>
                     <div>
-                      <h4 className="text-sm font-bold">{m.titulo}</h4>
+                      <h4 className="text-sm font-bold text-[var(--text)]">{m.titulo}</h4>
                       <p className="text-[10px] text-slate-500">{m.lecciones_total} lecciones</p>
                     </div>
                  </div>
@@ -160,11 +168,11 @@ export default function Dashboard() {
           })}
         </div>
 
-        {/* PREMIUM SECTION - CORREGIDA PARA MOBILE */}
+        {/* PREMIUM SECTION */}
         <h2 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Herramientas Pro</h2>
         <div 
           onClick={() => router.push('/pocket')}
-          className={`bg-[#12141c] border ${esPremium ? 'border-blue-500/30' : 'border-purple-500/20'} rounded-2xl p-6 cursor-pointer hover:bg-white/[0.02] transition-all group`}
+          className={`bg-[var(--card)] border ${esPremium ? 'border-blue-500/30' : 'border-purple-500/20'} rounded-2xl p-6 cursor-pointer hover:bg-white/[0.02] transition-all group`}
         >
           <div className="flex flex-col sm:flex-row items-center text-center sm:text-left gap-6">
             <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl ${esPremium ? 'bg-blue-500/10' : 'bg-purple-500/10'}`}>
@@ -172,7 +180,7 @@ export default function Dashboard() {
             </div>
             <div className="flex-1">
               <div className="flex flex-col sm:flex-row items-center gap-2 mb-2">
-                <h3 className="font-bold text-base">Pocket Database</h3>
+                <h3 className="font-bold text-base text-[var(--text)]">Pocket Database</h3>
                 <span className={`text-[9px] font-black px-2 py-0.5 rounded ${esPremium ? 'bg-blue-500 text-white' : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'}`}>
                   {esPremium ? 'ACTIVO ✨' : 'NUEVO'}
                 </span>
@@ -191,9 +199,9 @@ export default function Dashboard() {
       {/* Popup de Retos */}
       {retoPopup && (
         <div className="fixed inset-0 z-[500] bg-black/80 backdrop-blur-md flex items-center justify-center p-6">
-          <div className="bg-[#12141c] border border-amber-500/30 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
+          <div className="bg-[var(--card)] border border-amber-500/30 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
             <span className="text-5xl block mb-4">⚡</span>
-            <h2 className="text-xl font-bold mb-2">¡Retos listos!</h2>
+            <h2 className="text-xl font-bold mb-2 text-[var(--text)]">¡Retos listos!</h2>
             <p className="text-sm text-slate-400 mb-8 leading-relaxed">Completá los desafíos diarios para ganar XP extra y subir en el ranking semanal.</p>
             <div className="flex gap-3">
               <button onClick={() => setRetoPopup(false)} className="flex-1 py-3 text-sm text-slate-500 font-bold">Luego</button>
@@ -208,7 +216,7 @@ export default function Dashboard() {
 
 function Pill({ children, color }: { children: React.ReactNode, color: string }) {
   return (
-    <div className="bg-white/5 border border-white/10 rounded-full px-3 py-1 flex items-center gap-2 text-[10px] font-bold text-slate-300">
+    <div className="bg-white/5 border border-white/10 rounded-full px-3 py-1 flex items-center gap-2 text-[10px] font-bold text-slate-400">
       <div className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
       {children}
     </div>
@@ -217,7 +225,7 @@ function Pill({ children, color }: { children: React.ReactNode, color: string })
 
 function StatCard({ value, label, color, suffix = "" }: { value: any, label: string, color: string, suffix?: string }) {
   return (
-    <div className="bg-[#12141c] border border-white/5 rounded-2xl p-4 lg:p-5">
+    <div className="bg-[var(--card)] border border-white/5 rounded-2xl p-4 lg:p-5">
       <div className="text-lg lg:text-xl font-bold mb-1" style={{ color }}>{value}{suffix}</div>
       <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{label}</div>
     </div>
