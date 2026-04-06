@@ -607,7 +607,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
 
 
   // ── VISTA INTRO SUBQUERIES ──
-  if (vista === 'intro-subqueries') {
+  if ((vista as string) === 'intro-subqueries') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
         <TopBar title="Cómo funciona una Subquery" module={getModuloLabel()} prog="Intro" onBack={() => router.replace('/dashboard')} />
@@ -680,7 +680,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
   }
 
   // ── VISTA INTRO CTEs ──
-  if (vista === 'intro-ctes') {
+  if ((vista as string) === 'intro-ctes') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
         <TopBar title="Cómo funcionan los CTEs" module={getModuloLabel()} prog="Intro" onBack={() => router.replace('/dashboard')} />
@@ -750,7 +750,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
   }
 
   // ── VISTA INTRO SUBQUERIES ──
-  if (vista === 'intro-subqueries') {
+  if ((vista as string) === 'intro-subqueries') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
         <TopBar title="Qué es una Subquery" module={getModuloLabel()} prog="Intro" onBack={() => router.replace('/dashboard')} />
@@ -807,7 +807,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
   }
 
   // ── VISTA INTRO CTEs ──
-  if (vista === 'intro-ctes') {
+  if ((vista as string) === 'intro-ctes') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
         <TopBar title="Qué es un CTE" module={getModuloLabel()} prog="Intro" onBack={() => router.replace('/dashboard')} />
