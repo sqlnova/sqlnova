@@ -19,7 +19,6 @@ export default function Dashboard() {
 
     const uid = session.user.id
 
-    // Load perfil
     let { data: p } = await sb.from('perfiles').select('*').eq('id', uid).single()
     if (!p) {
       await sb.from('perfiles').insert({
@@ -32,7 +31,6 @@ export default function Dashboard() {
     }
     setPerfil(p)
 
-    // Load progreso
     const { data: progData } = await sb.from('progreso').select('*').eq('usuario_id', uid)
     const progMap: Record<string, Progreso> = {}
     ;(progData || []).forEach((r: Progreso) => { progMap[r.leccion_id] = r })
@@ -68,6 +66,13 @@ export default function Dashboard() {
           SQL<span style={{ color: 'var(--nova)' }}>Nova</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {/* Leaderboard button */}
+          <button
+            onClick={() => router.push('/leaderboard')}
+            style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '4px 10px', color: 'var(--amber)', fontSize: '0.76rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+          >
+            🏆 <span style={{ color: 'var(--sub)' }}>Ranking</span>
+          </button>
           <Pill color="var(--amber)">{perfil?.racha_actual || 0} días 🔥</Pill>
           <Pill color="var(--nova)">{xp} XP ⚡</Pill>
           <div style={{ position: 'relative' }}>
@@ -77,6 +82,13 @@ export default function Dashboard() {
             {dropOpen && (
               <div style={{ position: 'absolute', right: 0, top: 38, background: 'var(--card)', border: '1px solid var(--border2)', borderRadius: 12, padding: 6, minWidth: 170, boxShadow: '0 8px 24px rgba(0,0,0,0.4)', zIndex: 200 }}>
                 <div style={{ padding: '7px 11px', fontSize: '0.84rem', fontWeight: 600, color: 'var(--text)' }}>{nombre}</div>
+                <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
+                <div onClick={() => { setDropOpen(false); router.push('/leaderboard') }} style={{ padding: '7px 11px', borderRadius: 7, fontSize: '0.84rem', cursor: 'pointer', color: 'var(--amber)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  🏆 Leaderboard
+                </div>
+                <div onClick={() => { setDropOpen(false); router.push('/perfil') }} style={{ padding: '7px 11px', borderRadius: 7, fontSize: '0.84rem', cursor: 'pointer', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  ⚙️ Mi perfil
+                </div>
                 <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
                 <div onClick={logout} style={{ padding: '7px 11px', borderRadius: 7, fontSize: '0.84rem', cursor: 'pointer', color: 'var(--red)' }}>Cerrar sesión</div>
               </div>
