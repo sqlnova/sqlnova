@@ -50,27 +50,45 @@ export default function PerfilPage() {
     localStorage.setItem('sqlnova-tema', nuevoTema)
   }
 
-  const save = async () => {
+const save = async () => {
     if (!perfil) return
-    if (alias && !/^[a-zA-Z0-9_\-\.]{3,20}$/.test(alias)) {
-      setMsg({ tipo: 'error', texto: 'Alias inválido (3-20 caracteres)' })
-      return
-    }
     
+    // 1. Limpiamos espacios al principio y al final
+    const aliasLimpio = alias.trim()
+
+    // 2. Validaciones estrictas
+    if (aliasLimpio.length > 0) {
+      // No permitimos espacios internos en el alias (estándar de usernames)
+      if (/\s/.test(aliasLimpio)) {
+        setMsg({ tipo: 'error', texto: 'El alias no puede contener espacios internos.' })
+        return
+      }
+      
+      // Validamos formato: Alfanumérico, puntos, guiones y longitud
+      if (!/^[a-zA-Z0-9_\-\.]{3,20}$/.test(aliasLimpio)) {
+        setMsg({ tipo: 'error', texto: 'Usá entre 3 y 20 caracteres (letras, números, punto o guiones).' })
+        return
+      }
+    }
+
     setSaving(true)
     setMsg(null)
 
     const { error } = await sb.from('perfiles').update({
-      alias: alias.trim() || null,
+      alias: aliasLimpio || null, // Si está vacío después del trim, mandamos NULL
       tema,
       mostrar_en_leaderboard: mostrarLeaderboard,
       actualizado_en: new Date().toISOString(),
     }).eq('id', perfil.id)
 
     if (error) {
-      setMsg({ tipo: 'error', texto: 'Error al guardar. ¿Alias duplicado?' })
+      setMsg({ tipo: 'error', texto: error.message.includes('unique') 
+        ? 'Ese alias ya está en uso por otro usuario.' 
+        : 'Error al guardar. Intentá de nuevo.' 
+      })
     } else {
-      setMsg({ tipo: 'ok', texto: '¡Configuración guardada!' })
+      setMsg({ tipo: 'ok', texto: '¡Configuración guardada correctamente!' })
+      setAlias(aliasLimpio) // Actualizamos el input con el texto ya limpio
       aplicarTemaVisual(tema)
     }
     setSaving(false)
