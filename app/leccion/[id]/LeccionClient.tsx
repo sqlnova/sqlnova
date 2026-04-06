@@ -1364,7 +1364,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
 
 function TopBar({ title, module: mod, prog, onBack }: { title: string; module: string; prog: string; onBack: () => void }) {
   return (
-    <div style={{ background: 'rgba(8,9,13,0.88)', borderBottom: '1px solid var(--border)', backdropFilter: 'blur(14px)', padding: '0 12px', height: 52, display: 'flex', alignItems: 'center', gap: 8, position: 'sticky', top: 0, zIndex: 100 }}>
+    <div style={{ background: 'var(--nav-bg)', borderBottom: '1px solid var(--border)', backdropFilter: 'blur(14px)', padding: '0 12px', height: 52, display: 'flex', alignItems: 'center', gap: 8, position: 'sticky', top: 0, zIndex: 100 }}>
       <button onClick={onBack} style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 8, padding: '5px 10px', color: 'var(--sub)', fontSize: '0.78rem', fontWeight: 500, cursor: 'pointer', flexShrink: 0 }}>←</button>
       <div style={{ flex: 1, overflow: 'hidden' }}>
         <div style={{ fontSize: '0.62rem', color: 'var(--nova)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>{mod}</div>
@@ -1377,7 +1377,7 @@ function TopBar({ title, module: mod, prog, onBack }: { title: string; module: s
 
 function BottomBar({ label, pct }: { label: string; pct: number }) {
   return (
-    <div style={{ background: 'rgba(8,9,13,0.95)', borderTop: '1px solid var(--border)', backdropFilter: 'blur(8px)', padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 11, position: 'sticky', bottom: 0, zIndex: 50 }}>
+    <div style={{ background: 'var(--nav-bg)', borderTop: '1px solid var(--border)', backdropFilter: 'blur(8px)', padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 11, position: 'sticky', bottom: 0, zIndex: 50 }}>
       <div style={{ fontSize: '0.74rem', color: 'var(--sub)', whiteSpace: 'nowrap', flexShrink: 0 }}>{label}</div>
       <div style={{ flex: 1, height: 4, background: 'var(--bg3)', borderRadius: 4, overflow: 'hidden' }}>
         <div className="level-fill" style={{ height: '100%', borderRadius: 4, width: `${pct}%`, transition: 'width 0.4s ease' }} />
