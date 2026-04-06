@@ -18,10 +18,10 @@
   --dim: #4a4d60;
   --border: rgba(255,255,255,0.06);
   --border2: rgba(255,255,255,0.1);
+  --nav-bg: rgba(8,9,13,0.88);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-
 html { scroll-behavior: smooth; }
 
 body {
@@ -84,14 +84,12 @@ body::after {
 }
 
 /* ── MODO CLARO ──────────────────────────────────────────── */
-/* Agregar al final de globals.css                           */
-
 [data-theme="claro"] {
   --bg:      #f0f4f8;
   --bg2:     #e2e8f0;
   --bg3:     #cbd5e1;
   --card:    #ffffff;
-  --border:  #cbd5e1;
+  --border:  rgba(0,0,0,0.08);
   --border2: #94a3b8;
   --text:    #0f172a;
   --sub:     #475569;
@@ -101,30 +99,26 @@ body::after {
   --green:   #16a34a;
   --amber:   #d97706;
   --red:     #dc2626;
-}
-
-[data-theme="claro"] .sql-editor {
-  background: #f8fafc;
-  color: #0f172a;
-  border-color: #cbd5e1;
-}
-
-[data-theme="claro"] .level-fill {
-  background: linear-gradient(90deg, #2563eb, #7c3aed);
+  --nav-bg:  rgba(248,250,252,0.92);
 }
 
 [data-theme="claro"] body {
   background: var(--bg);
 }
 
-/* Nav y elementos con fondo hardcodeado */
-[data-theme="claro"] nav,
-[data-theme="claro"] .sticky {
-  background: rgba(240,244,248,0.92) !important;
-  border-bottom-color: #cbd5e1 !important;
+[data-theme="claro"] body::after {
+  background-image: radial-gradient(circle, rgba(0,0,0,0.04) 1px, transparent 1px);
 }
 
 [data-theme="claro"] .sql-editor {
-  background: #f8fafc;
+  background: #f1f5f9;
   color: #0f172a;
+  border: 1px solid #cbd5e1;
 }
+
+[data-theme="claro"] .level-fill {
+  background: linear-gradient(90deg, #2563eb, #7c3aed);
+}
+
+[data-theme="claro"] ::-webkit-scrollbar-track { background: #e2e8f0; }
+[data-theme="claro"] ::-webkit-scrollbar-thumb { background: #94a3b8; }
