@@ -229,7 +229,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-        {/* Pocket Database - Coming Soon */}
+                {/* Pocket Database - Coming Soon */}
         <div style={{ marginTop: 32, marginBottom: 8 }}>
           <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--sub)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Premium</div>
           <div style={{ background: 'var(--card)', border: '1px solid rgba(167,139,250,0.2)', borderRadius: 13, padding: '20px 22px', display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -250,7 +250,6 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-
       </div>
     </div>
   )
