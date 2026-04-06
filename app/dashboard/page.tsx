@@ -245,7 +245,7 @@ export default function Dashboard() {
             </div>
             <div style={{ flexShrink: 0 }}>
               <div style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', borderRadius: 9, padding: '8px 14px', fontSize: '0.78rem', color: '#a78bfa', fontWeight: 600, cursor: 'default' }}>
-                Pronto ✨
+                Pronto ✨✨
               </div>
             </div>
           </div>
