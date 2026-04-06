@@ -57,7 +57,8 @@ html {
 }
 
 body {
-  background: var(--bg);
+  /* CAMBIO 1: El !important asegura que el modo claro gane siempre */
+  background-color: var(--bg) !important;
   color: var(--text);
   font-family: 'DM Sans', sans-serif;
   min-height: 100vh;
@@ -74,6 +75,7 @@ input, textarea, .sql-editor, code, .selectable {
   user-select: text !important;
 }
 
+/* Fondo de puntitos dinámico */
 body::after {
   content: '';
   position: fixed;
