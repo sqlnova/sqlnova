@@ -319,7 +319,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     </div>
   )
 
-  // ── MÓDULO 0: INTRODUCCIÓN ──
+  // ── MÓDULO 0: INTRODUCCIÓN SQL──
   if (moduloId === 0) {
     const slide = INTRO_SLIDES[curSlide]
     const total = INTRO_SLIDES.length
