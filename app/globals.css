@@ -82,3 +82,37 @@ body::after {
   background: linear-gradient(90deg, var(--nova2), var(--green));
   transition: width 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* ── MODO CLARO ──────────────────────────────────────────── */
+/* Agregar al final de globals.css                           */
+
+[data-theme="claro"] {
+  --bg:      #f0f4f8;
+  --bg2:     #e2e8f0;
+  --bg3:     #cbd5e1;
+  --card:    #ffffff;
+  --border:  #cbd5e1;
+  --border2: #94a3b8;
+  --text:    #0f172a;
+  --sub:     #475569;
+  --dim:     #94a3b8;
+  --nova:    #2563eb;
+  --nova2:   #1d4ed8;
+  --green:   #16a34a;
+  --amber:   #d97706;
+  --red:     #dc2626;
+}
+
+[data-theme="claro"] .sql-editor {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+[data-theme="claro"] .level-fill {
+  background: linear-gradient(90deg, #2563eb, #7c3aed);
+}
+
+[data-theme="claro"] body {
+  background: var(--bg);
+}

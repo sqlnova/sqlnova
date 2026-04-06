@@ -1,22 +1,23 @@
 import type { Metadata } from 'next'
 import Script from 'next/script'
 import './globals.css'
- 
+
 export const metadata: Metadata = {
   title: 'SQLNova — Aprendé SQL jugando',
   description: 'Lecciones cortas. Racha diaria. Sandbox con tus propios datos.',
   icons: {
-    icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-    ],
+    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
     shortcut: '/favicon.svg',
     apple: '/favicon.svg',
   },
 }
- 
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `try { var t = localStorage.getItem('sqlnova-tema'); if (t === 'claro') document.documentElement.setAttribute('data-theme', 'claro'); } catch(e) {}` }} />
+      </head>
       <body>
         {children}
         <Script
