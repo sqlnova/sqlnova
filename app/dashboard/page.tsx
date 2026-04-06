@@ -26,7 +26,6 @@ export default function Dashboard() {
 
       const uid = session.user.id
 
-      // 1. Obtener o Crear Perfil (Optimizado en un solo paso si es posible)
       let { data: p } = await sb.from('perfiles').select('*').eq('id', uid).maybeSingle()
       
       if (!p) {
@@ -42,20 +41,17 @@ export default function Dashboard() {
       }
       setPerfil(p)
 
-      // 2. Carga paralela de Progreso y Retos para mejorar performance
-      const hoy = new Date().toISOString().split('T')[0]
+      const hoy = new Date().toLocaleDateString('sv-SE')
       
       const [progRes, retosRes] = await Promise.all([
         sb.from('progreso').select('*').eq('usuario_id', uid),
         sb.from('retos').select('id').eq('fecha', hoy).eq('activo', true).limit(1)
       ])
 
-      // Mapear progreso
       const progMap: Record<string, Progreso> = {}
       ;(progRes.data || []).forEach((r: Progreso) => { progMap[r.leccion_id] = r })
       setProg(progMap)
 
-      // Verificar retos pendientes
       if (retosRes.data && retosRes.data.length > 0) {
         const retoId = retosRes.data[0].id
         const { data: completado } = await sb.from('retos_completados')
@@ -86,18 +82,19 @@ export default function Dashboard() {
   }
 
   if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-      <div style={{ width: 32, height: 32, border: '2px solid var(--border2)', borderTopColor: 'var(--nova)', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'var(--bg)', gap: 16 }}>
+      <div style={{ width: 32, height: 32, border: '3px solid var(--border2)', borderTopColor: 'var(--nova)', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+      <div style={{ color: 'var(--sub)', fontSize: '0.85rem' }}>Cargando tu progreso...</div>
     </div>
   )
 
-  // Cálculos de lógica de negocio
   const xp = perfil?.xp_total || 0
   const nivel = Math.min(Math.floor(xp / 500) + 1, NIVELES.length - 1)
   const xpEnNivel = xp % 500
   const nombre = perfil?.nombre || 'Amigo'
   const iniciales = nombre.trim().split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '??'
   const leccionesCompletadas = Object.values(prog).filter(p => p.completada).length
+  const esPremium = (perfil as any)?.es_premium || false
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
@@ -125,22 +122,18 @@ export default function Dashboard() {
           <Pill color="var(--nova)">{xp}⚡</Pill>
 
           <div style={{ position: 'relative' }}>
-            <div onClick={() => setDropOpen(!dropOpen)} style={{ width: 31, height: 31, borderRadius: '50%', background: 'rgba(77,166,255,0.11)', border: '1px solid rgba(77,166,255,0.24)', color: 'var(--nova)', fontSize: '0.73rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginLeft: 4 }}>
+            <div onClick={() => setDropOpen(!dropOpen)} style={{ width: 31, height: 31, borderRadius: '50%', background: 'rgba(77,166,255,0.11)', border: '1px solid rgba(77,166,255,0.24)', color: 'var(--nova)', fontSize: '0.73rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginLeft: 4, position: 'relative' }}>
               {iniciales}
+              {esPremium && <div style={{ position: 'absolute', bottom: -2, right: -2, fontSize: '0.6rem' }}>💎</div>}
             </div>
             {dropOpen && (
               <div style={{ position: 'absolute', right: 0, top: 38, background: 'var(--card)', border: '1px solid var(--border2)', borderRadius: 12, padding: 6, minWidth: 170, boxShadow: '0 8px 24px rgba(0,0,0,0.4)', zIndex: 200 }}>
-                <div style={{ padding: '7px 11px', fontSize: '0.84rem', fontWeight: 600, color: 'var(--text)' }}>{nombre}</div>
+                <div style={{ padding: '7px 11px', fontSize: '0.84rem', fontWeight: 600, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {nombre} {esPremium && <span style={{ fontSize: '0.7rem' }}>💎</span>}
+                </div>
                 <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
-                <div onClick={() => { setDropOpen(false); router.push('/retos') }} style={{ padding: '7px 11px', borderRadius: 7, fontSize: '0.84rem', cursor: 'pointer', color: 'var(--amber)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  ⚡ Retos diarios {tieneRetoHoy && <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--amber)', marginLeft: 'auto' }} />}
-                </div>
-                <div onClick={() => { setDropOpen(false); router.push('/leaderboard') }} style={{ padding: '7px 11px', borderRadius: 7, fontSize: '0.84rem', cursor: 'pointer', color: 'var(--amber)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  🏆 Leaderboard
-                </div>
-                <div onClick={() => { setDropOpen(false); router.push('/perfil') }} style={{ padding: '7px 11px', borderRadius: 7, fontSize: '0.84rem', cursor: 'pointer', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  ⚙️ Mi perfil
-                </div>
+                <div onClick={() => { setDropOpen(false); router.push('/pocket') }} style={{ padding: '7px 11px', borderRadius: 7, fontSize: '0.84rem', cursor: 'pointer', color: 'var(--nova)', fontWeight: 600 }}>🗄️ Pocket Database</div>
+                <div onClick={() => { setDropOpen(false); router.push('/perfil') }} style={{ padding: '7px 11px', borderRadius: 7, fontSize: '0.84rem', cursor: 'pointer', color: 'var(--text)' }}>⚙️ Mi perfil</div>
                 <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
                 <div onClick={logout} style={{ padding: '7px 11px', borderRadius: 7, fontSize: '0.84rem', cursor: 'pointer', color: 'var(--red)' }}>Cerrar sesión</div>
               </div>
@@ -174,7 +167,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* MODULOS */}
+        {/* CURRICULO */}
         <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--sub)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Currículo</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))', gap: 10, marginBottom: 32 }}>
           {MODULOS.map((m, i) => {
@@ -226,18 +219,48 @@ export default function Dashboard() {
           })}
         </div>
 
-        {/* PREMIUM SECTION */}
+        {/* PREMIUM SECTION ACTUALIZADA */}
         <div style={{ marginBottom: 40 }}>
           <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--sub)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Premium</div>
-          <div style={{ background: 'var(--card)', border: '1px solid rgba(167,139,250,0.2)', borderRadius: 13, padding: '20px 22px', display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div 
+            onClick={() => router.push('/pocket')}
+            style={{ 
+              background: 'var(--card)', 
+              border: `1px solid ${esPremium ? 'rgba(77,166,255,0.3)' : 'rgba(167,139,250,0.2)'}`, 
+              borderRadius: 13, 
+              padding: '20px 22px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 16,
+              cursor: 'pointer',
+              transition: 'transform 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+            onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+          >
             <div style={{ fontSize: '2.2rem', flexShrink: 0 }}>🗄️</div>
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                 <div style={{ fontSize: '0.95rem', fontWeight: 700 }}>Pocket Database</div>
-                <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '2px 7px', borderRadius: 5, background: 'rgba(167,139,250,0.12)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.3)' }}>PRONTO</span>
+                <span style={{ 
+                  fontSize: '0.65rem', 
+                  fontWeight: 700, 
+                  padding: '2px 7px', 
+                  borderRadius: 5, 
+                  background: esPremium ? 'rgba(77,166,255,0.1)' : 'rgba(167,139,250,0.12)', 
+                  color: esPremium ? 'var(--nova)' : '#a78bfa', 
+                  border: `1px solid ${esPremium ? 'rgba(77,166,255,0.3)' : 'rgba(167,139,250,0.3)'}` 
+                }}>
+                  {esPremium ? 'ACTIVO ✨' : 'NUEVO'}
+                </span>
               </div>
               <div style={{ fontSize: '0.82rem', color: 'var(--sub)', lineHeight: 1.6 }}>
-                Subí tu propio CSV y explorá tus datos con SQL directamente en el browser.
+                Subí tu propio CSV y explorá tus datos con SQL localmente. Privacidad total.
+              </div>
+            </div>
+            <div style={{ flexShrink: 0 }}>
+              <div style={{ background: 'var(--nova2)', color: '#fff', borderRadius: 9, padding: '8px 14px', fontSize: '0.78rem', fontWeight: 600 }}>
+                Entrar →
               </div>
             </div>
           </div>
@@ -264,7 +287,6 @@ export default function Dashboard() {
   )
 }
 
-// Sub-componentes
 function Pill({ children, color }: { children: React.ReactNode; color: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.77rem', fontWeight: 500, color: 'var(--sub)', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 100, padding: '4px 11px' }}>
