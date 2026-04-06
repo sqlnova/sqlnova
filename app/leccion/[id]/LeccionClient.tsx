@@ -25,7 +25,14 @@ import {
 } from '@/lib/curriculum-m9m10'
 
 type Prog = Record<string, { completada: boolean; xp_ganado: number }>
-type Vista = 'leccion' | 'resumen' | 'glosario' | 'intro-joins' | 'intro-windows' | 'intro-subqueries' | 'intro-ctes'
+type Vista = 
+  | 'leccion' 
+  | 'resumen' 
+  | 'glosario' 
+  | 'intro-joins' 
+  | 'intro-windows' 
+  | 'intro-subqueries' 
+  | 'intro-ctes'
 
 export default function LeccionClient({ moduloId }: { moduloId: number }) {
   const router = useRouter()
@@ -146,18 +153,10 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
         const prefix = getPrefix()
         const done = Object.keys(pm).filter(k => k.startsWith(prefix) && pm[k]?.completada).length
         setCurIdx(Math.min(done, lecciones.length - 1))
-        if (moduloId === 3 && done === 0) {
-          setVista('intro-joins')
-        }
-        if (moduloId === 8 && done === 0) {
-          setVista('intro-windows')
-        }
-        if (moduloId === 6 && done === 0) {
-          setVista('intro-subqueries')
-        }
-        if (moduloId === 7 && done === 0) {
-          setVista('intro-ctes')
-        }
+        if (moduloId === 3 && done === 0) setVista('intro-joins')
+        if (moduloId === 6 && done === 0) setVista('intro-subqueries')
+        if (moduloId === 7 && done === 0) setVista('intro-ctes')
+        if (moduloId === 8 && done === 0) setVista('intro-windows')
         if (moduloId === 6 && done === 0) {
           setVista('intro-subqueries')
         }
@@ -319,7 +318,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     </div>
   )
 
-  // ── MÓDULO 0: INTRODUCCIÓN SQL──
+  // ── MÓDULO 0: INTRODUCCIÓN ──
   if (moduloId === 0) {
     const slide = INTRO_SLIDES[curSlide]
     const total = INTRO_SLIDES.length
