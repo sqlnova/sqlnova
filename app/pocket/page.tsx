@@ -8,6 +8,7 @@ export default function PocketPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [esPremium, setEsPremium] = useState(false)
+  const [user, setUser] = useState<any>(null)
   const [tablas, setTablas] = useState<{nombre: string, columnas: string[]}[]>([])
   const [query, setQuery] = useState('')
   const [resultado, setResultado] = useState<{ columns: string[], values: any[][] } | null>(null)
@@ -19,7 +20,9 @@ export default function PocketPage() {
     const init = async () => {
       const { data: { session } } = await sb.auth.getSession()
       if (!session) { router.replace('/auth'); return }
+      setUser(session.user)
 
+      // 1. Verificar estado Premium
       const { data: p } = await sb.from('perfiles').select('es_premium').eq('id', session.user.id).single()
       
       if (!p?.es_premium) {
@@ -30,6 +33,7 @@ export default function PocketPage() {
 
       setEsPremium(true)
 
+      // 2. Inicializar motor SQL (WASM)
       const SQL = (window as any)._sqljsInstance || (await (window as any)._sqljsPromise)
       if (SQL) {
         dbRef.current = new SQL.Database()
@@ -47,9 +51,17 @@ export default function PocketPage() {
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
+      transformHeader: (h) => h.trim().replace(/[^a-z0-9]/gi, '_').toLowerCase(),
       complete: (results) => {
         try {
-          const nombreTabla = file.name.replace(/\.[^/.]+$/, "").replace(/[^a-z0-9]/gi, '_').toLowerCase()
+          if (results.data.length === 0) throw new Error("El archivo está vacío.")
+
+          const nombreTabla = file.name
+            .replace(/\.[^/.]+$/, "")
+            .trim()
+            .replace(/[^a-z0-9]/gi, '_') 
+            .toLowerCase()
+
           const columnas = Object.keys(results.data[0] as object)
           
           dbRef.current.run(`DROP TABLE IF EXISTS "${nombreTabla}"`)
@@ -58,13 +70,14 @@ export default function PocketPage() {
 
           const sqlInsert = `INSERT INTO "${nombreTabla}" VALUES (${columnas.map(() => '?').join(', ')});`
           results.data.forEach((fila: any) => {
-            dbRef.current.run(sqlInsert, Object.values(fila))
+            const valoresLimpios = Object.values(fila).map(v => typeof v === 'string' ? v.trim() : v)
+            dbRef.current.run(sqlInsert, valoresLimpios)
           })
 
           setTablas(prev => [...prev, { nombre: nombreTabla, columnas }])
           setQuery(`SELECT * FROM ${nombreTabla} LIMIT 10;`)
         } catch (err: any) {
-          setError("Error: " + err.message)
+          setError("Error al procesar: " + err.message)
         }
       }
     })
@@ -93,21 +106,57 @@ export default function PocketPage() {
     </div>
   )
 
-  if (!esPremium) return <div className="p-10 text-center">Contenido Premium 💎</div>
+  // CONTENIDO PREMIUM (PAYWALL)
+  if (!esPremium) return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#08090d] p-6 text-center animate-fade-up">
+      <div className="bg-blue-500/10 p-6 rounded-3xl mb-5 border border-blue-500/20">
+        <span className="text-6xl">💎</span>
+      </div>
 
+      <h2 className="text-2xl lg:text-3xl font-extrabold mb-3 tracking-tight text-white">
+        Desbloqueá tu <span className="text-blue-400">Pocket Database</span>
+      </h2>
+      
+      <p className="text-slate-400 max-w-md leading-relaxed mb-8 text-sm lg:text-base">
+        Llevá tus habilidades de SQL al mundo real. Analizá tus propios datos sin que salgan de tu computadora.
+      </p>
+
+      {/* Grilla de Beneficios */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl w-full mb-10">
+        <BenefitCard icon="🔒" title="Privacidad Total" desc="Tus archivos nunca tocan el servidor." />
+        <BenefitCard icon="📊" title="Análisis Libre" desc="Cruzá múltiples CSV con JOINs." />
+        <BenefitCard icon="⚡" title="WASM Engine" desc="Velocidad nativa en tu navegador." />
+        <BenefitCard icon="📁" title="Multi-Table" desc="Cargá todos los archivos que necesites." />
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
+        <button 
+          onClick={() => router.push('/dashboard')}
+          className="flex-1 bg-white/5 border border-white/10 text-slate-400 py-3.5 rounded-xl font-bold hover:bg-white/10 transition-all"
+        >
+          Volver
+        </button>
+        <button 
+          onClick={() => alert('Próximamente: Integración con Lemon Squeezy')}
+          className="flex-[2] bg-blue-600 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-500 transition-all active:scale-95"
+        >
+          Hacerme Premium ✨
+        </button>
+      </div>
+    </div>
+  )
+
+  // CONTENIDO PREMIUM ACTIVADO (SANDBOX)
   return (
     <div className="flex flex-col min-h-screen bg-[#08090d]">
-      {/* TopBar */}
       <div className="h-[52px] border-b border-white/5 flex items-center px-4 gap-3 sticky top-0 bg-[#08090d]/80 backdrop-blur-md z-50">
         <button onClick={() => router.replace('/dashboard')} className="p-2 text-slate-400">←</button>
-        <h1 className="font-bold text-sm">🗄️ Pocket Database</h1>
+        <h1 className="font-bold text-sm text-white">🗄️ Pocket Database</h1>
       </div>
 
       <div className="flex-1 p-4 lg:p-8 max-w-6xl mx-auto w-full">
-        {/* Layout Adaptable: Columna en móvil, Fila en escritorio */}
         <div className="flex flex-col lg:flex-row gap-6">
           
-          {/* Sidebar de Tablas */}
           <aside className="w-full lg:w-[280px] flex-shrink-0">
             <div className="bg-[#12141c] border border-white/5 rounded-xl p-5">
               <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-white/10 rounded-lg cursor-pointer hover:bg-white/5 transition-colors mb-6">
@@ -116,11 +165,11 @@ export default function PocketPage() {
                 <input type="file" accept=".csv" onChange={procesarCSV} className="hidden" />
               </label>
 
-              <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Tus tablas locales</h3>
+              <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Tablas en RAM</h3>
               <div className="space-y-4">
-                {tablas.length === 0 && <p className="text-xs text-slate-600 italic">No hay tablas cargadas.</p>}
+                {tablas.length === 0 && <p className="text-xs text-slate-600 italic">No hay datos cargados.</p>}
                 {tablas.map(t => (
-                  <div key={t.nombre} className="group">
+                  <div key={t.nombre}>
                     <div className="text-xs font-bold text-blue-400 flex items-center gap-2">📁 {t.nombre}</div>
                     <div className="text-[10px] text-slate-500 ml-5 mt-1 leading-relaxed">{t.columnas.join(', ')}</div>
                   </div>
@@ -129,20 +178,18 @@ export default function PocketPage() {
             </div>
           </aside>
 
-          {/* Editor y Resultados */}
           <main className="flex-1 min-w-0">
             <div className="bg-[#12141c] border border-white/5 rounded-xl overflow-hidden">
               <div className="bg-white/5 px-4 py-2 flex items-center justify-between border-b border-white/5">
-                <span className="text-[10px] font-mono text-slate-400">editor_sandbox.sql</span>
-                <span className="text-[10px] text-blue-400 font-bold">RAM MODE</span>
+                <span className="text-[10px] font-mono text-slate-400">sandbox_explorador.sql</span>
+                <span className="text-[10px] text-blue-400 font-bold">MODO LOCAL</span>
               </div>
               
-              {/* EDITOR MÁS GRANDE */}
               <textarea 
-                className="w-full bg-transparent p-5 text-sm font-mono text-slate-300 outline-none min-h-[220px] lg:min-h-[300px] resize-none"
+                className="w-full bg-transparent p-5 text-sm font-mono text-slate-300 outline-none min-h-[220px] lg:min-h-[350px] resize-none"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Escribí tu query aquí... (Ej: SELECT * FROM mi_tabla)"
+                placeholder="Escribí tu query... (Ej: SELECT * FROM ventas)"
               />
               
               <div className="p-4 bg-white/[0.02] border-t border-white/5 flex justify-end">
@@ -161,7 +208,6 @@ export default function PocketPage() {
               </div>
             )}
 
-            {/* TABLA DE RESULTADOS RESPONSIVA */}
             {resultado && (
               <div className="mt-6">
                 <div className="text-[10px] font-bold text-slate-500 uppercase mb-2">Resultado ({resultado.values.length} filas)</div>
@@ -188,9 +234,18 @@ export default function PocketPage() {
               </div>
             )}
           </main>
-
         </div>
       </div>
+    </div>
+  )
+}
+
+function BenefitCard({ icon, title, desc }: { icon: string, title: string, desc: string }) {
+  return (
+    <div className="bg-[#12141c] border border-white/5 p-4 rounded-2xl text-left">
+      <div className="text-xl mb-2">{icon}</div>
+      <div className="text-xs font-bold text-white mb-1 uppercase tracking-wide">{title}</div>
+      <div className="text-[11px] text-slate-500 leading-normal">{desc}</div>
     </div>
   )
 }
