@@ -16,46 +16,69 @@ export default function Dashboard() {
   const [tieneRetoHoy, setTieneRetoHoy] = useState(false)
 
   const loadData = useCallback(async () => {
-    const { data: { session } } = await sb.auth.getSession()
-    if (!session) { router.replace('/auth'); return }
-
-    const uid = session.user.id
-
-    let { data: p } = await sb.from('perfiles').select('*').eq('id', uid).single()
-    if (!p) {
-      await sb.from('perfiles').insert({
-        id: uid,
-        nombre: session.user.user_metadata?.full_name || session.user.email?.split('@')[0],
-        email: session.user.email,
-      })
-      const { data: p2 } = await sb.from('perfiles').select('*').eq('id', uid).single()
-      p = p2
-    }
-    setPerfil(p)
-
-    const { data: progData } = await sb.from('progreso').select('*').eq('usuario_id', uid)
-    const progMap: Record<string, Progreso> = {}
-    ;(progData || []).forEach((r: Progreso) => { progMap[r.leccion_id] = r })
-    setProg(progMap)
-
-    // Verificar si hay reto nuevo hoy sin completar
-    const hoy = new Date().toISOString().split('T')[0]
-    const { data: retosHoy } = await sb.from('retos').select('id').eq('fecha', hoy).eq('activo', true).limit(1)
-    if (retosHoy && retosHoy.length > 0) {
-      const { data: completados } = await sb.from('retos_completados')
-        .select('reto_id')
-        .eq('usuario_id', uid)
-        .in('reto_id', retosHoy.map((r: any) => r.id))
-      setTieneRetoHoy(true)
-      if (!completados || completados.length === 0) {
-        setRetoPopup(true)
+    try {
+      const { data: { session } } = await sb.auth.getSession()
+      
+      if (!session) { 
+        router.replace('/auth')
+        return 
       }
-    }
 
-    setLoading(false)
+      const uid = session.user.id
+
+      // 1. Obtener o Crear Perfil (Optimizado en un solo paso si es posible)
+      let { data: p } = await sb.from('perfiles').select('*').eq('id', uid).maybeSingle()
+      
+      if (!p) {
+        const { data: newProfile } = await sb.from('perfiles')
+          .insert({
+            id: uid,
+            nombre: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Usuario',
+            email: session.user.email,
+          })
+          .select()
+          .single()
+        p = newProfile
+      }
+      setPerfil(p)
+
+      // 2. Carga paralela de Progreso y Retos para mejorar performance
+      const hoy = new Date().toISOString().split('T')[0]
+      
+      const [progRes, retosRes] = await Promise.all([
+        sb.from('progreso').select('*').eq('usuario_id', uid),
+        sb.from('retos').select('id').eq('fecha', hoy).eq('activo', true).limit(1)
+      ])
+
+      // Mapear progreso
+      const progMap: Record<string, Progreso> = {}
+      ;(progRes.data || []).forEach((r: Progreso) => { progMap[r.leccion_id] = r })
+      setProg(progMap)
+
+      // Verificar retos pendientes
+      if (retosRes.data && retosRes.data.length > 0) {
+        const retoId = retosRes.data[0].id
+        const { data: completado } = await sb.from('retos_completados')
+          .select('reto_id')
+          .eq('usuario_id', uid)
+          .eq('reto_id', retoId)
+          .maybeSingle()
+
+        setTieneRetoHoy(true)
+        if (!completado) {
+          setRetoPopup(true)
+        }
+      }
+    } catch (error) {
+      console.error("Error cargando datos del dashboard:", error)
+    } finally {
+      setLoading(false)
+    }
   }, [router])
 
-  useEffect(() => { loadData() }, [loadData])
+  useEffect(() => { 
+    loadData() 
+  }, [loadData])
 
   const logout = async () => {
     await sb.auth.signOut()
@@ -68,11 +91,12 @@ export default function Dashboard() {
     </div>
   )
 
+  // Cálculos de lógica de negocio
   const xp = perfil?.xp_total || 0
   const nivel = Math.min(Math.floor(xp / 500) + 1, NIVELES.length - 1)
   const xpEnNivel = xp % 500
-  const nombre = perfil?.nombre || 'amigo'
-  const iniciales = nombre.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+  const nombre = perfil?.nombre || 'Amigo'
+  const iniciales = nombre.trim().split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '??'
   const leccionesCompletadas = Object.values(prog).filter(p => p.completada).length
 
   return (
@@ -83,22 +107,23 @@ export default function Dashboard() {
           SQL<span style={{ color: 'var(--nova)' }}>Nova</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          {/* Retos button */}
           <button
             onClick={() => router.push('/retos')}
             style={{ background: tieneRetoHoy ? 'rgba(232,168,56,0.12)' : 'var(--bg3)', border: `1px solid ${tieneRetoHoy ? 'rgba(232,168,56,0.4)' : 'var(--border)'}`, borderRadius: 8, padding: '4px 10px', color: 'var(--amber)', fontSize: '0.76rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
           >
             <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>⚡{tieneRetoHoy && <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--amber)', display: 'inline-block' }} />}</span>
           </button>
-          {/* Leaderboard button */}
+          
           <button
             onClick={() => router.push('/leaderboard')}
-            style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '4px 10px', color: 'var(--amber)', fontSize: '0.76rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+            style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '4px 10px', color: 'var(--amber)', fontSize: '0.76rem', fontWeight: 600, cursor: 'pointer' }}
           >
             🏆
           </button>
+
           <Pill color="var(--amber)">{perfil?.racha_actual || 0}🔥</Pill>
           <Pill color="var(--nova)">{xp}⚡</Pill>
+
           <div style={{ position: 'relative' }}>
             <div onClick={() => setDropOpen(!dropOpen)} style={{ width: 31, height: 31, borderRadius: '50%', background: 'rgba(77,166,255,0.11)', border: '1px solid rgba(77,166,255,0.24)', color: 'var(--nova)', fontSize: '0.73rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginLeft: 4 }}>
               {iniciales}
@@ -125,7 +150,7 @@ export default function Dashboard() {
       </nav>
 
       {/* CONTENT */}
-      <div style={{ flex: 1, padding: '34px 22px', maxWidth: 940, margin: '0 auto', width: '100%', animation: 'fadeUp 0.3s ease both' }}>
+      <div style={{ flex: 1, padding: '34px 22px', maxWidth: 940, margin: '0 auto', width: '100%' }}>
         <div style={{ marginBottom: 30 }}>
           <h1 style={{ fontSize: '1.45rem', fontWeight: 700, letterSpacing: '-0.03em', marginBottom: 4 }}>Hola, {nombre.split(' ')[0]} 👋</h1>
           <p style={{ color: 'var(--sub)', fontSize: '0.88rem' }}>Cada lección te acerca más al dominio total del SQL.</p>
@@ -135,7 +160,7 @@ export default function Dashboard() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 11, marginBottom: 26 }}>
           <StatCard value={xp} label="XP total" color="var(--nova)" />
           <StatCard value={`${perfil?.racha_actual || 0} 🔥`} label="Días de racha" color="var(--amber)" />
-          <StatCard value={leccionesCompletadas} label="Lecciones completadas" color="var(--green)" />
+          <StatCard value={leccionesCompletadas} label="Lecciones" color="var(--green)" />
         </div>
 
         {/* LEVEL */}
@@ -145,40 +170,13 @@ export default function Dashboard() {
             <div style={{ fontSize: '0.76rem', color: 'var(--sub)', fontFamily: 'DM Mono' }}>{xpEnNivel} / 500 XP</div>
           </div>
           <div style={{ height: 5, background: 'var(--bg3)', borderRadius: 5, overflow: 'hidden' }}>
-            <div className="level-fill" style={{ height: '100%', borderRadius: 5, width: `${(xpEnNivel / 500) * 100}%` }} />
+            <div style={{ height: '100%', borderRadius: 5, background: 'var(--nova)', width: `${(xpEnNivel / 500) * 100}%`, transition: 'width 0.5s ease-out' }} />
           </div>
         </div>
 
-        {/* MODULES */}
-        {/* Pop-up de reto del día */}
-        {retoPopup && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-            <div style={{ background: 'var(--card)', border: '1px solid rgba(232,168,56,0.3)', borderRadius: 16, padding: '28px 24px', maxWidth: 400, width: '100%', textAlign: 'center', animation: 'fadeUp 0.25s ease both' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>⚡</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 8 }}>¡Nuevos retos disponibles!</div>
-              <div style={{ fontSize: '0.84rem', color: 'var(--sub)', lineHeight: 1.7, marginBottom: 20 }}>
-                Tenés 3 retos de SQL para hoy — nivel inicial, avanzado y experto.<br/>
-                Completarlos suma XP al leaderboard semanal.
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 20 }}>
-                {[['⭐','Inicial','15 XP','var(--green)'],['⭐⭐','Avanzado','30 XP','var(--nova)'],['⭐⭐⭐','Experto','50 XP','var(--amber)']].map(([ico,lbl,xp,color]) => (
-                  <div key={String(lbl)} style={{ background: 'var(--bg2)', borderRadius: 8, padding: '10px 6px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '1rem', marginBottom: 4 }}>{ico}</div>
-                    <div style={{ fontSize: '0.72rem', fontWeight: 600, color: color as string }}>{lbl}</div>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--sub)', fontFamily: 'DM Mono' }}>{xp}</div>
-                  </div>
-                ))}
-              </div>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button onClick={() => setRetoPopup(false)} style={{ flex: 1, background: 'transparent', border: '1px solid var(--border2)', borderRadius: 9, padding: '10px', color: 'var(--sub)', cursor: 'pointer', fontSize: '0.84rem' }}>Después</button>
-                <button onClick={() => { setRetoPopup(false); router.push('/retos') }} style={{ flex: 2, background: 'var(--amber)', color: '#1a0f00', border: 'none', borderRadius: 9, padding: '10px', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}>¡Empezar retos! →</button>
-              </div>
-            </div>
-          </div>
-        )}
-
+        {/* MODULOS */}
         <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--sub)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Currículo</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))', gap: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))', gap: 10, marginBottom: 32 }}>
           {MODULOS.map((m, i) => {
             const prefix = m.id === 0 ? '00-' : `0${m.id}-`
             const done = Object.keys(prog).filter(k => k.startsWith(prefix) && prog[k]?.completada).length
@@ -204,13 +202,13 @@ export default function Dashboard() {
                   <span style={{ fontSize: '1.15rem' }}>{m.icono}</span>
                   <div>
                     <div style={{ fontSize: '0.93rem', fontWeight: 600, letterSpacing: '-0.02em' }}>{m.titulo}</div>
-                    <div style={{ fontSize: '0.73rem', color: 'var(--sub)' }}>{m.contexto} · {m.lecciones_total} lecciones</div>
+                    <div style={{ fontSize: '0.73rem', color: 'var(--sub)' }}>{m.contexto} · {m.lecciones_total} lecc.</div>
                   </div>
                 </div>
                 {m.id !== 0 && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ flex: 1, height: 3, background: 'var(--bg3)', borderRadius: 3, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', borderRadius: 3, background: 'var(--nova2)', width: `${pct}%`, transition: 'width 0.4s' }} />
+                      <div style={{ height: '100%', borderRadius: 3, background: 'var(--nova2)', width: `${pct}%` }} />
                     </div>
                     <div style={{ fontSize: '0.7rem', color: 'var(--sub)', fontFamily: 'DM Mono', minWidth: 26, textAlign: 'right' }}>{pct}%</div>
                   </div>
@@ -227,34 +225,46 @@ export default function Dashboard() {
             )
           })}
         </div>
-      </div>
 
-                {/* Pocket Database - Coming Soon */}
-        <div style={{ marginTop: 32, marginBottom: 8 }}>
+        {/* PREMIUM SECTION */}
+        <div style={{ marginBottom: 40 }}>
           <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--sub)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Premium</div>
           <div style={{ background: 'var(--card)', border: '1px solid rgba(167,139,250,0.2)', borderRadius: 13, padding: '20px 22px', display: 'flex', alignItems: 'center', gap: 16 }}>
             <div style={{ fontSize: '2.2rem', flexShrink: 0 }}>🗄️</div>
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                 <div style={{ fontSize: '0.95rem', fontWeight: 700 }}>Pocket Database</div>
-                <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '2px 7px', borderRadius: 5, background: 'rgba(167,139,250,0.12)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.3)' }}>PRÓXIMAMENTE</span>
+                <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '2px 7px', borderRadius: 5, background: 'rgba(167,139,250,0.12)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.3)' }}>PRONTO</span>
               </div>
               <div style={{ fontSize: '0.82rem', color: 'var(--sub)', lineHeight: 1.6 }}>
-                Subí tu propio CSV, explorá tus datos y corré queries SQL directamente en el browser. Con normalización automática de columnas y export de resultados.
-              </div>
-            </div>
-            <div style={{ flexShrink: 0 }}>
-              <div style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', borderRadius: 9, padding: '8px 14px', fontSize: '0.78rem', color: '#a78bfa', fontWeight: 600, cursor: 'default' }}>
-                Pronto ✨✨
+                Subí tu propio CSV y explorá tus datos con SQL directamente en el browser.
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* MODAL RETOS */}
+      {retoPopup && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, backdropFilter: 'blur(4px)' }}>
+          <div style={{ background: 'var(--card)', border: '1px solid rgba(232,168,56,0.3)', borderRadius: 16, padding: '28px 24px', maxWidth: 400, width: '100%', textAlign: 'center' }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>⚡</div>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 8 }}>¡Retos del día listos!</div>
+            <p style={{ fontSize: '0.84rem', color: 'var(--sub)', lineHeight: 1.7, marginBottom: 20 }}>
+              Completar los retos diarios te otorga XP extra para subir en el leaderboard semanal.
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setRetoPopup(false)} style={{ flex: 1, background: 'transparent', border: '1px solid var(--border2)', borderRadius: 9, padding: '10px', color: 'var(--sub)', cursor: 'pointer' }}>Luego</button>
+              <button onClick={() => { setRetoPopup(false); router.push('/retos') }} style={{ flex: 2, background: 'var(--amber)', color: '#1a0f00', border: 'none', borderRadius: 9, padding: '10px', fontWeight: 700, cursor: 'pointer' }}>¡Ir a retos! →</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
+// Sub-componentes
 function Pill({ children, color }: { children: React.ReactNode; color: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.77rem', fontWeight: 500, color: 'var(--sub)', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 100, padding: '4px 11px' }}>

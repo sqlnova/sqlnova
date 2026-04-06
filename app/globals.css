@@ -19,10 +19,25 @@
   --border: rgba(255,255,255,0.06);
   --border2: rgba(255,255,255,0.1);
   --nav-bg: rgba(8,9,13,0.88);
+  
+  /* Safe Areas para móviles con Notch */
+  --sat: env(safe-area-inset-top);
+  --sab: env(safe-area-inset-bottom);
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+* { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+  /* Evita el recuadro azul al tocar botones en Android */
+  -webkit-tap-highlight-color: transparent;
+}
+
+html { 
+  scroll-behavior: smooth;
+  /* Evita el rebote de scroll (pull-to-refresh) que delata que es una web */
+  overscroll-behavior-y: none; 
+}
 
 body {
   background: var(--bg);
@@ -33,92 +48,105 @@ body {
   line-height: 1.6;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  
+  /* Bloquea la selección de texto en toda la app (excepto inputs) */
+  user-select: none;
+  /* Optimización para que no haya delay al clickear */
+  touch-action: manipulation;
+}
+
+/* Permitir selección solo donde es necesario */
+input, textarea, .sql-editor, code, .selectable {
+  user-select: text !important;
 }
 
 body::after {
   content: '';
   position: fixed;
   inset: 0;
-  background-image: radial-gradient(circle, rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-image: radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
   background-size: 28px 28px;
   pointer-events: none;
-  z-index: 0;
+  z-index: -1; /* Cambiado a -1 para no interferir con clicks */
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--bg2); }
-::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 3px; }
+/* Scrollbar estética para WebViews de Android */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 10px; }
 
 /* SQL editor */
 .sql-editor {
   background: #0b0d14;
   color: #d4d8e8;
   font-family: 'DM Mono', monospace;
-  font-size: 0.88rem;
-  line-height: 1.75;
-  resize: vertical;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  resize: none; /* Mejor no permitir resize manual en móvil */
   outline: none;
-  border: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
   width: 100%;
-  min-height: 100px;
-  padding: 14px 16px;
+  min-height: 120px;
+  padding: 16px;
   caret-color: var(--nova);
+  transition: border-color 0.2s;
 }
 
-/* Animations */
+.sql-editor:focus {
+  border-color: var(--nova);
+}
+
+/* Animations mejoradas */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
-.animate-fade-up { animation: fadeUp 0.3s ease both; }
-.animate-spin { animation: spin 0.7s linear infinite; }
 
-/* Level bar */
-.level-fill {
-  background: linear-gradient(90deg, var(--nova2), var(--green));
-  transition: width 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+.animate-fade-up { 
+  animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; 
 }
 
-/* ── MODO CLARO ──────────────────────────────────────────── */
+/* Barra de nivel con gradiente más "Premium" */
+.level-fill {
+  background: linear-gradient(90deg, var(--nova2), var(--nova), var(--green));
+  background-size: 200% 100%;
+  transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ── MODO CLARO (Ajustado para mayor contraste) ──────────────── */
 [data-theme="claro"] {
-  --bg:      #f0f4f8;
-  --bg2:     #e2e8f0;
-  --bg3:     #cbd5e1;
+  --bg:      #f8fafc;
+  --bg2:     #f1f5f9;
+  --bg3:     #e2e8f0;
   --card:    #ffffff;
-  --border:  rgba(0,0,0,0.08);
-  --border2: #94a3b8;
+  --border:  rgba(0,0,0,0.06);
+  --border2: #cbd5e1;
   --text:    #0f172a;
-  --sub:     #475569;
+  --sub:     #64748b;
   --dim:     #94a3b8;
   --nova:    #2563eb;
   --nova2:   #1d4ed8;
-  --green:   #16a34a;
-  --amber:   #d97706;
-  --red:     #dc2626;
-  --nav-bg:  rgba(248,250,252,0.92);
-}
-
-[data-theme="claro"] body {
-  background: var(--bg);
+  --green:   #10b981;
+  --amber:   #f59e0b;
+  --red:     #ef4444;
+  --nav-bg:  rgba(255,255,255,0.9);
 }
 
 [data-theme="claro"] body::after {
-  background-image: radial-gradient(circle, rgba(0,0,0,0.04) 1px, transparent 1px);
+  background-image: radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px);
 }
 
 [data-theme="claro"] .sql-editor {
-  background: #f1f5f9;
-  color: #0f172a;
-  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
 }
 
-[data-theme="claro"] .level-fill {
-  background: linear-gradient(90deg, #2563eb, #7c3aed);
-}
-
-[data-theme="claro"] ::-webkit-scrollbar-track { background: #e2e8f0; }
-[data-theme="claro"] ::-webkit-scrollbar-thumb { background: #94a3b8; }
+/* Clases de utilidad para el Safe Area (útil en Navbars y Footers) */
+.pt-safe { padding-top: var(--sat, 0px); }
+.pb-safe { padding-bottom: var(--sab, 0px); }
