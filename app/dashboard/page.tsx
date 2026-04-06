@@ -254,10 +254,8 @@ style={{ background: ‘var(–bg3)’, border: ‘1px solid var(–border)’, 
         </div>
       </div>
     </div>
-
   </div>
 </div>
-```
 
 )
 }
