@@ -20,7 +20,6 @@ export default function PocketPage() {
       const { data: { session } } = await sb.auth.getSession()
       if (!session) { router.replace('/auth'); return }
 
-      // 1. Verificar si es Premium
       const { data: p } = await sb.from('perfiles').select('es_premium').eq('id', session.user.id).single()
       
       if (!p?.es_premium) {
@@ -31,7 +30,6 @@ export default function PocketPage() {
 
       setEsPremium(true)
 
-      // 2. Esperar al motor SQL (que ya precargamos en el Layout)
       const SQL = (window as any)._sqljsInstance || (await (window as any)._sqljsPromise)
       if (SQL) {
         dbRef.current = new SQL.Database()
@@ -41,197 +39,157 @@ export default function PocketPage() {
     init()
   }, [router])
 
-const procesarCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  if (!dbRef.current) {
-    setError("El motor SQL no está listo. Reintentando...");
-    return;
-  }
+  const procesarCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !dbRef.current) return
 
-  setError('');
-  console.log("Procesando:", file.name);
+    setError('')
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        try {
+          const nombreTabla = file.name.replace(/\.[^/.]+$/, "").replace(/[^a-z0-9]/gi, '_').toLowerCase()
+          const columnas = Object.keys(results.data[0] as object)
+          
+          dbRef.current.run(`DROP TABLE IF EXISTS "${nombreTabla}"`)
+          const sqlCreate = `CREATE TABLE "${nombreTabla}" (${columnas.map(c => `"${c}" TEXT`).join(', ')});`
+          dbRef.current.run(sqlCreate)
 
-  Papa.parse(file, {
-    header: true,
-    skipEmptyLines: true,
-    complete: (results) => {
-      try {
-        if (results.data.length === 0) throw new Error("El archivo está vacío.");
+          const sqlInsert = `INSERT INTO "${nombreTabla}" VALUES (${columnas.map(() => '?').join(', ')});`
+          results.data.forEach((fila: any) => {
+            dbRef.current.run(sqlInsert, Object.values(fila))
+          })
 
-        const nombreTabla = file.name.replace(/\.[^/.]+$/, "").replace(/[^a-z0-9]/gi, '_').toLowerCase();
-        const columnas = Object.keys(results.data[0] as object);
-        
-        // Crear tabla
-        dbRef.current.run(`DROP TABLE IF EXISTS "${nombreTabla}"`);
-        const sqlCreate = `CREATE TABLE "${nombreTabla}" (${columnas.map(c => `"${c}" TEXT`).join(', ')});`;
-        dbRef.current.run(sqlCreate);
-
-        // Insertar filas (una por una para evitar límites de strings largos)
-        const sqlInsert = `INSERT INTO "${nombreTabla}" VALUES (${columnas.map(() => '?').join(', ')});`;
-        results.data.forEach((fila: any) => {
-          dbRef.current.run(sqlInsert, Object.values(fila));
-        });
-
-        console.log("Tabla creada:", nombreTabla);
-        setTablas(prev => [...prev, { nombre: nombreTabla, columnas }]);
-        setQuery(`SELECT * FROM ${nombreTabla} LIMIT 10;`); // Query sugerida
-      } catch (err: any) {
-        console.error(err);
-        setError("Error: " + err.message);
+          setTablas(prev => [...prev, { nombre: nombreTabla, columnas }])
+          setQuery(`SELECT * FROM ${nombreTabla} LIMIT 10;`)
+        } catch (err: any) {
+          setError("Error: " + err.message)
+        }
       }
-    }
-  });
-};
+    })
+  }
 
   const ejecutarSQL = () => {
     if (!dbRef.current || !query.trim()) return
     setError('')
+    setResultado(null)
     try {
       const res = dbRef.current.exec(query)
       if (res.length > 0) {
         setResultado(res[0])
       } else {
-        setResultado(null)
-        setError("Query ejecutada. No hubo resultados que mostrar.")
+        setError("Query ejecutada sin resultados.")
       }
     } catch (err: any) {
       setError(err.message)
-      setResultado(null)
     }
   }
 
-  if (loading) return <div className="loader">Cargando...</div>
-
-  // PANTALLA PARA NO PREMIUM (PAYWALL)
-if (!esPremium) return (
-  <div style={{ 
-    display: 'flex', 
-    flexDirection: 'column', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    minHeight: '80vh', 
-    padding: '20px', 
-    textAlign: 'center',
-    animation: 'fadeUp 0.5s ease both'
-  }}>
-    <div style={{ 
-      background: 'rgba(77,166,255,0.1)', 
-      padding: '24px', 
-      borderRadius: '24px', 
-      marginBottom: '20px',
-      border: '1px solid var(--border2)'
-    }}>
-      <span style={{ fontSize: '4rem' }}>💎</span>
-    </div>
-
-    <h2 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: '12px', letterSpacing: '-0.03em' }}>
-      Desbloqueá tu <span style={{ color: 'var(--nova)' }}>Pocket Database</span>
-    </h2>
-    
-    <p style={{ color: 'var(--sub)', maxWidth: '450px', lineHeight: '1.6', marginBottom: '32px' }}>
-      Llevá tus habilidades de SQL al mundo real. Analizá tus propios datos sin que salgan de tu computadora.
-    </p>
-
-    {/* Grilla de Beneficios */}
-    <div style={{ 
-      display: 'grid', 
-      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-      gap: '12px', 
-      maxWidth: '600px', 
-      width: '100%',
-      marginBottom: '40px' 
-    }}>
-      <BenefitCard icon="🔒" title="Privacidad Total" desc="Los archivos nunca se suben a la nube." />
-      <BenefitCard icon="📊" title="Análisis Libre" desc="Cruza múltiples CSV con JOINs." />
-      <BenefitCard icon="⚡" title="WASM Engine" desc="Velocidad nativa en tu navegador." />
-      <BenefitCard icon="📁" title="Exportar" desc="Descargá tus reportes en un click." />
-    </div>
-
-    <div style={{ display: 'flex', gap: '12px', width: '100%', maxWidth: '400px' }}>
-      <button 
-        onClick={() => router.push('/dashboard')}
-        style={{ flex: 1, background: 'transparent', border: '1px solid var(--border2)', color: 'var(--sub)', padding: '14px', borderRadius: '12px', fontWeight: 600, cursor: 'pointer' }}
-      >
-        Volver
-      </button>
-      <button 
-        style={{ flex: 2, background: 'var(--nova2)', color: 'white', border: 'none', padding: '14px', borderRadius: '12px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(45, 143, 255, 0.3)' }}
-      >
-        Hacerme Premium ✨
-      </button>
-    </div>
-  </div>
-)
-
-// Sub-componente para los beneficios
-function BenefitCard({ icon, title, desc }: { icon: string, title: string, desc: string }) {
-  return (
-    <div style={{ background: 'var(--card)', border: '1px solid var(--border)', padding: '16px', borderRadius: '16px', textAlign: 'left' }}>
-      <div style={{ fontSize: '1.2rem', marginBottom: '8px' }}>{icon}</div>
-      <div style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '4px' }}>{title}</div>
-      <div style={{ fontSize: '0.75rem', color: 'var(--sub)', lineHeight: '1.4' }}>{desc}</div>
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#08090d] gap-4">
+      <div className="w-8 h-8 border-2 border-white/10 border-t-blue-500 rounded-full animate-spin" />
+      <span className="text-xs text-slate-500 font-mono">Iniciando Sandbox...</span>
     </div>
   )
-}
+
+  if (!esPremium) return <div className="p-10 text-center">Contenido Premium 💎</div>
 
   return (
-    <div style={{ padding: '20px', maxWidth: 1000, margin: '0 auto' }}>
-      <header style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: '1.4rem' }}>🗄️ Pocket Database</h1>
-        <p style={{ fontSize: '0.85rem', color: 'var(--sub)' }}>Los datos se procesan en tu RAM. Nada se sube al servidor.</p>
-      </header>
+    <div className="flex flex-col min-h-screen bg-[#08090d]">
+      {/* TopBar */}
+      <div className="h-[52px] border-b border-white/5 flex items-center px-4 gap-3 sticky top-0 bg-[#08090d]/80 backdrop-blur-md z-50">
+        <button onClick={() => router.replace('/dashboard')} className="p-2 text-slate-400">←</button>
+        <h1 className="font-bold text-sm">🗄️ Pocket Database</h1>
+      </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 20 }}>
-        {/* Sidebar: Tablas */}
-        <aside style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
-          <label style={{ display: 'block', padding: '10px', border: '2px dashed var(--border2)', borderRadius: 8, textAlign: 'center', cursor: 'pointer', marginBottom: 16 }}>
-            <span style={{ fontSize: '0.8rem' }}>+ Cargar CSV</span>
-            <input type="file" accept=".csv" onChange={procesarCSV} style={{ display: 'none' }} />
-          </label>
+      <div className="flex-1 p-4 lg:p-8 max-w-6xl mx-auto w-full">
+        {/* Layout Adaptable: Columna en móvil, Fila en escritorio */}
+        <div className="flex flex-col lg:flex-row gap-6">
           
-          <h3 style={{ fontSize: '0.75rem', color: 'var(--sub)', textTransform: 'uppercase', marginBottom: 12 }}>Tus Tablas</h3>
-          {tablas.map(t => (
-            <div key={t.nombre} style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--nova)' }}>📁 {t.nombre}</div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--dim)', marginLeft: 18 }}>{t.columnas.join(', ')}</div>
+          {/* Sidebar de Tablas */}
+          <aside className="w-full lg:w-[280px] flex-shrink-0">
+            <div className="bg-[#12141c] border border-white/5 rounded-xl p-5">
+              <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-white/10 rounded-lg cursor-pointer hover:bg-white/5 transition-colors mb-6">
+                <span className="text-2xl mb-1">📤</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Subir CSV</span>
+                <input type="file" accept=".csv" onChange={procesarCSV} className="hidden" />
+              </label>
+
+              <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Tus tablas locales</h3>
+              <div className="space-y-4">
+                {tablas.length === 0 && <p className="text-xs text-slate-600 italic">No hay tablas cargadas.</p>}
+                {tablas.map(t => (
+                  <div key={t.nombre} className="group">
+                    <div className="text-xs font-bold text-blue-400 flex items-center gap-2">📁 {t.nombre}</div>
+                    <div className="text-[10px] text-slate-500 ml-5 mt-1 leading-relaxed">{t.columnas.join(', ')}</div>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-        </aside>
+          </aside>
 
-        {/* Main: Query & Resultados */}
-        <main>
-          <textarea 
-            className="sql-editor" 
-            value={query} 
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="SELECT * FROM nombre_de_tu_archivo LIMIT 10;"
-          />
-          <button onClick={ejecutarSQL} style={{ marginTop: 12, background: 'var(--nova2)', color: 'white', border: 'none', padding: '10px 20px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
-            Ejecutar Query
-          </button>
-
-          {error && <div style={{ color: 'var(--red)', marginTop: 12, fontSize: '0.85rem', fontFamily: 'DM Mono' }}>{error}</div>}
-
-          {resultado && (
-            <div style={{ marginTop: 24, overflowX: 'auto', background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border)' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem', fontFamily: 'DM Mono' }}>
-                <thead>
-                  <tr style={{ background: 'var(--bg3)' }}>
-                    {resultado.columns.map(col => <th key={col} style={{ padding: 10, textAlign: 'left', borderBottom: '1px solid var(--border)' }}>{col}</th>)}
-                  </tr>
-                </thead>
-                <tbody>
-                  {resultado.values.map((fila, i) => (
-                    <tr key={i}>
-                      {fila.map((val, j) => <td key={j} style={{ padding: 10, borderBottom: '1px solid var(--border)' }}>{val}</td>)}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          {/* Editor y Resultados */}
+          <main className="flex-1 min-w-0">
+            <div className="bg-[#12141c] border border-white/5 rounded-xl overflow-hidden">
+              <div className="bg-white/5 px-4 py-2 flex items-center justify-between border-b border-white/5">
+                <span className="text-[10px] font-mono text-slate-400">editor_sandbox.sql</span>
+                <span className="text-[10px] text-blue-400 font-bold">RAM MODE</span>
+              </div>
+              
+              {/* EDITOR MÁS GRANDE */}
+              <textarea 
+                className="w-full bg-transparent p-5 text-sm font-mono text-slate-300 outline-none min-h-[220px] lg:min-h-[300px] resize-none"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Escribí tu query aquí... (Ej: SELECT * FROM mi_tabla)"
+              />
+              
+              <div className="p-4 bg-white/[0.02] border-t border-white/5 flex justify-end">
+                <button 
+                  onClick={ejecutarSQL}
+                  className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-6 py-2.5 rounded-lg transition-all active:scale-95"
+                >
+                  ▶ Ejecutar SQL
+                </button>
+              </div>
             </div>
-          )}
-        </main>
+
+            {error && (
+              <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-xs font-mono">
+                ⚠️ {error}
+              </div>
+            )}
+
+            {/* TABLA DE RESULTADOS RESPONSIVA */}
+            {resultado && (
+              <div className="mt-6">
+                <div className="text-[10px] font-bold text-slate-500 uppercase mb-2">Resultado ({resultado.values.length} filas)</div>
+                <div className="bg-[#12141c] border border-white/5 rounded-xl overflow-hidden overflow-x-auto">
+                  <table className="w-full text-left border-collapse font-mono text-[11px]">
+                    <thead>
+                      <tr className="bg-white/5">
+                        {resultado.columns.map(col => (
+                          <th key={col} className="p-3 border-b border-white/5 text-blue-400 uppercase tracking-wider">{col}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {resultado.values.map((fila, i) => (
+                        <tr key={i} className="hover:bg-white/[0.02]">
+                          {fila.map((val, j) => (
+                            <td key={j} className="p-3 border-b border-white/[0.02] text-slate-400">{val}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </main>
+
+        </div>
       </div>
     </div>
   )
