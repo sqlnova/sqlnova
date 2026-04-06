@@ -37,7 +37,7 @@ export const LECCIONES_M9: Leccion[] = [
     id: '09-05', num: 5, titulo: 'Cuando NO usar indices', tipo: 'escribir',
     dificultad: 'intermedio', xp: 20, tabla: 'usuarios',
     teoria: 'Los indices <strong>no siempre</strong> mejoran el rendimiento. No convienen en columnas con muy pocos valores distintos — si una columna booleana tiene solo 0 y 1, el indice no ayuda porque el motor igual recorre la mitad de la tabla. Si convienen en columnas con muchos valores distintos como pais o email, donde el indice puede descartar muchas filas rapidamente.',
-    enunciado: 'Las columnas con pocos valores distintos no se benefician de un indice. La columna <strong>es_premium</strong> solo tiene dos valores posibles (0 o 1). Demostrato: conta cuantos valores distintos tiene usando <strong>COUNT(DISTINCT es_premium)</strong>. Mostra el resultado como "valores_distintos".',
+    enunciado: 'Las columnas con pocos valores distintos no se benefician de un indice. La columna <strong>es_premium</strong> solo tiene dos valores posibles (0 o 1). Demostralo: conta cuantos valores distintos tiene usando <strong>COUNT(DISTINCT es_premium)</strong>. Mostra el resultado como "valores_distintos".',
     pista: 'SELECT COUNT(DISTINCT es_premium) AS valores_distintos FROM usuarios',
     solucion: 'SELECT COUNT(DISTINCT es_premium) AS valores_distintos FROM usuarios',
   },
