@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { sb } from '@/lib/supabase'
 import Papa from 'papaparse'
 import * as XLSX from 'xlsx'
-import PremiumModal from '@/app/components/PremiumModal' // 1. Importamos el nuevo componente
+import PremiumModal from '@/app/components/PremiumModal'
 
 // Tipos de datos
 type TableInfo = {
@@ -50,7 +50,7 @@ export default function PocketPage() {
   const [resultado, setResultado] = useState<{ columns: string[], values: any[][] } | null>(null)
   const [error, setError] = useState('')
   const [showGlosario, setShowGlosario] = useState(false)
-  const [isModalOpen, setIsModalOpen] = useState(false) // 2. Estado para el Modal Premium
+  const [isModalOpen, setIsModalOpen] = useState(false) 
   const [tablePreview, setTablePreview] = useState<PreviewData | null>(null)
   const dbRef = useRef<any>(null)
 
@@ -62,11 +62,10 @@ export default function PocketPage() {
         const tableNames = res[0].values.map((v: any[]) => v[0] as string);
         const nuevasTablas = tableNames.map((tName: string) => {
           const pragma = dbRef.current.exec(`PRAGMA table_info("${tName}")`);
-          let columnas: string[] = [];
-          if (pragma.length > 0) {
-            columnas = pragma[0].values.map((v: any[]) => v[1] as string);
-          }
-          return { nombre: tName, columnas };
+          return { 
+            nombre: tName, 
+            columnas: pragma.length > 0 ? pragma[0].values.map((v: any[]) => v[1] as string) : [] 
+          };
         });
         setTablas(nuevasTablas);
       } else {
@@ -82,8 +81,6 @@ export default function PocketPage() {
       const res = dbRef.current.exec(`SELECT * FROM "${t}" LIMIT 5`);
       if (res.length > 0) {
         setTablePreview({ name: t, data: res[0] });
-      } else {
-        setTablePreview({ name: t, data: { columns: ['Info'], values: [['Tabla vacía']] } });
       }
     } catch(e) { console.error(e); }
   }
@@ -93,23 +90,17 @@ export default function PocketPage() {
       const { data: { session } } = await sb.auth.getSession()
       if (!session) { router.replace('/auth'); return }
       const { data: p } = await sb.from('perfiles').select('es_premium').eq('id', session.user.id).single()
-      if (!p?.es_premium) { setEsPremium(false); setLoading(false); return }
-      setEsPremium(true)
+      
+      setEsPremium(!!p?.es_premium)
 
-      let SQL: any
-      if ((window as any)._sqljsReady && (window as any)._sqljsInstance) {
-        SQL = (window as any)._sqljsInstance
-      } else if ((window as any)._sqljsPromise) {
-        SQL = await (window as any)._sqljsPromise
-      } else {
-        const script = document.createElement('script')
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js'
-        document.head.appendChild(script)
-        await new Promise(resolve => { script.onload = resolve })
-        SQL = await (window as any).initSqlJs({
-          locateFile: (f: string) => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}`
-        })
-      }
+      const script = document.createElement('script')
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js'
+      document.head.appendChild(script)
+      await new Promise(resolve => { script.onload = resolve })
+      const SQL = await (window as any).initSqlJs({
+        locateFile: (f: string) => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}`
+      })
+      
       dbRef.current = new SQL.Database()
       setLoading(false)
     }
@@ -117,6 +108,13 @@ export default function PocketPage() {
   }, [router])
 
   const procesarArchivo = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Si NO es premium, bloqueamos la subida y abrimos el modal
+    if (!esPremium) {
+      setIsModalOpen(true)
+      e.target.value = '' 
+      return
+    }
+
     const file = e.target.files?.[0]
     if (!file || !dbRef.current) return
     setError('')
@@ -130,8 +128,7 @@ export default function PocketPage() {
         if (isExcel) {
           const data = new Uint8Array(event.target?.result as ArrayBuffer)
           const workbook = XLSX.read(data, { type: 'array' })
-          const firstSheet = workbook.Sheets[workbook.SheetNames[0]]
-          csvContent = XLSX.utils.sheet_to_csv(firstSheet)
+          csvContent = XLSX.utils.sheet_to_csv(workbook.Sheets[workbook.SheetNames[0]])
         } else {
           csvContent = event.target?.result as string
         }
@@ -142,7 +139,6 @@ export default function PocketPage() {
           transformHeader: (h) => h.trim().replace(/[^a-z0-9]/gi, '_').toLowerCase(),
           complete: (results) => {
             try {
-              if (results.data.length === 0) throw new Error("El archivo está vacío");
               const nombreTabla = file.name.replace(/\.[^/.]+$/, "").trim().replace(/[^a-z0-9]/gi, '_').toLowerCase()
               const columnas = Object.keys(results.data[0] as object)
               dbRef.current.run(`DROP TABLE IF EXISTS "${nombreTabla}"`)
@@ -150,15 +146,14 @@ export default function PocketPage() {
               
               const sqlInsert = `INSERT INTO "${nombreTabla}" VALUES (${columnas.map(() => '?').join(', ')});`
               results.data.forEach((fila: any) => {
-                const valores = Object.values(fila).map(v => typeof v === 'string' ? v.trim() : v)
-                dbRef.current.run(sqlInsert, valores)
+                dbRef.current.run(sqlInsert, Object.values(fila))
               })
               actualizarEsquema()
               setQuery(`SELECT * FROM ${nombreTabla} LIMIT 10;`)
             } catch (err: any) { setError("Error SQL: " + err.message) }
           }
         })
-      } catch (err: any) { setError("Error al leer archivo: " + err.message) }
+      } catch (err: any) { setError("Error al leer: " + err.message) }
     }
 
     if (isExcel) reader.readAsArrayBuffer(file)
@@ -170,13 +165,12 @@ export default function PocketPage() {
     setError(''); setResultado(null); setTablePreview(null);
     try {
       const res = dbRef.current.exec(query)
-      if (res.length > 0) {
-        setResultado(res[0])
-      } else {
+      if (res.length > 0) setResultado(res[0])
+      else {
         const q = query.trim().toUpperCase()
         if (/^(CREATE|DROP|ALTER|INSERT|UPDATE|DELETE)/.test(q)) {
-          setResultado({ columns: ['✓ Éxito'], values: [['Operación ejecutada correctamente.']] })
-        } else { setError("Query ejecutada sin resultados.") }
+          setResultado({ columns: ['✓ Éxito'], values: [['Operación completada.']] })
+        } else { setError("Sin resultados.") }
       }
       actualizarEsquema()
     } catch (err: any) { setError(err.message) }
@@ -192,15 +186,7 @@ export default function PocketPage() {
     link.click()
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-[var(--bg)]">
-        <div className="w-8 h-8 border-2 border-[var(--border2)] border-t-blue-500 rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (!esPremium) return <Paywall router={router} />;
+  if (loading) return <div className="flex items-center justify-center min-h-screen bg-[var(--bg)]"><div className="w-8 h-8 border-2 border-t-blue-500 rounded-full animate-spin" /></div>
 
   return (
     <div className="flex flex-col min-h-screen bg-[var(--bg)] text-[var(--text)] font-sans">
@@ -210,13 +196,18 @@ export default function PocketPage() {
           <h1 className="font-bold text-sm">🗄️ Pocket Database</h1>
         </div>
         <div className="flex gap-2">
-          {/* 3. Botón para ver los planes Premium */}
-          <button 
-            onClick={() => setIsModalOpen(true)} 
-            className="text-[10px] bg-blue-600/10 text-blue-500 border border-blue-600/30 px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 hover:bg-blue-600/20 transition-all"
-          >
-            <span>💎</span> VER PLANES
-          </button>
+          {!esPremium ? (
+            <button 
+              onClick={() => setIsModalOpen(true)} 
+              className="text-[10px] bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 animate-pulse shadow-lg shadow-blue-500/20"
+            >
+              <span>💎</span> DESBLOQUEAR PREMIUM
+            </button>
+          ) : (
+            <div className="text-[9px] bg-green-500/10 text-green-500 border border-green-500/20 px-3 py-1.5 rounded-lg font-bold flex items-center gap-1">
+              <span>✅</span> PREMIUM
+            </div>
+          )}
           <button onClick={() => setShowGlosario(true)} className="text-[10px] bg-[var(--bg3)] border border-[var(--border)] px-3 py-1.5 rounded-lg font-bold">💡 GLOSARIO</button>
           {resultado && resultado.columns[0] !== '✓ Éxito' && (
             <button onClick={descargarCSV} className="text-[10px] bg-blue-600/20 text-blue-500 border border-blue-600/30 px-3 py-1.5 rounded-lg font-bold">📥 DESCARGAR</button>
@@ -230,7 +221,7 @@ export default function PocketPage() {
             <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm">
               <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-[var(--border)] rounded-lg cursor-pointer hover:bg-[var(--bg3)] mb-6 transition-all group">
                 <span className="text-3xl mb-1 group-hover:scale-110 transition-transform">📊</span>
-                <span className="text-[10px] font-bold text-[var(--sub)] uppercase text-center">Subir CSV o Excel</span>
+                <span className="text-[10px] font-bold text-[var(--sub)] uppercase text-center">Subir Archivo</span>
                 <input type="file" accept=".csv, .xlsx, .xls" onChange={procesarArchivo} className="hidden" />
               </label>
               
@@ -251,12 +242,6 @@ export default function PocketPage() {
                         {tablePreview?.name === t.nombre ? 'Ocultar' : 'Ver datos'}
                       </span>
                     </div>
-                    {t.columnas.map(col => (
-                      <div key={col} className="flex justify-between items-center text-[10px] py-1 border-b border-[var(--border)] last:border-0">
-                        <span className="text-[var(--text)] font-mono opacity-80">{col}</span>
-                        <span className="text-[var(--sub)] italic opacity-60 text-[8px]">TEXT</span>
-                      </div>
-                    ))}
                   </div>
                 ))}
               </div>
@@ -265,28 +250,20 @@ export default function PocketPage() {
 
           <main className="flex-1 min-w-0 space-y-4">
             {tablePreview && (
-              <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden mb-4 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden mb-4 shadow-sm">
                 <div className="bg-[var(--bg3)] p-3 border-b border-[var(--border)] flex justify-between items-center">
-                  <span className="text-xs font-mono text-[var(--nova)] font-bold">🔍 Vista previa: {tablePreview.name}</span>
+                  <span className="text-xs font-mono text-blue-500 font-bold">🔍 Vista previa: {tablePreview.name}</span>
                   <button onClick={() => setTablePreview(null)} className="text-[var(--sub)]">✕</button>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse font-mono text-[10px]">
                     <thead>
-                      <tr className="bg-[var(--bg)]/50">
-                        {tablePreview.data.columns.map(col => (
-                          <th key={col} className="p-2.5 border-b border-[var(--border)] text-[var(--sub)]">{col}</th>
-                        ))}
-                      </tr>
+                      <tr>{tablePreview.data.columns.map(col => (<th key={col} className="p-2 border-b border-[var(--border)] text-[var(--sub)]">{col}</th>))}</tr>
                     </thead>
                     <tbody>
                       {tablePreview.data.values.map((row, i) => (
                         <tr key={i} className="hover:bg-[var(--bg3)] border-b border-[var(--border)] last:border-0">
-                          {row.map((val, j) => (
-                            <td key={j} className="p-2.5 text-[var(--text)]">
-                              {val !== null ? String(val) : <span className="text-[var(--sub)] opacity-50">NULL</span>}
-                            </td>
-                          ))}
+                          {row.map((val, j) => (<td key={j} className="p-2 text-[var(--text)]">{val !== null ? String(val) : 'NULL'}</td>))}
                         </tr>
                       ))}
                     </tbody>
@@ -300,10 +277,10 @@ export default function PocketPage() {
                 className="w-full bg-transparent p-5 text-sm font-mono text-[var(--text)] outline-none min-h-[300px] resize-none focus:bg-[var(--bg)] transition-colors"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Escribí tu query SQL (ej: SELECT * FROM mi_tabla)..."
+                placeholder="Escribí tu query SQL..."
               />
               <div className="p-4 bg-[var(--bg2)] border-t border-[var(--border)] flex justify-end">
-                <button onClick={ejecutarSQL} className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-8 py-3 rounded-lg active:scale-95 transition-all shadow-lg shadow-blue-500/20">▶ EJECUTAR SQL</button>
+                <button onClick={ejecutarSQL} className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-8 py-3 rounded-lg active:scale-95 transition-all">▶ EJECUTAR SQL</button>
               </div>
             </div>
 
@@ -315,20 +292,14 @@ export default function PocketPage() {
                   <thead>
                     <tr className="bg-[var(--bg3)]">
                       {resultado.columns.map(col => (
-                        <th key={col} className={`p-4 border-b border-[var(--border)] uppercase font-bold ${col === '✓ Éxito' ? 'text-green-500' : 'text-blue-500'}`}>
-                          {col}
-                        </th>
+                        <th key={col} className="p-4 border-b border-[var(--border)] uppercase font-bold text-blue-500">{col}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {resultado.values.map((fila, i) => (
-                      <tr key={i} className="hover:bg-[var(--bg2)] border-b border-[var(--border)] last:border-0 transition-colors">
-                        {fila.map((val, j) => (
-                          <td key={j} className="p-4 text-[var(--text)]">
-                            {val !== null ? String(val) : <span className="text-[var(--sub)] opacity-50">NULL</span>}
-                          </td>
-                        ))}
+                      <tr key={i} className="hover:bg-[var(--bg2)] border-b border-[var(--border)] last:border-0">
+                        {fila.map((val, j) => (<td key={j} className="p-4 text-[var(--text)]">{val !== null ? String(val) : 'NULL'}</td>))}
                       </tr>
                     ))}
                   </tbody>
@@ -340,22 +311,20 @@ export default function PocketPage() {
       </div>
 
       {showGlosario && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col shadow-2xl scale-in-95 animate-in">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col shadow-2xl">
             <div className="p-5 border-b border-[var(--border)] flex justify-between items-center bg-[var(--bg3)]">
-              <h2 className="font-bold text-[var(--text)] flex items-center gap-2">💡 Glosario SQL</h2>
-              <button onClick={() => setShowGlosario(false)} className="text-[var(--sub)] hover:text-[var(--text)] text-xl w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--bg2)] transition-colors">✕</button>
+              <h2 className="font-bold text-[var(--text)]">💡 Glosario SQL</h2>
+              <button onClick={() => setShowGlosario(false)} className="text-[var(--sub)] text-xl">✕</button>
             </div>
             <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-[var(--bg)]">
               {GLOSARIO.map(cat => (
                 <div key={cat.cat}>
-                  <h3 className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> {cat.cat}
-                  </h3>
+                  <h3 className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-4">{cat.cat}</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {cat.funcs.map(f => (
-                      <div key={f.n} className="bg-[var(--bg2)] p-4 rounded-xl border border-[var(--border)] hover:border-blue-500/30 transition-colors group">
-                        <div className="font-mono text-xs text-blue-400 mb-2 group-hover:text-blue-300 transition-colors">{f.n}</div>
+                      <div key={f.n} className="bg-[var(--bg2)] p-4 rounded-xl border border-[var(--border)]">
+                        <div className="font-mono text-xs text-blue-400 mb-2">{f.n}</div>
                         <div className="text-[10px] text-[var(--sub)] leading-relaxed">{f.d}</div>
                       </div>
                     ))}
@@ -367,24 +336,7 @@ export default function PocketPage() {
         </div>
       )}
 
-      {/* 4. El Modal Premium al final */}
-      <PremiumModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-      />
-    </div>
-  )
-}
-
-function Paywall({ router }: { router: any }) {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-[var(--bg)] p-6 text-center animate-in fade-in duration-500">
-      <div className="bg-blue-500/10 p-8 rounded-full mb-6 border border-blue-500/20 shadow-2xl shadow-blue-500/10">
-        <span className="text-7xl animate-pulse inline-block">💎</span>
-      </div>
-      <h2 className="text-3xl font-extrabold mb-4 text-[var(--text)] tracking-tight">Pocket Database Premium</h2>
-      <p className="text-[var(--sub)] max-w-md mb-10 text-base leading-relaxed">Analizá tus propios archivos, cruzá datos y descargá reportes. Todo procesado localmente: privacidad total.</p>
-      <button onClick={() => router.push('/dashboard')} className="bg-blue-600 hover:bg-blue-500 text-white px-12 py-4 rounded-2xl font-bold transition-all shadow-xl shadow-blue-600/20 active:scale-95">Volver al Dashboard</button>
+      <PremiumModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   )
 }
