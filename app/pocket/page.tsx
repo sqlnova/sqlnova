@@ -59,7 +59,7 @@ export default function PocketPage() {
       const res = dbRef.current.exec("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'");
       if (res.length > 0) {
         const tableNames = res[0].values.map((v: any[]) => v[0] as string);
-        const nuevasTablas = tableNames.map((tName) => {
+        const nuevasTablas = tableNames.map((tName: string) => {
           const pragma = dbRef.current.exec(`PRAGMA table_info("${tName}")`);
           let columnas: string[] = [];
           if (pragma.length > 0) {
