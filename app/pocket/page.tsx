@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { sb } from '@/lib/supabase'
 import Papa from 'papaparse'
 import * as XLSX from 'xlsx'
+import PremiumModal from '@/app/components/PremiumModal' // 1. Importamos el nuevo componente
 
 // Tipos de datos
 type TableInfo = {
@@ -49,6 +50,7 @@ export default function PocketPage() {
   const [resultado, setResultado] = useState<{ columns: string[], values: any[][] } | null>(null)
   const [error, setError] = useState('')
   const [showGlosario, setShowGlosario] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false) // 2. Estado para el Modal Premium
   const [tablePreview, setTablePreview] = useState<PreviewData | null>(null)
   const dbRef = useRef<any>(null)
 
@@ -114,7 +116,6 @@ export default function PocketPage() {
     init()
   }, [router])
 
-  // Lógica de procesamiento unificada
   const procesarArchivo = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !dbRef.current) return
@@ -160,7 +161,6 @@ export default function PocketPage() {
       } catch (err: any) { setError("Error al leer archivo: " + err.message) }
     }
 
-    // CRÍTICO: Leer según el tipo de archivo
     if (isExcel) reader.readAsArrayBuffer(file)
     else reader.readAsText(file)
   }
@@ -210,6 +210,13 @@ export default function PocketPage() {
           <h1 className="font-bold text-sm">🗄️ Pocket Database</h1>
         </div>
         <div className="flex gap-2">
+          {/* 3. Botón para ver los planes Premium */}
+          <button 
+            onClick={() => setIsModalOpen(true)} 
+            className="text-[10px] bg-blue-600/10 text-blue-500 border border-blue-600/30 px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 hover:bg-blue-600/20 transition-all"
+          >
+            <span>💎</span> VER PLANES
+          </button>
           <button onClick={() => setShowGlosario(true)} className="text-[10px] bg-[var(--bg3)] border border-[var(--border)] px-3 py-1.5 rounded-lg font-bold">💡 GLOSARIO</button>
           {resultado && resultado.columns[0] !== '✓ Éxito' && (
             <button onClick={descargarCSV} className="text-[10px] bg-blue-600/20 text-blue-500 border border-blue-600/30 px-3 py-1.5 rounded-lg font-bold">📥 DESCARGAR</button>
@@ -224,7 +231,6 @@ export default function PocketPage() {
               <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-[var(--border)] rounded-lg cursor-pointer hover:bg-[var(--bg3)] mb-6 transition-all group">
                 <span className="text-3xl mb-1 group-hover:scale-110 transition-transform">📊</span>
                 <span className="text-[10px] font-bold text-[var(--sub)] uppercase text-center">Subir CSV o Excel</span>
-                {/* INPUT ACTUALIZADO PARA ACEPTAR EXCEL */}
                 <input type="file" accept=".csv, .xlsx, .xls" onChange={procesarArchivo} className="hidden" />
               </label>
               
@@ -360,6 +366,12 @@ export default function PocketPage() {
           </div>
         </div>
       )}
+
+      {/* 4. El Modal Premium al final */}
+      <PremiumModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
     </div>
   )
 }
