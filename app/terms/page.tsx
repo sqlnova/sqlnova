@@ -34,7 +34,7 @@ export default function TermsPage() {
         <section className="space-y-3">
           <h2 className="text-xl font-bold">4. Limitación de Responsabilidad</h2>
           <p className="text-[var(--sub)] leading-relaxed">
-            SQLNova se proporciona "tal cual". No garantizamos que el servicio sea ininterrumpido o libre de errores. No nos hacemos responsables por la pérdida de datos o interrupciones en el servicio.
+            SQLNova se proporciona &quot;tal cual&quot;. No garantizamos que el servicio sea ininterrumpido o libre de errores. No nos hacemos responsables por la pérdida de datos o interrupciones en el servicio.
           </p>
         </section>
       </div>
