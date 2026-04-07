@@ -1,6 +1,8 @@
 'use client'
-import React from 'react'
-import { Check, Crown, X, Rocket, ShieldCheck, Download, Zap } from 'lucide-react'
+import React, { useState } from 'react'
+import { Crown, X, Rocket, ShieldCheck, Download, Zap, Loader2 } from 'lucide-react'
+import { sb } from '@/lib/supabase'
+import { PREMIUM_PRICE } from '@/lib/constants'
 
 interface PremiumModalProps {
   isOpen: boolean;
@@ -8,7 +10,45 @@ interface PremiumModalProps {
 }
 
 export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
   if (!isOpen) return null;
+
+  const handleSubscription = async () => {
+    setIsRedirecting(true);
+    try {
+      // 1. Validamos sesión del usuario
+      const { data: { session } } = await sb.auth.getSession();
+      
+      if (!session) {
+        alert("Por favor, iniciá sesión para realizar la compra.");
+        setIsRedirecting(false);
+        return;
+      }
+
+      // 2. Llamamos a la API de Checkout
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userId: session.user.id 
+        })
+      });
+
+      const data = await res.json();
+
+      if (data.id) {
+        // 3. Redirección a la pasarela de Mercado Pago
+        window.location.href = `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=${data.id}`;
+      } else {
+        throw new Error("Error al generar el pago");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("No se pudo conectar con el sistema de pagos. Intentá de nuevo.");
+      setIsRedirecting(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
@@ -28,7 +68,6 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
             <Crown size={40} className="text-yellow-400 fill-yellow-400" />
           </div>
           
-          {/* Círculos decorativos de fondo */}
           <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-white/10 rounded-full blur-2xl" />
           <div className="absolute -top-8 -right-8 w-24 h-24 bg-blue-400/20 rounded-full blur-2xl" />
         </div>
@@ -39,7 +78,7 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
               SQLNova <span className="text-blue-500">Premium</span>
             </h2>
             <p className="text-[var(--sub)] text-sm leading-relaxed">
-              Llevá tu aprendizaje al siguiente nivel y desbloqueá herramientas avanzadas de análisis.
+              Desbloqueá Pocket Database y procesá tus propios archivos Excel y CSV sin límites.
             </p>
           </div>
 
@@ -53,7 +92,7 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
             <BenefitItem 
               icon={<ShieldCheck size={18} className="text-green-500" />} 
               title="Privacidad Blindada" 
-              desc="Tus datos nunca salen de tu dispositivo." 
+              desc="Tus datos nunca salen de tu navegador." 
             />
             <BenefitItem 
               icon={<Download size={18} className="text-purple-500" />} 
@@ -63,20 +102,28 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
             <BenefitItem 
               icon={<Zap size={18} className="text-yellow-500" />} 
               title="Sin Límites" 
-              desc="Consultas SQL sin restricciones de tamaño." 
+              desc="Consultas SQL potentes y sin restricciones." 
             />
           </div>
 
-          {/* Botón de Acción */}
+          {/* Botón de Acción Dinámico */}
           <button 
-            onClick={() => alert("Aquí iría tu pasarela de pago o link de Stripe/MercadoPago")}
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-600/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+            onClick={handleSubscription}
+            disabled={isRedirecting}
+            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-600/20 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            Suscribirme ahora
+            {isRedirecting ? (
+              <>
+                <Loader2 className="animate-spin" size={20} />
+                Conectando...
+              </>
+            ) : (
+              "Suscribirme ahora"
+            )}
           </button>
           
-          <p className="text-center text-[var(--sub)] text-[10px] mt-4 uppercase tracking-widest font-semibold">
-            Pago único · Acceso de por vida
+          <p className="text-center text-[var(--sub)] text-[11px] mt-4 uppercase tracking-widest font-bold">
+            Pago único de ${PREMIUM_PRICE.toLocaleString('es-AR')} · Acceso de por vida
           </p>
         </div>
       </div>
@@ -86,8 +133,8 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
 
 function BenefitItem({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) {
   return (
-    <div className="flex gap-4">
-      <div className="flex-shrink-0 w-10 h-10 bg-[var(--bg2)] rounded-xl flex items-center justify-center border border-[var(--border)]">
+    <div className="flex gap-4 group">
+      <div className="flex-shrink-0 w-10 h-10 bg-[var(--bg2)] rounded-xl flex items-center justify-center border border-[var(--border)] group-hover:border-blue-500/50 transition-colors">
         {icon}
       </div>
       <div>
