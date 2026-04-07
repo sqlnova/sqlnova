@@ -1,5 +1,5 @@
 import { MercadoPagoConfig, Preference } from 'mercadopago';
-import { sb } from '@/lib/supabase';
+import { PREMIUM_PRICE, PREMIUM_PLAN_NAME } from '@/lib/constants';
 
 const client = new MercadoPagoConfig({ 
   accessToken: process.env.MP_ACCESS_TOKEN || '' 
@@ -7,7 +7,7 @@ const client = new MercadoPagoConfig({
 
 export async function POST(request: Request) {
   try {
-    const { userId, email } = await request.json();
+    const { userId } = await request.json();
 
     const preference = new Preference(client);
     const result = await preference.create({
@@ -15,14 +15,14 @@ export async function POST(request: Request) {
         items: [
           {
             id: 'premium-lifetime',
-            title: 'SQLNova Premium - Acceso de por vida',
+            title: PREMIUM_PLAN_NAME,
             quantity: 1,
-            unit_price: 5000, // Ajustá el precio acá
+            unit_price: PREMIUM_PRICE,
             currency_id: 'ARS',
           }
         ],
         metadata: {
-          user_id: userId, // CRÍTICO: Guardamos el ID de Supabase acá
+          user_id: userId, // Esto es lo que lee el webhook para activar la cuenta
         },
         back_urls: {
           success: 'https://app.sqlnova.app/dashboard?pago=exitoso',
@@ -30,12 +30,13 @@ export async function POST(request: Request) {
           pending: 'https://app.sqlnova.app/pocket?pago=pendiente',
         },
         auto_return: 'approved',
-        notification_url: 'https://app.sqlnova.app/api/webhook', // Mercado Pago avisará acá
+        notification_url: 'https://app.sqlnova.app/api/webhook',
       }
     });
 
     return Response.json({ id: result.id });
   } catch (error) {
+    console.error('Error MP:', error);
     return Response.json({ error: 'Error al crear la preferencia' }, { status: 500 });
   }
 }
