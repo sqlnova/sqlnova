@@ -26,7 +26,7 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
         return;
       }
 
-      // 2. Llamamos a la API de Checkout
+      // 2. Llamamos a nuestra API interna de Checkout
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -37,11 +37,11 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
 
       const data = await res.json();
 
-      if (data.id) {
-        // 3. Redirección a la pasarela de Mercado Pago
-        window.location.href = `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=${data.id}`;
+      // 3. Redireccionamos a la URL de Mercado Pago que devuelve el backend
+      if (data.url) {
+        window.location.href = data.url;
       } else {
-        throw new Error("Error al generar el pago");
+        throw new Error("No se pudo generar el link de pago");
       }
     } catch (err) {
       console.error(err);
@@ -68,6 +68,7 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
             <Crown size={40} className="text-yellow-400 fill-yellow-400" />
           </div>
           
+          {/* Círculos decorativos de fondo */}
           <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-white/10 rounded-full blur-2xl" />
           <div className="absolute -top-8 -right-8 w-24 h-24 bg-blue-400/20 rounded-full blur-2xl" />
         </div>
