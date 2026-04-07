@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { sb } from '@/lib/supabase'
 import Papa from 'papaparse'
-import * as XLSX from 'xlsx' // 1. Importamos la nueva librería
+import * as XLSX from 'xlsx'
 
 // Tipos de datos
 type TableInfo = {
@@ -70,17 +70,12 @@ export default function PocketPage() {
       } else {
         setTablas([]);
       }
-    } catch (e) {
-      console.error(e);
-    }
+    } catch (e) { console.error(e); }
   }
 
   const openTablePreview = (t: string) => {
     if (!dbRef.current) return;
-    if (tablePreview?.name === t) {
-      setTablePreview(null);
-      return;
-    }
+    if (tablePreview?.name === t) { setTablePreview(null); return; }
     try {
       const res = dbRef.current.exec(`SELECT * FROM "${t}" LIMIT 5`);
       if (res.length > 0) {
@@ -88,23 +83,15 @@ export default function PocketPage() {
       } else {
         setTablePreview({ name: t, data: { columns: ['Info'], values: [['Tabla vacía']] } });
       }
-    } catch(e) {
-      console.error(e);
-    }
+    } catch(e) { console.error(e); }
   }
 
   useEffect(() => {
     const init = async () => {
       const { data: { session } } = await sb.auth.getSession()
       if (!session) { router.replace('/auth'); return }
-      
       const { data: p } = await sb.from('perfiles').select('es_premium').eq('id', session.user.id).single()
-      if (!p?.es_premium) { 
-        setEsPremium(false)
-        setLoading(false)
-        return 
-      }
-      
+      if (!p?.es_premium) { setEsPremium(false); setLoading(false); return }
       setEsPremium(true)
 
       let SQL: any
@@ -121,14 +108,13 @@ export default function PocketPage() {
           locateFile: (f: string) => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}`
         })
       }
-      
       dbRef.current = new SQL.Database()
       setLoading(false)
     }
     init()
   }, [router])
 
-  // 2. FUNCIÓN DE PROCESAMIENTO UNIFICADA (CSV + EXCEL)
+  // Lógica de procesamiento unificada
   const procesarArchivo = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !dbRef.current) return
@@ -140,25 +126,22 @@ export default function PocketPage() {
     reader.onload = (event) => {
       try {
         let csvContent = ''
-
         if (isExcel) {
-          // Si es Excel, usamos SheetJS para pasarlo a CSV
           const data = new Uint8Array(event.target?.result as ArrayBuffer)
           const workbook = XLSX.read(data, { type: 'array' })
           const firstSheet = workbook.Sheets[workbook.SheetNames[0]]
           csvContent = XLSX.utils.sheet_to_csv(firstSheet)
         } else {
-          // Si es CSV, leemos el texto directamente
           csvContent = event.target?.result as string
         }
 
-        // Usamos PapaParse para procesar el string de CSV (venga de donde venga)
         Papa.parse(csvContent, {
           header: true,
           skipEmptyLines: true,
           transformHeader: (h) => h.trim().replace(/[^a-z0-9]/gi, '_').toLowerCase(),
           complete: (results) => {
             try {
+              if (results.data.length === 0) throw new Error("El archivo está vacío");
               const nombreTabla = file.name.replace(/\.[^/.]+$/, "").trim().replace(/[^a-z0-9]/gi, '_').toLowerCase()
               const columnas = Object.keys(results.data[0] as object)
               dbRef.current.run(`DROP TABLE IF EXISTS "${nombreTabla}"`)
@@ -169,7 +152,6 @@ export default function PocketPage() {
                 const valores = Object.values(fila).map(v => typeof v === 'string' ? v.trim() : v)
                 dbRef.current.run(sqlInsert, valores)
               })
-              
               actualizarEsquema()
               setQuery(`SELECT * FROM ${nombreTabla} LIMIT 10;`)
             } catch (err: any) { setError("Error SQL: " + err.message) }
@@ -178,15 +160,14 @@ export default function PocketPage() {
       } catch (err: any) { setError("Error al leer archivo: " + err.message) }
     }
 
+    // CRÍTICO: Leer según el tipo de archivo
     if (isExcel) reader.readAsArrayBuffer(file)
     else reader.readAsText(file)
   }
 
   const ejecutarSQL = () => {
     if (!dbRef.current || !query.trim()) return
-    setError(''); 
-    setResultado(null); 
-    setTablePreview(null);
+    setError(''); setResultado(null); setTablePreview(null);
     try {
       const res = dbRef.current.exec(query)
       if (res.length > 0) {
@@ -195,9 +176,7 @@ export default function PocketPage() {
         const q = query.trim().toUpperCase()
         if (/^(CREATE|DROP|ALTER|INSERT|UPDATE|DELETE)/.test(q)) {
           setResultado({ columns: ['✓ Éxito'], values: [['Operación ejecutada correctamente.']] })
-        } else {
-          setError("Query ejecutada sin resultados.")
-        }
+        } else { setError("Query ejecutada sin resultados.") }
       }
       actualizarEsquema()
     } catch (err: any) { setError(err.message) }
@@ -221,19 +200,17 @@ export default function PocketPage() {
     );
   }
 
-  if (!esPremium) {
-    return <Paywall router={router} />;
-  }
+  if (!esPremium) return <Paywall router={router} />;
 
   return (
-    <div className="flex flex-col min-h-screen bg-[var(--bg)] text-[var(--text)]">
+    <div className="flex flex-col min-h-screen bg-[var(--bg)] text-[var(--text)] font-sans">
       <div className="h-[56px] border-b border-[var(--border)] flex items-center px-4 justify-between bg-[var(--bg)]/80 backdrop-blur-md sticky top-0 z-50">
         <div className="flex items-center gap-3">
           <button onClick={() => router.replace('/dashboard')} className="text-[var(--sub)]">←</button>
           <h1 className="font-bold text-sm">🗄️ Pocket Database</h1>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => setShowGlosario(true)} className="text-[10px] bg-[var(--bg3)] border border-[var(--border)] px-3 py-1.5 rounded-lg font-bold text-[var(--text)]">💡 GLOSARIO</button>
+          <button onClick={() => setShowGlosario(true)} className="text-[10px] bg-[var(--bg3)] border border-[var(--border)] px-3 py-1.5 rounded-lg font-bold">💡 GLOSARIO</button>
           {resultado && resultado.columns[0] !== '✓ Éxito' && (
             <button onClick={descargarCSV} className="text-[10px] bg-blue-600/20 text-blue-500 border border-blue-600/30 px-3 py-1.5 rounded-lg font-bold">📥 DESCARGAR</button>
           )}
@@ -243,37 +220,35 @@ export default function PocketPage() {
       <div className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full">
         <div className="flex flex-col lg:flex-row gap-6">
           <aside className="w-full lg:w-[280px] space-y-4">
-            <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5">
-              <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-[var(--border)] rounded-lg cursor-pointer hover:bg-[var(--bg3)] mb-6 transition-colors">
-                <span className="text-2xl mb-1">📤</span>
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm">
+              <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-[var(--border)] rounded-lg cursor-pointer hover:bg-[var(--bg3)] mb-6 transition-all group">
+                <span className="text-3xl mb-1 group-hover:scale-110 transition-transform">📊</span>
                 <span className="text-[10px] font-bold text-[var(--sub)] uppercase text-center">Subir CSV o Excel</span>
+                {/* INPUT ACTUALIZADO PARA ACEPTAR EXCEL */}
                 <input type="file" accept=".csv, .xlsx, .xls" onChange={procesarArchivo} className="hidden" />
               </label>
               
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-[10px] font-bold text-[var(--sub)] uppercase tracking-widest">Estructura (Schema)</h3>
+                <h3 className="text-[10px] font-bold text-[var(--sub)] uppercase tracking-widest">Estructura</h3>
                 <button onClick={actualizarEsquema} className="text-[10px] text-[var(--sub)] hover:text-[var(--text)]">↻</button>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {tablas.length === 0 && (
-                  <div className="text-[10px] text-[var(--sub)] text-center py-4 border border-dashed border-[var(--border)] rounded-lg">No hay tablas todavía.</div>
+                  <div className="text-[10px] text-[var(--sub)] text-center py-6 border border-dashed border-[var(--border)] rounded-lg">No hay tablas cargadas.</div>
                 )}
                 {tablas.map(t => (
                   <div key={t.nombre} className="bg-[var(--bg2)] p-3 rounded-lg border border-[var(--border)]">
-                    <div 
-                      className="text-xs font-bold text-blue-500 mb-2 flex justify-between items-center cursor-pointer"
-                      onClick={() => openTablePreview(t.nombre)}
-                    >
+                    <div className="text-xs font-bold text-blue-500 mb-2 flex justify-between items-center cursor-pointer" onClick={() => openTablePreview(t.nombre)}>
                       <span>📁 {t.nombre}</span>
-                      <span className="text-[9px] font-normal text-[var(--sub)] border border-[var(--border)] px-1.5 rounded">
+                      <span className="text-[9px] font-normal text-[var(--sub)] border border-[var(--border)] px-1.5 rounded bg-[var(--bg3)]">
                         {tablePreview?.name === t.nombre ? 'Ocultar' : 'Ver datos'}
                       </span>
                     </div>
                     {t.columnas.map(col => (
                       <div key={col} className="flex justify-between items-center text-[10px] py-1 border-b border-[var(--border)] last:border-0">
-                        <span className="text-[var(--text)] font-mono">{col}</span>
-                        <span className="text-[var(--sub)] italic">TEXT</span>
+                        <span className="text-[var(--text)] font-mono opacity-80">{col}</span>
+                        <span className="text-[var(--sub)] italic opacity-60 text-[8px]">TEXT</span>
                       </div>
                     ))}
                   </div>
@@ -284,26 +259,26 @@ export default function PocketPage() {
 
           <main className="flex-1 min-w-0 space-y-4">
             {tablePreview && (
-              <div className="bg-[var(--bg2)] border border-[var(--border)] rounded-xl overflow-hidden mb-4">
+              <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden mb-4 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
                 <div className="bg-[var(--bg3)] p-3 border-b border-[var(--border)] flex justify-between items-center">
-                  <span className="text-xs font-mono text-[var(--nova)] font-bold">🔍 {tablePreview.name} (Primeras 5 filas)</span>
-                  <button onClick={() => setTablePreview(null)} className="text-[var(--sub)] cursor-pointer">✕</button>
+                  <span className="text-xs font-mono text-[var(--nova)] font-bold">🔍 Vista previa: {tablePreview.name}</span>
+                  <button onClick={() => setTablePreview(null)} className="text-[var(--sub)]">✕</button>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse font-mono text-[10px]">
                     <thead>
-                      <tr>
+                      <tr className="bg-[var(--bg)]/50">
                         {tablePreview.data.columns.map(col => (
-                          <th key={col} className="p-2 border-b border-[var(--border)] text-[var(--sub)]">{col}</th>
+                          <th key={col} className="p-2.5 border-b border-[var(--border)] text-[var(--sub)]">{col}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {tablePreview.data.values.map((row, i) => (
-                        <tr key={i} className="hover:bg-[var(--bg3)]">
+                        <tr key={i} className="hover:bg-[var(--bg3)] border-b border-[var(--border)] last:border-0">
                           {row.map((val, j) => (
-                            <td key={j} className="p-2 border-b border-[var(--border)] text-[var(--text)]">
-                              {val !== null ? String(val) : 'NULL'}
+                            <td key={j} className="p-2.5 text-[var(--text)]">
+                              {val !== null ? String(val) : <span className="text-[var(--sub)] opacity-50">NULL</span>}
                             </td>
                           ))}
                         </tr>
@@ -314,27 +289,27 @@ export default function PocketPage() {
               </div>
             )}
 
-            <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden">
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden shadow-sm">
               <textarea 
-                className="w-full bg-transparent p-5 text-sm font-mono text-[var(--text)] outline-none min-h-[250px] lg:min-h-[400px] resize-none"
+                className="w-full bg-transparent p-5 text-sm font-mono text-[var(--text)] outline-none min-h-[300px] resize-none focus:bg-[var(--bg)] transition-colors"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Escribí tu query SQL..."
+                placeholder="Escribí tu query SQL (ej: SELECT * FROM mi_tabla)..."
               />
               <div className="p-4 bg-[var(--bg2)] border-t border-[var(--border)] flex justify-end">
-                <button onClick={ejecutarSQL} className="bg-blue-600 text-white text-xs font-bold px-8 py-3 rounded-lg active:scale-95 transition-all">▶ EJECUTAR SQL</button>
+                <button onClick={ejecutarSQL} className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-8 py-3 rounded-lg active:scale-95 transition-all shadow-lg shadow-blue-500/20">▶ EJECUTAR SQL</button>
               </div>
             </div>
 
-            {error && <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-xs font-mono">⚠️ {error}</div>}
+            {error && <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-xs font-mono animate-pulse">⚠️ {error}</div>}
 
             {resultado && (
-              <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden overflow-x-auto">
+              <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden overflow-x-auto shadow-sm">
                 <table className="w-full text-left border-collapse font-mono text-[11px]">
                   <thead>
                     <tr className="bg-[var(--bg3)]">
                       {resultado.columns.map(col => (
-                        <th key={col} className={`p-3 border-b border-[var(--border)] uppercase ${col === '✓ Éxito' ? 'text-green-500' : 'text-blue-500'}`}>
+                        <th key={col} className={`p-4 border-b border-[var(--border)] uppercase font-bold ${col === '✓ Éxito' ? 'text-green-500' : 'text-blue-500'}`}>
                           {col}
                         </th>
                       ))}
@@ -342,10 +317,10 @@ export default function PocketPage() {
                   </thead>
                   <tbody>
                     {resultado.values.map((fila, i) => (
-                      <tr key={i} className="hover:bg-[var(--bg2)]">
+                      <tr key={i} className="hover:bg-[var(--bg2)] border-b border-[var(--border)] last:border-0 transition-colors">
                         {fila.map((val, j) => (
-                          <td key={j} className="p-3 border-b border-[var(--border)] text-[var(--text)]">
-                            {val !== null ? String(val) : <span className="text-[var(--sub)]">NULL</span>}
+                          <td key={j} className="p-4 text-[var(--text)]">
+                            {val !== null ? String(val) : <span className="text-[var(--sub)] opacity-50">NULL</span>}
                           </td>
                         ))}
                       </tr>
@@ -359,20 +334,22 @@ export default function PocketPage() {
       </div>
 
       {showGlosario && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col shadow-2xl scale-in-95 animate-in">
             <div className="p-5 border-b border-[var(--border)] flex justify-between items-center bg-[var(--bg3)]">
-              <h2 className="font-bold text-[var(--text)]">💡 Glosario de Funciones SQL</h2>
-              <button onClick={() => setShowGlosario(false)} className="text-[var(--sub)] hover:text-[var(--text)] text-xl">✕</button>
+              <h2 className="font-bold text-[var(--text)] flex items-center gap-2">💡 Glosario SQL</h2>
+              <button onClick={() => setShowGlosario(false)} className="text-[var(--sub)] hover:text-[var(--text)] text-xl w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--bg2)] transition-colors">✕</button>
             </div>
-            <div className="flex-1 overflow-y-auto p-6 space-y-8">
+            <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-[var(--bg)]">
               {GLOSARIO.map(cat => (
                 <div key={cat.cat}>
-                  <h3 className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-3">{cat.cat}</h3>
+                  <h3 className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> {cat.cat}
+                  </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {cat.funcs.map(f => (
-                      <div key={f.n} className="bg-[var(--bg2)] p-3 rounded-lg border border-[var(--border)]">
-                        <div className="font-mono text-xs text-[var(--text)] mb-1">{f.n}</div>
+                      <div key={f.n} className="bg-[var(--bg2)] p-4 rounded-xl border border-[var(--border)] hover:border-blue-500/30 transition-colors group">
+                        <div className="font-mono text-xs text-blue-400 mb-2 group-hover:text-blue-300 transition-colors">{f.n}</div>
                         <div className="text-[10px] text-[var(--sub)] leading-relaxed">{f.d}</div>
                       </div>
                     ))}
@@ -389,11 +366,13 @@ export default function PocketPage() {
 
 function Paywall({ router }: { router: any }) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-[var(--bg)] p-6 text-center">
-      <div className="bg-blue-500/10 p-6 rounded-3xl mb-5 border border-blue-500/20"><span className="text-6xl">💎</span></div>
-      <h2 className="text-2xl font-extrabold mb-3 text-[var(--text)] tracking-tight">Pocket Database Premium</h2>
-      <p className="text-[var(--sub)] max-w-md mb-10 text-sm leading-relaxed">Subí tus CSV, cruzá datos y descargá reportes. Privacidad total: nada se sube a la nube.</p>
-      <button onClick={() => router.push('/dashboard')} className="bg-blue-600 text-white px-10 py-3 rounded-xl font-bold hover:bg-blue-500 transition-all">Volver al Dashboard</button>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[var(--bg)] p-6 text-center animate-in fade-in duration-500">
+      <div className="bg-blue-500/10 p-8 rounded-full mb-6 border border-blue-500/20 shadow-2xl shadow-blue-500/10">
+        <span className="text-7xl animate-pulse inline-block">💎</span>
+      </div>
+      <h2 className="text-3xl font-extrabold mb-4 text-[var(--text)] tracking-tight">Pocket Database Premium</h2>
+      <p className="text-[var(--sub)] max-w-md mb-10 text-base leading-relaxed">Analizá tus propios archivos, cruzá datos y descargá reportes. Todo procesado localmente: privacidad total.</p>
+      <button onClick={() => router.push('/dashboard')} className="bg-blue-600 hover:bg-blue-500 text-white px-12 py-4 rounded-2xl font-bold transition-all shadow-xl shadow-blue-600/20 active:scale-95">Volver al Dashboard</button>
     </div>
   )
 }
