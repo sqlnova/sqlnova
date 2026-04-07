@@ -4,7 +4,17 @@ import { useRouter } from 'next/navigation'
 import { sb } from '@/lib/supabase'
 import Papa from 'papaparse'
 
-// --- DATOS DEL GLOSARIO ---
+// Tipos de datos limpios para que el compilador no se maree
+type TableInfo = {
+  nombre: string;
+  columnas: string[];
+};
+
+type PreviewData = {
+  name: string;
+  data: { columns: string[]; values: any[][] };
+};
+
 const GLOSARIO = [
   { cat: 'Agregación', funcs: [
     { n: 'COUNT(*)', d: 'Cuenta el total de filas.' },
@@ -33,22 +43,23 @@ export default function PocketPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [esPremium, setEsPremium] = useState(false)
-  const [tablas, setTablas] = useState<{nombre: string, columnas: string[]}[]>([])
+  const [tablas, setTablas] = useState<TableInfo[]>([])
   const [query, setQuery] = useState('')
   const [resultado, setResultado] = useState<{ columns: string[], values: any[][] } | null>(null)
   const [error, setError] = useState('')
   const [showGlosario, setShowGlosario] = useState(false)
   
+  const [tablePreview, setTablePreview] = useState<PreviewData | null>(null)
+  
   const dbRef = useRef<any>(null)
 
-  // Función para refrescar el menú lateral directamente desde la DB
   const actualizarEsquema = () => {
     if (!dbRef.current) return;
     try {
       const res = dbRef.current.exec("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'");
       if (res.length > 0) {
         const tableNames = res[0].values.map((v: any[]) => v[0] as string);
-        const nuevasTablas = tableNames.map((tName) => {
+        const nuevasTablas = tableNames.map((tName: string) => {
           const pragma = dbRef.current.exec(`PRAGMA table_info("${tName}")`);
           let columnas: string[] = [];
           if (pragma.length > 0) {
@@ -60,7 +71,27 @@ export default function PocketPage() {
       } else {
         setTablas([]);
       }
-    } catch (e) {}
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  const openTablePreview = (t: string) => {
+    if (!dbRef.current) return;
+    if (tablePreview?.name === t) {
+      setTablePreview(null);
+      return;
+    }
+    try {
+      const res = dbRef.current.exec(`SELECT * FROM "${t}" LIMIT 5`);
+      if (res.length > 0) {
+        setTablePreview({ name: t, data: res[0] });
+      } else {
+        setTablePreview({ name: t, data: { columns: ['Info'], values: [['Tabla vacía']] } });
+      }
+    } catch(e) {
+      console.error(e);
+    }
   }
 
   useEffect(() => {
@@ -118,7 +149,7 @@ export default function PocketPage() {
             dbRef.current.run(sqlInsert, valores)
           })
           
-          actualizarEsquema() // Actualizamos el panel
+          actualizarEsquema()
           setQuery(`SELECT * FROM ${nombreTabla} LIMIT 10;`)
         } catch (err: any) { setError(err.message) }
       }
@@ -127,7 +158,9 @@ export default function PocketPage() {
 
   const ejecutarSQL = () => {
     if (!dbRef.current || !query.trim()) return
-    setError(''); setResultado(null)
+    setError(''); 
+    setResultado(null); 
+    setTablePreview(null);
     try {
       const res = dbRef.current.exec(query)
       if (res.length > 0) {
@@ -140,7 +173,7 @@ export default function PocketPage() {
           setError("Query ejecutada sin resultados.")
         }
       }
-      actualizarEsquema() // Actualizamos el panel post ejecución
+      actualizarEsquema()
     } catch (err: any) { setError(err.message) }
   }
 
@@ -154,13 +187,24 @@ export default function PocketPage() {
     link.click()
   }
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen bg-[var(--bg)]"><div className="w-8 h-8 border-2 border-[var(--border2)] border-t-blue-500 rounded-full animate-spin" /></div>
+  // ------------------------------------------------------------------
+  // Estos bloques `if` se separaron con llaves para evitar el error del compilador
+  // ------------------------------------------------------------------
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[var(--bg)]">
+        <div className="w-8 h-8 border-2 border-[var(--border2)] border-t-blue-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
-  if (!esPremium) return <Paywall router={router} />
+  if (!esPremium) {
+    return <Paywall router={router} />;
+  }
+  // ------------------------------------------------------------------
 
   return (
     <div className="flex flex-col min-h-screen bg-[var(--bg)] text-[var(--text)]">
-      {/* Header */}
       <div className="h-[56px] border-b border-[var(--border)] flex items-center px-4 justify-between bg-[var(--bg)]/80 backdrop-blur-md sticky top-0 z-50">
         <div className="flex items-center gap-3">
           <button onClick={() => router.replace('/dashboard')} className="text-[var(--sub)]">←</button>
@@ -176,8 +220,6 @@ export default function PocketPage() {
 
       <div className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full">
         <div className="flex flex-col lg:flex-row gap-6">
-          
-          {/* Sidebar */}
           <aside className="w-full lg:w-[280px] space-y-4">
             <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5">
               <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-[var(--border)] rounded-lg cursor-pointer hover:bg-[var(--bg3)] mb-6 transition-colors">
@@ -197,7 +239,15 @@ export default function PocketPage() {
                 )}
                 {tablas.map(t => (
                   <div key={t.nombre} className="bg-[var(--bg2)] p-3 rounded-lg border border-[var(--border)]">
-                    <div className="text-xs font-bold text-blue-500 mb-2">📁 {t.nombre}</div>
+                    <div 
+                      className="text-xs font-bold text-blue-500 mb-2 flex justify-between items-center cursor-pointer"
+                      onClick={() => openTablePreview(t.nombre)}
+                    >
+                      <span>📁 {t.nombre}</span>
+                      <span className="text-[9px] font-normal text-[var(--sub)] border border-[var(--border)] px-1.5 rounded">
+                        {tablePreview?.name === t.nombre ? 'Ocultar' : 'Ver datos'}
+                      </span>
+                    </div>
                     {t.columnas.map(col => (
                       <div key={col} className="flex justify-between items-center text-[10px] py-1 border-b border-[var(--border)] last:border-0">
                         <span className="text-[var(--text)] font-mono">{col}</span>
@@ -210,8 +260,39 @@ export default function PocketPage() {
             </div>
           </aside>
 
-          {/* Main */}
           <main className="flex-1 min-w-0 space-y-4">
+            {/* PREVIEW UI */}
+            {tablePreview && (
+              <div className="bg-[var(--bg2)] border border-[var(--border)] rounded-xl overflow-hidden mb-4">
+                <div className="bg-[var(--bg3)] p-3 border-b border-[var(--border)] flex justify-between items-center">
+                  <span className="text-xs font-mono text-[var(--nova)] font-bold">🔍 {tablePreview.name} (Primeras 5 filas)</span>
+                  <button onClick={() => setTablePreview(null)} className="text-[var(--sub)] cursor-pointer">✕</button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse font-mono text-[10px]">
+                    <thead>
+                      <tr>
+                        {tablePreview.data.columns.map(col => (
+                          <th key={col} className="p-2 border-b border-[var(--border)] text-[var(--sub)]">{col}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tablePreview.data.values.map((row, i) => (
+                        <tr key={i} className="hover:bg-[var(--bg3)]">
+                          {row.map((val, j) => (
+                            <td key={j} className="p-2 border-b border-[var(--border)] text-[var(--text)]">
+                              {val !== null ? String(val) : 'NULL'}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
             <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden">
               <textarea 
                 className="w-full bg-transparent p-5 text-sm font-mono text-[var(--text)] outline-none min-h-[250px] lg:min-h-[400px] resize-none"
@@ -229,8 +310,26 @@ export default function PocketPage() {
             {resultado && (
               <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden overflow-x-auto">
                 <table className="w-full text-left border-collapse font-mono text-[11px]">
-                  <thead><tr className="bg-[var(--bg3)]">{resultado.columns.map(col => (<th key={col} className={`p-3 border-b border-[var(--border)] uppercase ${col === '✓ Éxito' ? 'text-green-500' : 'text-blue-500'}`}>{col}</th>))}</tr></thead>
-                  <tbody>{resultado.values.map((fila, i) => (<tr key={i} className="hover:bg-[var(--bg2)]">{fila.map((val, j) => (<td key={j} className="p-3 border-b border-[var(--border)] text-[var(--text)]">{val !== null ? String(val) : <span className="text-[var(--sub)]">NULL</span>}</td>))}</tr>))}</tbody>
+                  <thead>
+                    <tr className="bg-[var(--bg3)]">
+                      {resultado.columns.map(col => (
+                        <th key={col} className={`p-3 border-b border-[var(--border)] uppercase ${col === '✓ Éxito' ? 'text-green-500' : 'text-blue-500'}`}>
+                          {col}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {resultado.values.map((fila, i) => (
+                      <tr key={i} className="hover:bg-[var(--bg2)]">
+                        {fila.map((val, j) => (
+                          <td key={j} className="p-3 border-b border-[var(--border)] text-[var(--text)]">
+                            {val !== null ? String(val) : <span className="text-[var(--sub)]">NULL</span>}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
                 </table>
               </div>
             )}
@@ -238,7 +337,6 @@ export default function PocketPage() {
         </div>
       </div>
 
-      {/* Modal Glosario */}
       {showGlosario && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl">
@@ -268,7 +366,7 @@ export default function PocketPage() {
   )
 }
 
-function Paywall({ router }: any) {
+function Paywall({ router }: { router: any }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-[var(--bg)] p-6 text-center">
       <div className="bg-blue-500/10 p-6 rounded-3xl mb-5 border border-blue-500/20"><span className="text-6xl">💎</span></div>

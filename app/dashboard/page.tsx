@@ -34,7 +34,6 @@ export default function Dashboard() {
       }
       setPerfil(p)
 
-      // Aplicar tema
       document.documentElement.setAttribute('data-theme', p?.tema || 'oscuro')
 
       const hoy = new Date().toLocaleDateString('sv-SE')
@@ -51,7 +50,12 @@ export default function Dashboard() {
         const retoId = retosRes.data[0].id
         const { data: comp } = await sb.from('retos_completados').select('reto_id').eq('usuario_id', uid).eq('reto_id', retoId).maybeSingle()
         setTieneRetoHoy(true)
-        if (!comp) setRetoPopup(true)
+        
+        // LÓGICA ANTI-SPAM
+        const popupVisto = localStorage.getItem(`reto_popup_${hoy}`)
+        if (!comp && !popupVisto) {
+          setRetoPopup(true)
+        }
       }
     } catch (e) { console.error(e) } finally { setLoading(false) }
   }, [router])
@@ -73,12 +77,10 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[var(--bg)] text-[var(--text)] transition-colors duration-300">
-      {/* NAV */}
       <nav className="h-[52px] border-b border-[var(--border)] bg-[var(--nav-bg)] backdrop-blur-md sticky top-0 z-[100] px-4 flex items-center justify-between">
         <div className="font-bold text-lg tracking-tighter text-[var(--text)]">SQL<span className="text-blue-500">Nova</span></div>
         
         <div className="flex items-center gap-2">
-          {/* BOTÓN DE RANKING RESTAURADO */}
           <button onClick={() => router.push('/leaderboard')} className="p-1.5 rounded-lg border bg-[var(--bg3)] border-[var(--border)] text-[var(--sub)] text-xs font-bold">
             🏆
           </button>
@@ -110,20 +112,17 @@ export default function Dashboard() {
       </nav>
 
       <div className="flex-1 p-6 lg:p-10 max-w-5xl mx-auto w-full">
-        {/* Header */}
         <header className="mb-8">
           <h1 className="text-2xl font-bold tracking-tight text-[var(--text)]">Hola, {nombre.split(' ')[0]} 👋</h1>
           <p className="text-[var(--sub)] text-sm">Tu camino al dominio total de SQL.</p>
         </header>
 
-        {/* Stats Grid */}
         <div className="grid grid-cols-3 gap-3 mb-8">
           <StatCard value={xp} label="XP Total" color="#3b82f6" />
           <StatCard value={perfil?.racha_actual || 0} label="Racha" color="#fbbf24" suffix="🔥" />
           <StatCard value={nivel} label="Nivel" color="#10b981" />
         </div>
 
-        {/* Progress Bar */}
         <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 mb-8">
           <div className="flex justify-between items-end mb-3">
             <div>
@@ -137,7 +136,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Curriculum Grid */}
         <h2 className="text-[10px] font-bold text-[var(--sub)] uppercase tracking-[0.2em] mb-4">Módulos de aprendizaje</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
           {MODULOS.map((m, i) => {
@@ -169,7 +167,6 @@ export default function Dashboard() {
           })}
         </div>
 
-        {/* PREMIUM SECTION - RECUPERADA INTACTA */}
         <h2 className="text-[10px] font-bold text-[var(--sub)] uppercase tracking-[0.2em] mb-4">Herramientas Pro</h2>
         <div 
           onClick={() => router.push('/pocket')}
@@ -197,16 +194,32 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Popup de Retos */}
+      {/* POPUP DE RETOS DIARIOS */}
       {retoPopup && (
-        <div className="fixed inset-0 z-[500] bg-black/60 backdrop-blur-md flex items-center justify-center p-6">
+        <div className="fixed inset-0 z-[500] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 animate-fade-up">
           <div className="bg-[var(--card)] border border-amber-500/30 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
             <span className="text-5xl block mb-4">⚡</span>
-            <h2 className="text-xl font-bold mb-2 text-[var(--text)]">¡Retos listos!</h2>
-            <p className="text-sm text-[var(--sub)] mb-8 leading-relaxed">Completá los desafíos diarios para ganar XP extra y subir en el ranking semanal.</p>
+            <h2 className="text-xl font-bold mb-2 text-[var(--text)]">¡Retos diarios listos!</h2>
+            <p className="text-sm text-[var(--sub)] mb-8 leading-relaxed">
+              ¿Te animás a resolver los desafíos de hoy? Ganá XP extra y subí en el ranking semanal.
+            </p>
             <div className="flex gap-3">
-              <button onClick={() => setRetoPopup(false)} className="flex-1 py-3 text-sm text-[var(--sub)] font-bold">Luego</button>
-              <button onClick={() => router.push('/retos')} className="flex-[2] bg-amber-500 text-black py-3 rounded-xl text-sm font-bold">Ir ahora →</button>
+              <button 
+                onClick={() => {
+                  setRetoPopup(false);
+                  const hoyStr = new Date().toLocaleDateString('sv-SE');
+                  localStorage.setItem(`reto_popup_${hoyStr}`, 'true');
+                }} 
+                className="flex-1 py-3 text-sm text-[var(--sub)] font-bold bg-[var(--bg3)] hover:bg-[var(--border)] rounded-xl transition-all"
+              >
+                Más tarde
+              </button>
+              <button 
+                onClick={() => router.push('/retos')} 
+                className="flex-[2] bg-amber-500 hover:bg-amber-400 text-black py-3 rounded-xl text-sm font-bold transition-all shadow-lg shadow-amber-500/20"
+              >
+                ¡Quiero el reto!
+              </button>
             </div>
           </div>
         </div>
