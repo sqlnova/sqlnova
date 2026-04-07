@@ -129,7 +129,7 @@ export default function PocketPage() {
             <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden">
               <textarea 
                 className="w-full bg-transparent p-5 text-sm font-mono text-[var(--text)] outline-none min-h-[300px] resize-none"
-                value={queryText}
+                value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="SELECT * FROM..."
               />
