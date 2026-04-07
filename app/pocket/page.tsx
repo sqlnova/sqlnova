@@ -6,7 +6,7 @@ import Papa from 'papaparse'
 import * as XLSX from 'xlsx'
 import PremiumModal from '@/app/components/PremiumModal'
 
-// Tipos de datos
+// Tipos de datos .
 type TableInfo = {
   nombre: string;
   columnas: string[];
