@@ -41,6 +41,28 @@ export default function PocketPage() {
   
   const dbRef = useRef<any>(null)
 
+  // Función para refrescar el menú lateral directamente desde la DB
+  const actualizarEsquema = () => {
+    if (!dbRef.current) return;
+    try {
+      const res = dbRef.current.exec("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'");
+      if (res.length > 0) {
+        const tableNames = res[0].values.map((v: any[]) => v[0] as string);
+        const nuevasTablas = tableNames.map((tName) => {
+          const pragma = dbRef.current.exec(`PRAGMA table_info("${tName}")`);
+          let columnas: string[] = [];
+          if (pragma.length > 0) {
+            columnas = pragma[0].values.map((v: any[]) => v[1] as string);
+          }
+          return { nombre: tName, columnas };
+        });
+        setTablas(nuevasTablas);
+      } else {
+        setTablas([]);
+      }
+    } catch (e) {}
+  }
+
   useEffect(() => {
     const init = async () => {
       const { data: { session } } = await sb.auth.getSession()
@@ -55,7 +77,6 @@ export default function PocketPage() {
       
       setEsPremium(true)
 
-      // INIT SQL.JS SEGURO Y COMPLETO (Esto es lo que faltaba)
       let SQL: any
       if ((window as any)._sqljsReady && (window as any)._sqljsInstance) {
         SQL = (window as any)._sqljsInstance
@@ -96,7 +117,8 @@ export default function PocketPage() {
             const valores = Object.values(fila).map(v => typeof v === 'string' ? v.trim() : v)
             dbRef.current.run(sqlInsert, valores)
           })
-          setTablas(prev => [...prev, { nombre: nombreTabla, columnas }])
+          
+          actualizarEsquema() // Actualizamos el panel
           setQuery(`SELECT * FROM ${nombreTabla} LIMIT 10;`)
         } catch (err: any) { setError(err.message) }
       }
@@ -108,8 +130,17 @@ export default function PocketPage() {
     setError(''); setResultado(null)
     try {
       const res = dbRef.current.exec(query)
-      if (res.length > 0) setResultado(res[0])
-      else setError("Query ejecutada sin resultados.")
+      if (res.length > 0) {
+        setResultado(res[0])
+      } else {
+        const q = query.trim().toUpperCase()
+        if (/^(CREATE|DROP|ALTER|INSERT|UPDATE|DELETE)/.test(q)) {
+          setResultado({ columns: ['✓ Éxito'], values: [['Operación ejecutada correctamente.']] })
+        } else {
+          setError("Query ejecutada sin resultados.")
+        }
+      }
+      actualizarEsquema() // Actualizamos el panel post ejecución
     } catch (err: any) { setError(err.message) }
   }
 
@@ -137,7 +168,7 @@ export default function PocketPage() {
         </div>
         <div className="flex gap-2">
           <button onClick={() => setShowGlosario(true)} className="text-[10px] bg-[var(--bg3)] border border-[var(--border)] px-3 py-1.5 rounded-lg font-bold text-[var(--text)]">💡 GLOSARIO</button>
-          {resultado && (
+          {resultado && resultado.columns[0] !== '✓ Éxito' && (
             <button onClick={descargarCSV} className="text-[10px] bg-blue-600/20 text-blue-500 border border-blue-600/30 px-3 py-1.5 rounded-lg font-bold">📥 DESCARGAR</button>
           )}
         </div>
@@ -154,8 +185,16 @@ export default function PocketPage() {
                 <span className="text-[10px] font-bold text-[var(--sub)] uppercase text-center">Subir CSV</span>
                 <input type="file" accept=".csv" onChange={procesarCSV} className="hidden" />
               </label>
-              <h3 className="text-[10px] font-bold text-[var(--sub)] uppercase tracking-widest mb-4">Estructura (Schema)</h3>
+              
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-[10px] font-bold text-[var(--sub)] uppercase tracking-widest">Estructura (Schema)</h3>
+                <button onClick={actualizarEsquema} className="text-[10px] text-[var(--sub)] hover:text-[var(--text)]">↻</button>
+              </div>
+
               <div className="space-y-4">
+                {tablas.length === 0 && (
+                  <div className="text-[10px] text-[var(--sub)] text-center py-4 border border-dashed border-[var(--border)] rounded-lg">No hay tablas todavía.</div>
+                )}
                 {tablas.map(t => (
                   <div key={t.nombre} className="bg-[var(--bg2)] p-3 rounded-lg border border-[var(--border)]">
                     <div className="text-xs font-bold text-blue-500 mb-2">📁 {t.nombre}</div>
@@ -190,7 +229,7 @@ export default function PocketPage() {
             {resultado && (
               <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden overflow-x-auto">
                 <table className="w-full text-left border-collapse font-mono text-[11px]">
-                  <thead><tr className="bg-[var(--bg3)]">{resultado.columns.map(col => (<th key={col} className="p-3 border-b border-[var(--border)] text-blue-500 uppercase">{col}</th>))}</tr></thead>
+                  <thead><tr className="bg-[var(--bg3)]">{resultado.columns.map(col => (<th key={col} className={`p-3 border-b border-[var(--border)] uppercase ${col === '✓ Éxito' ? 'text-green-500' : 'text-blue-500'}`}>{col}</th>))}</tr></thead>
                   <tbody>{resultado.values.map((fila, i) => (<tr key={i} className="hover:bg-[var(--bg2)]">{fila.map((val, j) => (<td key={j} className="p-3 border-b border-[var(--border)] text-[var(--text)]">{val !== null ? String(val) : <span className="text-[var(--sub)]">NULL</span>}</td>))}</tr>))}</tbody>
                 </table>
               </div>
