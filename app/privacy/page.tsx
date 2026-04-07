@@ -27,7 +27,7 @@ export default function PrivacyPage() {
         <section className="space-y-3">
           <h2 className="text-xl font-bold">3. Protección de datos y terceros</h2>
           <p className="text-[var(--sub)] leading-relaxed">
-            No vendemos, alquilamos ni compartimos tus datos personales con terceros para fines comerciales. La autenticación y base de datos son gestionadas de forma segura a través de Supabase. En la sección "Pocket Database", los archivos CSV que subís se procesan localmente en tu navegador y no se almacenan en nuestros servidores.
+            No vendemos, alquilamos ni compartimos tus datos personales con terceros para fines comerciales. La autenticación y base de datos son gestionadas de forma segura a través de Supabase. En la sección &quot;Pocket Database&quot;, los archivos CSV que subís se procesan localmente en tu navegador y no se almacenan en nuestros servidores.
           </p>
         </section>
 
