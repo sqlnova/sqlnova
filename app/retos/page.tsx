@@ -31,13 +31,21 @@ export default function RetosPage() {
   const [retos, setRetos] = useState<Reto[]>([])
   const [completados, setCompletados] = useState<Completado[]>([])
   const [nivelActivo, setNivelActivo] = useState<'inicial' | 'avanzado' | 'experto'>('inicial')
+  
   const [queryText, setQueryText] = useState('')
   const [result, setResult] = useState<{ columns: string[]; values: any[][] } | null>(null)
   const [resultError, setResultError] = useState('')
+  
   const [hintOpen, setHintOpen] = useState(false)
+  const [hintUsed, setHintUsed] = useState(false) // Nuevo estado anti-trampa
+  
+  const [tablas, setTablas] = useState<string[]>([])
+  const [tablePreview, setTablePreview] = useState<{name: string, data: {columns: string[], values: any[][]}} | null>(null)
+
   const [answered, setAnswered] = useState(false)
   const [loading, setLoading] = useState(true)
   const [celebrating, setCelebrating] = useState(false)
+  
   const sqlDbRef = useRef<any>(null)
   const dbInitRef = useRef(false)
 
@@ -81,6 +89,14 @@ export default function RetosPage() {
           const db = new SQL.Database()
           db.run(dataset)
           sqlDbRef.current = db
+
+          // Extraer nombres de tablas dinámicamente
+          try {
+            const res = db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'");
+            if (res.length > 0) {
+              setTablas(res[0].values.map((v: any[]) => v[0]));
+            }
+          } catch(e) {}
         }
       }
 
@@ -102,6 +118,8 @@ export default function RetosPage() {
     setResult(null)
     setResultError('')
     setHintOpen(false)
+    setHintUsed(false)
+    setTablePreview(null)
     setAnswered(false)
   }, [nivelActivo])
 
@@ -114,6 +132,22 @@ export default function RetosPage() {
   }, [yaCompletado, nivelActivo])
 
   const normalize = (q: string) => q.replace(/;$/, '').replace(/\s+/g, ' ').trim().toUpperCase()
+
+  const openTablePreview = (t: string) => {
+    if (!sqlDbRef.current) return;
+    if (tablePreview?.name === t) {
+      setTablePreview(null); // Cerrar si ya está abierta
+      return;
+    }
+    try {
+      const res = sqlDbRef.current.exec(`SELECT * FROM ${t} LIMIT 5`);
+      if (res.length > 0) {
+        setTablePreview({ name: t, data: res[0] });
+      } else {
+        setTablePreview({ name: t, data: { columns: ['Info'], values: [['Tabla vacía']] } });
+      }
+    } catch(e) {}
+  }
 
   const runQuery = async () => {
     if (!queryText.trim() || !sqlDbRef.current || !retoActual) return
@@ -134,17 +168,20 @@ export default function RetosPage() {
         const normMatch = normalize(queryText) === normalize(retoActual.solucion)
 
         if (flexMatch || normMatch) {
-          // Guardar como completado
+          // Penalización: si usó pista, 0 XP
+          const xpToAward = hintUsed ? 0 : retoActual.xp;
+
           const { data } = await sb.rpc('completar_reto', {
             p_usuario_id: user.id,
             p_reto_id: retoActual.id,
-            p_xp: retoActual.xp,
-            p_pista_usada: hintOpen,
+            p_xp: xpToAward,
+            p_pista_usada: hintUsed,
           })
+          
           if (data?.ok) {
             setAnswered(true)
             setCelebrating(true)
-            setCompletados(prev => [...prev, { reto_id: retoActual.id, xp_ganado: retoActual.xp }])
+            setCompletados(prev => [...prev, { reto_id: retoActual.id, xp_ganado: xpToAward }])
             setTimeout(() => setCelebrating(false), 3000)
           }
         }
@@ -162,13 +199,13 @@ export default function RetosPage() {
   const completadosHoy = completados.filter(c => retos.some(r => r.id === c.reto_id)).length
 
   if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'var(--bg)' }}>
       <div style={{ width: 28, height: 28, border: '2px solid var(--border2)', borderTopColor: 'var(--nova)', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
     </div>
   )
 
   if (retos.length === 0) return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)' }}>
       <TopBar onBack={() => router.replace('/dashboard')} />
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16, padding: 24 }}>
         <div style={{ fontSize: '3rem' }}>🗓️</div>
@@ -180,9 +217,11 @@ export default function RetosPage() {
   )
 
   const c = NIVEL_COLOR[nivelActivo]
+  const currentCompleted = retoActual ? completados.find(c => c.reto_id === retoActual.id) : null;
+  const finalXp = currentCompleted ? currentCompleted.xp_ganado : 0;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1, background: 'var(--bg)', color: 'var(--text)' }}>
       <TopBar onBack={() => router.replace('/dashboard')} />
 
       <div style={{ flex: 1, padding: 'clamp(16px,4vw,24px) clamp(14px,4vw,20px)', maxWidth: 800, margin: '0 auto', width: '100%' }}>
@@ -204,7 +243,9 @@ export default function RetosPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 20 }}>
           {(['inicial', 'avanzado', 'experto'] as const).map(nivel => {
             const reto = retos.find(r => r.nivel === nivel)
-            const done = reto ? completados.some(c => c.reto_id === reto.id) : false
+            const cObj = reto ? completados.find(c => c.reto_id === reto.id) : null
+            const done = !!cObj
+            const earnedXp = cObj ? cObj.xp_ganado : NIVEL_XP[nivel]
             const col = NIVEL_COLOR[nivel]
             const activo = nivelActivo === nivel
             return (
@@ -219,7 +260,7 @@ export default function RetosPage() {
               >
                 <div style={{ fontSize: '0.72rem', fontWeight: 700, color: activo ? col.text : 'var(--sub)', marginBottom: 2 }}>{col.label}</div>
                 <div style={{ fontSize: '0.68rem', color: 'var(--sub)', fontFamily: 'DM Mono' }}>
-                  {done ? <span style={{ color: 'var(--green)' }}>✓ +{NIVEL_XP[nivel]} XP</span> : `+${NIVEL_XP[nivel]} XP`}
+                  {done ? <span style={{ color: earnedXp > 0 ? 'var(--green)' : 'var(--amber)' }}>✓ +{earnedXp} XP</span> : `+${NIVEL_XP[nivel]} XP`}
                 </div>
               </button>
             )
@@ -239,26 +280,55 @@ export default function RetosPage() {
               <div style={{ fontSize: '0.95rem', lineHeight: 1.7, marginBottom: 16, color: 'var(--text)' }}
                 dangerouslySetInnerHTML={{ __html: retoActual.enunciado }} />
 
-              {/* Tablas disponibles */}
-              <div style={{ marginBottom: 14, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {/* Tablas disponibles e Interactivas */}
+              <div style={{ marginBottom: 14, display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
                 <span style={{ fontSize: '0.72rem', color: 'var(--sub)' }}>Tablas:</span>
-                {['usuarios', 'contenidos', 'reproducciones', 'pagos'].map(t => (
-                  <span key={t} style={{ fontSize: '0.72rem', fontFamily: 'DM Mono', background: 'var(--bg3)', padding: '2px 8px', borderRadius: 5, color: 'var(--nova)' }}>{t}</span>
+                {tablas.map(t => (
+                  <button 
+                    key={t} 
+                    onClick={() => openTablePreview(t)}
+                    style={{ 
+                      fontSize: '0.72rem', fontFamily: 'DM Mono', 
+                      background: tablePreview?.name === t ? 'var(--nova)' : 'var(--bg3)', 
+                      padding: '4px 10px', borderRadius: 6, 
+                      color: tablePreview?.name === t ? '#fff' : 'var(--nova)', 
+                      border: '1px solid ' + (tablePreview?.name === t ? 'var(--nova)' : 'var(--border)'), 
+                      cursor: 'pointer', transition: 'all 0.2s' 
+                    }}
+                  >
+                    {t}
+                  </button>
                 ))}
               </div>
 
-              {/* Editor */}
-              <div style={{ background: '#0b0d14', border: '1px solid var(--border2)', borderRadius: 10, overflow: 'hidden', marginBottom: 12 }}>
-                <div style={{ background: '#0e1018', padding: '5px 10px', display: 'flex', gap: 5, borderBottom: '1px solid var(--border)' }}>
+              {/* Previsualización de Tabla */}
+              {tablePreview && (
+                <div style={{ marginBottom: 14, background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+                  <div style={{ background: 'var(--bg3)', padding: '8px 12px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.75rem', fontFamily: 'DM Mono', color: 'var(--nova)', fontWeight: 700 }}>🔍 {tablePreview.name} (Primeras 5 filas)</span>
+                    <button onClick={() => setTablePreview(null)} style={{ color: 'var(--sub)', background: 'transparent', border: 'none', cursor: 'pointer' }}>✕</button>
+                  </div>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'DM Mono', fontSize: '0.7rem' }}>
+                      <thead><tr>{tablePreview.data.columns.map(col => <th key={col} style={{ padding: '6px 10px', borderBottom: '1px solid var(--border)', color: 'var(--sub)', textAlign: 'left', background: 'var(--bg2)' }}>{col}</th>)}</tr></thead>
+                      <tbody>{tablePreview.data.values.map((row, i) => <tr key={i}>{row.map((val, j) => <td key={j} style={{ padding: '6px 10px', borderBottom: '1px solid var(--border)', color: 'var(--text)' }}>{val !== null ? String(val) : <span style={{color: 'var(--dim)'}}>NULL</span>}</td>)}</tr>)}</tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Editor de Código Adaptable a Modo Claro/Oscuro */}
+              <div style={{ background: 'var(--bg2)', border: '1px solid var(--border2)', borderRadius: 10, overflow: 'hidden', marginBottom: 12 }}>
+                <div style={{ background: 'var(--bg3)', padding: '5px 10px', display: 'flex', gap: 5, borderBottom: '1px solid var(--border)' }}>
                   {['#ff5f57','#ffbd2e','#28c840'].map(col => <div key={col} style={{ width: 7, height: 7, borderRadius: '50%', background: col }} />)}
-                  <span style={{ fontFamily: 'DM Mono', fontSize: '0.6rem', color: 'var(--dim)', marginLeft: 4 }}>reto.sql</span>
+                  <span style={{ fontFamily: 'DM Mono', fontSize: '0.6rem', color: 'var(--sub)', marginLeft: 4 }}>reto.sql</span>
                 </div>
                 <textarea
                   className="sql-editor"
                   value={queryText}
                   onChange={e => setQueryText(e.target.value)}
                   onKeyDown={e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); runQuery() } }}
-                  style={{ minHeight: 90 }}
+                  style={{ minHeight: 90, background: 'transparent', border: 'none', width: '100%' }}
                   placeholder="Escribí tu query acá..."
                   disabled={answered}
                 />
@@ -267,13 +337,15 @@ export default function RetosPage() {
               {/* Acciones */}
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
                 <button onClick={runQuery} disabled={answered} style={{ background: answered ? 'var(--bg3)' : 'var(--nova2)', color: answered ? 'var(--sub)' : '#fff', border: 'none', borderRadius: 9, padding: '9px 17px', fontWeight: 600, cursor: answered ? 'default' : 'pointer', fontSize: '0.84rem' }}>▶ Ejecutar</button>
-                <button onClick={() => setHintOpen(!hintOpen)} style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 9, padding: '8px 14px', color: hintOpen ? 'var(--amber)' : 'var(--sub)', cursor: 'pointer', fontSize: '0.84rem' }}>💡 Pista</button>
+                <button onClick={() => { setHintOpen(!hintOpen); setHintUsed(true); }} style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 9, padding: '8px 14px', color: hintOpen ? 'var(--amber)' : 'var(--sub)', cursor: 'pointer', fontSize: '0.84rem' }}>💡 Pista</button>
               </div>
 
               {/* Pista */}
               {hintOpen && (
                 <div style={{ marginBottom: 14, background: 'rgba(232,168,56,0.05)', border: '1px solid rgba(232,168,56,0.2)', borderRadius: 9, padding: '10px 14px' }}>
-                  <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--amber)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>Pista</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--amber)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Pista (Recompensa: 0 XP)</div>
+                  </div>
                   <div style={{ fontFamily: 'DM Mono', fontSize: '0.78rem', color: 'var(--sub)' }}>{retoActual.pista}</div>
                 </div>
               )}
@@ -288,7 +360,7 @@ export default function RetosPage() {
                       <div style={{ fontSize: '0.72rem', color: 'var(--sub)', marginBottom: 6, fontFamily: 'DM Mono' }}>{result.values.length} fila{result.values.length !== 1 ? 's' : ''}</div>
                       <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'DM Mono', fontSize: '0.74rem' }}>
                         <thead><tr>{result.columns.map(col => <th key={col} style={{ padding: '5px 9px', border: '1px solid var(--border)', fontSize: '0.65rem', textTransform: 'uppercase', background: 'var(--bg3)', color: 'var(--nova)' }}>{col}</th>)}</tr></thead>
-                        <tbody>{result.values.map((row, ri) => <tr key={ri}>{row.map((v, ci) => <td key={ci} style={{ padding: '5px 9px', border: '1px solid var(--border)' }}>{v !== null ? String(v) : <span style={{ color: 'var(--dim)' }}>NULL</span>}</td>)}</tr>)}</tbody>
+                        <tbody>{result.values.map((row, ri) => <tr key={ri}>{row.map((v, ci) => <td key={ci} style={{ padding: '5px 9px', border: '1px solid var(--border)', color: 'var(--text)' }}>{v !== null ? String(v) : <span style={{ color: 'var(--dim)' }}>NULL</span>}</td>)}</tr>)}</tbody>
                       </table>
                     </div>
                   )}
@@ -297,13 +369,15 @@ export default function RetosPage() {
 
               {/* Éxito */}
               {answered && (
-                <div style={{ background: 'rgba(62,207,142,0.06)', border: '1px solid rgba(62,207,142,0.2)', borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ background: finalXp > 0 ? 'rgba(62,207,142,0.06)' : 'rgba(232,168,56,0.06)', border: `1px solid ${finalXp > 0 ? 'rgba(62,207,142,0.2)' : 'rgba(232,168,56,0.2)'}`, borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
                   <span style={{ fontSize: '1.5rem' }}>{celebrating ? '🎉' : '✅'}</span>
                   <div>
-                    <div style={{ fontWeight: 700, color: 'var(--green)', marginBottom: 2 }}>
+                    <div style={{ fontWeight: 700, color: finalXp > 0 ? 'var(--green)' : 'var(--amber)', marginBottom: 2 }}>
                       {celebrating ? '¡Excelente! Reto completado' : 'Ya completaste este reto'}
                     </div>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--sub)' }}>+{retoActual.xp} XP sumados al leaderboard semanal</div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--sub)' }}>
+                      {finalXp > 0 ? `+${finalXp} XP sumados al leaderboard semanal` : 'Reto completado con ayuda (+0 XP)'}
+                    </div>
                   </div>
                   {completadosHoy < 3 && (
                     <button
@@ -342,7 +416,7 @@ function TopBar({ onBack }: { onBack: () => void }) {
       <button onClick={onBack} style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 8, padding: '5px 10px', color: 'var(--sub)', fontSize: '0.78rem', cursor: 'pointer', flexShrink: 0 }}>←</button>
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: '0.62rem', color: 'var(--nova)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>SQLNova</div>
-        <div style={{ fontSize: '0.88rem', fontWeight: 600 }}>⚡ Retos diarios</div>
+        <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text)' }}>⚡ Retos diarios</div>
       </div>
     </div>
   )
