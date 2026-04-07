@@ -334,7 +334,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     const TABLA_COLS = ['id', 'nombre', 'edad', 'ciudad']
 
     const subtituloStyle: React.CSSProperties = {
-      fontSize: '0.92rem', color: '#c8d8f0', lineHeight: 1.8,
+      fontSize: '0.92rem', color: 'var(--text)', lineHeight: 1.8,
       background: 'rgba(77,166,255,0.06)', borderLeft: '3px solid rgba(77,166,255,0.5)',
       borderRadius: '0 10px 10px 0', padding: '14px 16px', marginBottom: 18,
       textAlign: 'justify' as const,
@@ -358,7 +358,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                     ].map(({ ico, label, desc }) => (
                       <div key={label} style={{ background: 'rgba(77,166,255,0.06)', border: '1px solid rgba(77,166,255,0.15)', borderRadius: 10, padding: '14px 12px', textAlign: 'center' }}>
                         <div style={{ fontSize: '1.6rem', marginBottom: 8 }}>{ico}</div>
-                        <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#7dd3fc', marginBottom: 4 }}>{label}</div>
+                        <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--nova)', marginBottom: 4 }}>{label}</div>
                         <div style={{ fontSize: '0.7rem', color: 'var(--sub)', lineHeight: 1.5 }}>{desc}</div>
                       </div>
                     ))}
@@ -370,9 +370,9 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                     <span style={{ color: '#93c5fd' }}>SELECT</span><span style={{ color: '#e2e8f0' }}> nombre, email </span>
                     <span style={{ color: '#93c5fd' }}>FROM</span><span style={{ color: '#a78bfa' }}> clientes </span>
                     <span style={{ color: '#93c5fd' }}>WHERE</span><span style={{ color: '#e2e8f0' }}> ciudad = </span>
-                    <span style={{ color: '#86efac' }}>'Buenos Aires'</span>
+                    <span style={{ color: 'var(--green)' }}>'Buenos Aires'</span>
                     <span style={{ color: '#93c5fd' }}> AND</span><span style={{ color: '#e2e8f0' }}> gasto_total </span>
-                    <span style={{ color: '#6ee7b7' }}>&gt; </span><span style={{ color: '#fbbf24' }}>10000</span><span style={{ color: '#475569' }}>;</span>
+                    <span style={{ color: 'var(--green)' }}>&gt; </span><span style={{ color: 'var(--amber)' }}>10000</span><span style={{ color: '#475569' }}>;</span>
                   </div>
                 </div>
               )}
@@ -401,15 +401,15 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                     <rect x="20" y="32" width="148" height="132" rx="8" fill="rgba(77,166,255,0.08)" stroke="rgba(77,166,255,0.45)" strokeWidth="1.5"/>
                     <rect x="20" y="32" width="148" height="28" rx="8" fill="rgba(77,166,255,0.22)"/>
                     <rect x="20" y="52" width="148" height="8" fill="rgba(77,166,255,0.22)"/>
-                    <text x="94" y="51" textAnchor="middle" fill="#7dd3fc" fontSize="11" fontWeight="700" fontFamily="monospace">clientes</text>
+                    <text x="94" y="51" textAnchor="middle" fill="var(--nova)" fontSize="11" fontWeight="700" fontFamily="monospace">clientes</text>
                     {[['🔑 id','var(--sub)'],['nombre','#cbd5e1'],['email','#cbd5e1'],['ciudad','#cbd5e1'],['telefono','#cbd5e1']].map(([col, color], i) => (
                       <text key={String(col)} x="34" y={82 + i * 17} fill={color as string} fontSize="10" fontFamily="monospace">{col}</text>
                     ))}
                     <rect x="206" y="32" width="148" height="132" rx="8" fill="rgba(62,207,142,0.08)" stroke="rgba(62,207,142,0.45)" strokeWidth="1.5"/>
                     <rect x="206" y="32" width="148" height="28" rx="8" fill="rgba(62,207,142,0.22)"/>
                     <rect x="206" y="52" width="148" height="8" fill="rgba(62,207,142,0.22)"/>
-                    <text x="280" y="51" textAnchor="middle" fill="#6ee7b7" fontSize="11" fontWeight="700" fontFamily="monospace">pedidos</text>
-                    {[['🔑 id','var(--sub)'],['🔗 cliente_id','#fbbf24'],['🔗 producto_id','#fbbf24'],['fecha','#cbd5e1'],['total','#cbd5e1']].map(([col, color], i) => (
+                    <text x="280" y="51" textAnchor="middle" fill="var(--green)" fontSize="11" fontWeight="700" fontFamily="monospace">pedidos</text>
+                    {[['🔑 id','var(--sub)'],['🔗 cliente_id','var(--amber)'],['🔗 producto_id','var(--amber)'],['fecha','#cbd5e1'],['total','#cbd5e1']].map(([col, color], i) => (
                       <text key={String(col)} x="220" y={82 + i * 17} fill={color as string} fontSize="10" fontFamily="monospace">{col}</text>
                     ))}
                     <rect x="392" y="32" width="148" height="132" rx="8" fill="rgba(232,168,56,0.08)" stroke="rgba(232,168,56,0.45)" strokeWidth="1.5"/>
@@ -435,13 +435,13 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'DM Mono', fontSize: '0.76rem' }}>
                     <thead>
                       <tr>{TABLA_COLS.map(c => (
-                        <th key={c} style={{ padding: '7px 10px', border: '1px solid var(--border)', fontSize: '0.66rem', textTransform: 'uppercase', letterSpacing: '0.05em', background: (slide as any).hlCols ? 'rgba(77,166,255,0.18)' : 'var(--bg3)', color: (slide as any).hlCols ? '#7dd3fc' : 'var(--sub)', transition: 'all .3s' }}>{c}</th>
+                        <th key={c} style={{ padding: '7px 10px', border: '1px solid var(--border)', fontSize: '0.66rem', textTransform: 'uppercase', letterSpacing: '0.05em', background: (slide as any).hlCols ? 'rgba(77,166,255,0.18)' : 'var(--bg3)', color: (slide as any).hlCols ? 'var(--nova)' : 'var(--sub)', transition: 'all .3s' }}>{c}</th>
                       ))}</tr>
                     </thead>
                     <tbody>
                       {TABLA_ROWS.map((row, ri) => (
                         <tr key={ri}>{row.map((v, ci) => (
-                          <td key={ci} style={{ padding: '6px 10px', border: '1px solid var(--border)', background: ri === (slide as any).hlRow ? 'rgba(62,207,142,0.1)' : 'rgba(255,255,255,0.01)', color: ri === (slide as any).hlRow ? '#6ee7b7' : 'var(--text)', fontWeight: ri === (slide as any).hlRow ? 600 : 400, transition: 'all .3s' }}>{String(v)}</td>
+                          <td key={ci} style={{ padding: '6px 10px', border: '1px solid var(--border)', background: ri === (slide as any).hlRow ? 'rgba(62,207,142,0.1)' : 'rgba(255,255,255,0.01)', color: ri === (slide as any).hlRow ? 'var(--green)' : 'var(--text)', fontWeight: ri === (slide as any).hlRow ? 600 : 400, transition: 'all .3s' }}>{String(v)}</td>
                         ))}</tr>
                       ))}
                     </tbody>
@@ -473,8 +473,8 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                     <span style={{ color: '#a78bfa' }}> empleados </span>
                     <span style={{ color: '#93c5fd' }}>WHERE</span>
                     <span style={{ color: '#e2e8f0' }}> salario </span>
-                    <span style={{ color: '#6ee7b7' }}>&gt; </span>
-                    <span style={{ color: '#fbbf24' }}>80000</span>
+                    <span style={{ color: 'var(--green)' }}>&gt; </span>
+                    <span style={{ color: 'var(--amber)' }}>80000</span>
                     <span style={{ color: '#475569' }}>;</span>
                     <br/>
                     <span style={{ color: '#475569', fontSize: '0.72rem' }}>-- "Dame nombre y salario de los empleados que ganan más de $80k"</span>
@@ -569,7 +569,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
         <TopBar title="Tipos de Window Functions" module={getModuloLabel()} prog="Intro" onBack={() => router.replace('/dashboard')} />
         <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 26px) clamp(14px, 4vw, 20px)', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
-          <div style={{ background: 'rgba(77,166,255,0.06)', borderLeft: '3px solid rgba(77,166,255,0.6)', borderRadius: '0 10px 10px 0', padding: '14px 18px', marginBottom: 20, fontSize: '0.9rem', color: '#c8d8f0', lineHeight: 1.8, textAlign: 'justify' }}>
+          <div style={{ background: 'rgba(77,166,255,0.06)', borderLeft: '3px solid rgba(77,166,255,0.6)', borderRadius: '0 10px 10px 0', padding: '14px 18px', marginBottom: 20, fontSize: '0.9rem', color: 'var(--text)', lineHeight: 1.8, textAlign: 'justify' }}>
             Las <strong>Window Functions</strong> calculan valores sobre un conjunto de filas relacionadas <strong>sin eliminar filas del resultado</strong>. A diferencia de GROUP BY que colapsa las filas en una por grupo, las window functions agregan una columna calculada a cada fila existente.
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 20 }}>
@@ -579,8 +579,8 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                   <div style={{ fontFamily: 'DM Mono', fontSize: '0.8rem', fontWeight: 700, color: c.color }}>{c.nombre}</div>
                 </div>
                 <div style={{ padding: '12px 14px' }}>
-                  <div style={{ fontSize: '0.8rem', color: '#c8d8f0', lineHeight: 1.6, marginBottom: 8, textAlign: 'justify' }}>{c.desc}</div>
-                  <div style={{ background: 'var(--bg2)', borderRadius: 6, padding: '6px 10px', fontFamily: 'DM Mono', fontSize: '0.72rem', color: '#6ee7b7' }}>{c.ej}</div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text)', lineHeight: 1.6, marginBottom: 8, textAlign: 'justify' }}>{c.desc}</div>
+                  <div style={{ background: 'var(--bg2)', borderRadius: 6, padding: '6px 10px', fontFamily: 'DM Mono', fontSize: '0.72rem', color: 'var(--green)' }}>{c.ej}</div>
                 </div>
               </div>
             ))}
@@ -591,7 +591,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               {funcs.map(([fn, desc, ej], i) => (
                 <div key={fn} style={{ padding: '10px 14px', borderBottom: i < funcs.length - 2 ? '1px solid var(--border)' : 'none', borderRight: i % 2 === 0 ? '1px solid var(--border)' : 'none' }}>
                   <div style={{ fontFamily: 'DM Mono', fontSize: '0.78rem', fontWeight: 700, color: 'var(--nova)', marginBottom: 3 }}>{fn}</div>
-                  <div style={{ fontSize: '0.73rem', color: '#c8d8f0', marginBottom: 2 }}>{desc}</div>
+                  <div style={{ fontSize: '0.73rem', color: 'var(--text)', marginBottom: 2 }}>{desc}</div>
                   <div style={{ fontSize: '0.68rem', color: 'var(--sub)', fontFamily: 'DM Mono' }}>{ej}</div>
                 </div>
               ))}
@@ -612,7 +612,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
         <TopBar title="Cómo funciona una Subquery" module={getModuloLabel()} prog="Intro" onBack={() => router.replace('/dashboard')} />
         <div style={{ flex: 1, padding: 'clamp(16px,4vw,26px) clamp(14px,4vw,20px)', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
-          <div style={{ background: 'rgba(77,166,255,0.06)', borderLeft: '3px solid rgba(77,166,255,0.6)', borderRadius: '0 10px 10px 0', padding: '14px 18px', marginBottom: 20, fontSize: '0.9rem', color: '#c8d8f0', lineHeight: 1.8, textAlign: 'justify' }}>
+          <div style={{ background: 'rgba(77,166,255,0.06)', borderLeft: '3px solid rgba(77,166,255,0.6)', borderRadius: '0 10px 10px 0', padding: '14px 18px', marginBottom: 20, fontSize: '0.9rem', color: 'var(--text)', lineHeight: 1.8, textAlign: 'justify' }}>
             Una <strong>subquery</strong> es un SELECT dentro de otro SELECT. SQL la ejecuta primero y usa su resultado en el query principal. Son como preguntas anidadas: primero respondés la de adentro, luego la de afuera.
           </div>
 
@@ -624,21 +624,21 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               <span style={{ color: '#93c5fd' }}>FROM</span><span style={{ color: '#a78bfa' }}> pacientes</span><br/>
               <span style={{ color: '#93c5fd' }}>WHERE</span><span style={{ color: '#e2e8f0' }}> medico_id </span>
               <span style={{ color: '#93c5fd' }}>IN</span><span style={{ color: '#e2e8f0' }}> (</span>
-              <span style={{ color: '#fbbf24' }}> ← query externo</span><br/>
+              <span style={{ color: 'var(--amber)' }}> ← query externo</span><br/>
               <span style={{ color: '#e2e8f0' }}>   </span>
               <span style={{ color: '#93c5fd' }}>SELECT</span><span style={{ color: '#e2e8f0' }}> id </span>
               <span style={{ color: '#93c5fd' }}>FROM</span><span style={{ color: '#a78bfa' }}> medicos</span><br/>
               <span style={{ color: '#e2e8f0' }}>   </span>
               <span style={{ color: '#93c5fd' }}>WHERE</span><span style={{ color: '#e2e8f0' }}> experiencia </span>
-              <span style={{ color: '#6ee7b7' }}>&gt; </span><span style={{ color: '#fbbf24' }}>5</span>
-              <span style={{ color: '#86efac' }}> ← subquery (se ejecuta primero)</span><br/>
+              <span style={{ color: 'var(--green)' }}>&gt; </span><span style={{ color: 'var(--amber)' }}>5</span>
+              <span style={{ color: 'var(--green)' }}> ← subquery (se ejecuta primero)</span><br/>
               <span style={{ color: '#e2e8f0' }}>)</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {[
-                ['1', '#fbbf24', 'SQL ejecuta la subquery interna', 'SELECT id FROM medicos WHERE experiencia > 5 → [1, 3, 5]'],
+                ['1', 'var(--amber)', 'SQL ejecuta la subquery interna', 'SELECT id FROM medicos WHERE experiencia > 5 → [1, 3, 5]'],
                 ['2', '#93c5fd', 'Usa el resultado en el WHERE externo', 'WHERE medico_id IN (1, 3, 5)'],
-                ['3', '#6ee7b7', 'Devuelve las filas que coinciden', 'Los pacientes de esos médicos'],
+                ['3', 'var(--green)', 'Devuelve las filas que coinciden', 'Los pacientes de esos médicos'],
               ].map(([n, color, titulo, desc]) => (
                 <div key={n} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                   <div style={{ width: 24, height: 24, borderRadius: '50%', background: `${color}20`, border: `1px solid ${color}60`, color, fontSize: '0.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{n}</div>
@@ -664,8 +664,8 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                   <div style={{ fontFamily: 'DM Mono', fontSize: '0.78rem', fontWeight: 700, color: j.color }}>{j.nombre}</div>
                 </div>
                 <div style={{ padding: '10px 14px' }}>
-                  <div style={{ fontSize: '0.78rem', color: '#c8d8f0', lineHeight: 1.6, marginBottom: 8 }}>{j.desc}</div>
-                  <div style={{ background: 'var(--bg2)', borderRadius: 6, padding: '5px 9px', fontFamily: 'DM Mono', fontSize: '0.7rem', color: '#6ee7b7' }}>{j.ej}</div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text)', lineHeight: 1.6, marginBottom: 8 }}>{j.desc}</div>
+                  <div style={{ background: 'var(--bg2)', borderRadius: 6, padding: '5px 9px', fontFamily: 'DM Mono', fontSize: '0.7rem', color: 'var(--green)' }}>{j.ej}</div>
                 </div>
               </div>
             ))}
@@ -685,7 +685,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
         <TopBar title="Cómo funcionan los CTEs" module={getModuloLabel()} prog="Intro" onBack={() => router.replace('/dashboard')} />
         <div style={{ flex: 1, padding: 'clamp(16px,4vw,26px) clamp(14px,4vw,20px)', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
-          <div style={{ background: 'rgba(77,166,255,0.06)', borderLeft: '3px solid rgba(77,166,255,0.6)', borderRadius: '0 10px 10px 0', padding: '14px 18px', marginBottom: 20, fontSize: '0.9rem', color: '#c8d8f0', lineHeight: 1.8, textAlign: 'justify' }}>
+          <div style={{ background: 'rgba(77,166,255,0.06)', borderLeft: '3px solid rgba(77,166,255,0.6)', borderRadius: '0 10px 10px 0', padding: '14px 18px', marginBottom: 20, fontSize: '0.9rem', color: 'var(--text)', lineHeight: 1.8, textAlign: 'justify' }}>
             Un <strong>CTE</strong> (Common Table Expression) es una consulta con nombre que definís antes del SELECT principal. Se comporta como una tabla temporal que solo existe durante esa consulta. Son la forma más limpia de organizar queries complejos.
           </div>
 
@@ -693,12 +693,12 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
           <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: '20px', marginBottom: 16 }}>
             <div style={{ fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--sub)', marginBottom: 14 }}>Un solo CTE</div>
             <div style={{ background: 'var(--bg2)', borderRadius: 10, padding: '16px', fontFamily: 'DM Mono', fontSize: '0.8rem', lineHeight: 2, marginBottom: 14 }}>
-              <span style={{ color: '#6ee7b7' }}>-- 1. Definís el CTE con un nombre</span><br/>
-              <span style={{ color: '#93c5fd' }}>WITH</span><span style={{ color: '#fbbf24' }}> grandes_envios </span><span style={{ color: '#93c5fd' }}>AS</span><span style={{ color: '#e2e8f0' }}> (</span><br/>
-              <span style={{ color: '#e2e8f0' }}>  </span><span style={{ color: '#93c5fd' }}>SELECT</span><span style={{ color: '#e2e8f0' }}> * </span><span style={{ color: '#93c5fd' }}>FROM</span><span style={{ color: '#a78bfa' }}> envios </span><span style={{ color: '#93c5fd' }}>WHERE</span><span style={{ color: '#e2e8f0' }}> peso_kg </span><span style={{ color: '#6ee7b7' }}>&gt; </span><span style={{ color: '#fbbf24' }}>50</span><br/>
+              <span style={{ color: 'var(--green)' }}>-- 1. Definís el CTE con un nombre</span><br/>
+              <span style={{ color: '#93c5fd' }}>WITH</span><span style={{ color: 'var(--amber)' }}> grandes_envios </span><span style={{ color: '#93c5fd' }}>AS</span><span style={{ color: '#e2e8f0' }}> (</span><br/>
+              <span style={{ color: '#e2e8f0' }}>  </span><span style={{ color: '#93c5fd' }}>SELECT</span><span style={{ color: '#e2e8f0' }}> * </span><span style={{ color: '#93c5fd' }}>FROM</span><span style={{ color: '#a78bfa' }}> envios </span><span style={{ color: '#93c5fd' }}>WHERE</span><span style={{ color: '#e2e8f0' }}> peso_kg </span><span style={{ color: 'var(--green)' }}>&gt; </span><span style={{ color: 'var(--amber)' }}>50</span><br/>
               <span style={{ color: '#e2e8f0' }}>)</span><br/>
-              <span style={{ color: '#6ee7b7' }}>-- 2. Lo usás como si fuera una tabla</span><br/>
-              <span style={{ color: '#93c5fd' }}>SELECT</span><span style={{ color: '#e2e8f0' }}> * </span><span style={{ color: '#93c5fd' }}>FROM</span><span style={{ color: '#fbbf24' }}> grandes_envios</span>
+              <span style={{ color: 'var(--green)' }}>-- 2. Lo usás como si fuera una tabla</span><br/>
+              <span style={{ color: '#93c5fd' }}>SELECT</span><span style={{ color: '#e2e8f0' }}> * </span><span style={{ color: '#93c5fd' }}>FROM</span><span style={{ color: 'var(--amber)' }}> grandes_envios</span>
             </div>
           </div>
 
@@ -707,18 +707,18 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
             <div style={{ fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--sub)', marginBottom: 14 }}>Múltiples CTEs — separados por coma</div>
             <div style={{ background: 'var(--bg2)', borderRadius: 10, padding: '16px', fontFamily: 'DM Mono', fontSize: '0.78rem', lineHeight: 2 }}>
               <span style={{ color: '#93c5fd' }}>WITH</span><br/>
-              <span style={{ color: '#fbbf24' }}>paso1 </span><span style={{ color: '#93c5fd' }}>AS</span><span style={{ color: '#e2e8f0' }}> (</span><br/>
+              <span style={{ color: 'var(--amber)' }}>paso1 </span><span style={{ color: '#93c5fd' }}>AS</span><span style={{ color: '#e2e8f0' }}> (</span><br/>
               <span style={{ color: '#e2e8f0' }}>  </span><span style={{ color: '#93c5fd' }}>SELECT</span><span style={{ color: '#e2e8f0' }}> chofer_id, </span><span style={{ color: '#93c5fd' }}>COUNT</span><span style={{ color: '#e2e8f0' }}>(*) </span><span style={{ color: '#93c5fd' }}>AS</span><span style={{ color: '#e2e8f0' }}> total</span><br/>
               <span style={{ color: '#e2e8f0' }}>  </span><span style={{ color: '#93c5fd' }}>FROM</span><span style={{ color: '#a78bfa' }}> envios </span><span style={{ color: '#93c5fd' }}>GROUP BY</span><span style={{ color: '#e2e8f0' }}> chofer_id</span><br/>
-              <span style={{ color: '#e2e8f0' }}>)<span style={{ color: '#fbbf24' }}>,   </span></span>
-              <span style={{ color: '#6ee7b7' }}>← coma entre CTEs</span><br/>
-              <span style={{ color: '#fbbf24' }}>paso2 </span><span style={{ color: '#93c5fd' }}>AS</span><span style={{ color: '#e2e8f0' }}> (</span><br/>
+              <span style={{ color: '#e2e8f0' }}>)<span style={{ color: 'var(--amber)' }}>,   </span></span>
+              <span style={{ color: 'var(--green)' }}>← coma entre CTEs</span><br/>
+              <span style={{ color: 'var(--amber)' }}>paso2 </span><span style={{ color: '#93c5fd' }}>AS</span><span style={{ color: '#e2e8f0' }}> (</span><br/>
               <span style={{ color: '#e2e8f0' }}>  </span><span style={{ color: '#93c5fd' }}>SELECT</span><span style={{ color: '#e2e8f0' }}> c.nombre, p.total</span><br/>
-              <span style={{ color: '#e2e8f0' }}>  </span><span style={{ color: '#93c5fd' }}>FROM</span><span style={{ color: '#fbbf24' }}> paso1 </span><span style={{ color: '#e2e8f0' }}>p </span>
+              <span style={{ color: '#e2e8f0' }}>  </span><span style={{ color: '#93c5fd' }}>FROM</span><span style={{ color: 'var(--amber)' }}> paso1 </span><span style={{ color: '#e2e8f0' }}>p </span>
               <span style={{ color: '#93c5fd' }}>JOIN</span><span style={{ color: '#a78bfa' }}> choferes </span><span style={{ color: '#e2e8f0' }}>c </span><span style={{ color: '#93c5fd' }}>ON</span><span style={{ color: '#e2e8f0' }}> p.chofer_id = c.id</span><br/>
-              <span style={{ color: '#6ee7b7' }}>  -- paso2 puede usar paso1</span><br/>
+              <span style={{ color: 'var(--green)' }}>  -- paso2 puede usar paso1</span><br/>
               <span style={{ color: '#e2e8f0' }}>)</span><br/>
-              <span style={{ color: '#93c5fd' }}>SELECT</span><span style={{ color: '#e2e8f0' }}> * </span><span style={{ color: '#93c5fd' }}>FROM</span><span style={{ color: '#fbbf24' }}> paso2 </span><span style={{ color: '#93c5fd' }}>WHERE</span><span style={{ color: '#e2e8f0' }}> total </span><span style={{ color: '#6ee7b7' }}>&gt; </span><span style={{ color: '#fbbf24' }}>5</span>
+              <span style={{ color: '#93c5fd' }}>SELECT</span><span style={{ color: '#e2e8f0' }}> * </span><span style={{ color: '#93c5fd' }}>FROM</span><span style={{ color: 'var(--amber)' }}> paso2 </span><span style={{ color: '#93c5fd' }}>WHERE</span><span style={{ color: '#e2e8f0' }}> total </span><span style={{ color: 'var(--green)' }}>&gt; </span><span style={{ color: 'var(--amber)' }}>5</span>
             </div>
           </div>
 
@@ -734,7 +734,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               </div>
               <div style={{ padding: '14px' }}>
                 <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--green)', marginBottom: 8 }}>✓ Con CTE</div>
-                <div style={{ fontFamily: 'DM Mono', fontSize: '0.7rem', color: '#c8d8f0', lineHeight: 1.8 }}>
+                <div style={{ fontFamily: 'DM Mono', fontSize: '0.7rem', color: 'var(--text)', lineHeight: 1.8 }}>
                   WITH totales AS (<br/>  SELECT zona, SUM(peso) AS total<br/>  FROM envios GROUP BY zona<br/>)<br/>SELECT zona, total<br/>FROM totales WHERE total &gt; 500
                 </div>
               </div>
@@ -755,7 +755,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
         <TopBar title="Qué es una Subquery" module={getModuloLabel()} prog="Intro" onBack={() => router.replace('/dashboard')} />
         <div style={{ flex: 1, padding: 'clamp(16px,4vw,26px) clamp(14px,4vw,20px)', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
-          <div style={{ background: 'rgba(77,166,255,0.06)', borderLeft: '3px solid rgba(77,166,255,0.6)', borderRadius: '0 10px 10px 0', padding: '14px 18px', marginBottom: 20, fontSize: '0.9rem', color: '#c8d8f0', lineHeight: 1.8 }}>
+          <div style={{ background: 'rgba(77,166,255,0.06)', borderLeft: '3px solid rgba(77,166,255,0.6)', borderRadius: '0 10px 10px 0', padding: '14px 18px', marginBottom: 20, fontSize: '0.9rem', color: 'var(--text)', lineHeight: 1.8 }}>
             Una <strong>subquery</strong> es un SELECT dentro de otro SELECT. SQL ejecuta primero la subquery interna, obtiene un resultado, y lo usa en el query externo. Es como resolver un problema en dos pasos.
           </div>
           {/* Diagrama de flujo de subquery */}
@@ -770,7 +770,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                   <div key={paso} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                     <div style={{ width: 24, height: 24, borderRadius: '50%', background: `${color}20`, border: `1px solid ${color}`, color, fontSize: '0.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>{paso}</div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '0.8rem', color: '#c8d8f0', marginBottom: 4 }}>{label}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text)', marginBottom: 4 }}>{label}</div>
                       <div style={{ background: 'var(--bg2)', borderRadius: 6, padding: '6px 10px', fontFamily: 'DM Mono', fontSize: '0.72rem', color, marginBottom: 4 }}>{code}</div>
                       <div style={{ fontSize: '0.72rem', color: 'var(--sub)', fontFamily: 'DM Mono' }}>{result}</div>
                     </div>
@@ -792,7 +792,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                   <div style={{ fontFamily: 'DM Mono', fontSize: '0.78rem', fontWeight: 700, color: t.color }}>{t.nombre}</div>
                 </div>
                 <div style={{ padding: '10px 12px' }}>
-                  <div style={{ fontSize: '0.78rem', color: '#c8d8f0', lineHeight: 1.5, marginBottom: 8 }}>{t.desc}</div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text)', lineHeight: 1.5, marginBottom: 8 }}>{t.desc}</div>
                   <div style={{ background: 'var(--bg2)', borderRadius: 6, padding: '5px 8px', fontFamily: 'DM Mono', fontSize: '0.68rem', color: t.color }}>{t.ej}</div>
                 </div>
               </div>
@@ -812,20 +812,20 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
         <TopBar title="Qué es un CTE" module={getModuloLabel()} prog="Intro" onBack={() => router.replace('/dashboard')} />
         <div style={{ flex: 1, padding: 'clamp(16px,4vw,26px) clamp(14px,4vw,20px)', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
-          <div style={{ background: 'rgba(77,166,255,0.06)', borderLeft: '3px solid rgba(77,166,255,0.6)', borderRadius: '0 10px 10px 0', padding: '14px 18px', marginBottom: 20, fontSize: '0.9rem', color: '#c8d8f0', lineHeight: 1.8 }}>
+          <div style={{ background: 'rgba(77,166,255,0.06)', borderLeft: '3px solid rgba(77,166,255,0.6)', borderRadius: '0 10px 10px 0', padding: '14px 18px', marginBottom: 20, fontSize: '0.9rem', color: 'var(--text)', lineHeight: 1.8 }}>
             Un <strong>CTE</strong> (Common Table Expression) es una consulta con nombre que podés usar dentro de otra consulta. Se define con <strong>WITH nombre AS (query)</strong> y luego se usa como una tabla. Son como los pasos de un algoritmo: cada CTE resuelve una parte del problema.
           </div>
           {/* Sintaxis visual de CTE */}
           <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px', marginBottom: 16 }}>
             <div style={{ fontSize: '0.68rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--sub)', marginBottom: 12 }}>Sintaxis</div>
             <div style={{ fontFamily: 'DM Mono', fontSize: '0.82rem', lineHeight: 2 }}>
-              <span style={{ color: '#93c5fd' }}>WITH</span><span style={{ color: '#fbbf24' }}> nombre_cte</span><span style={{ color: '#e2e8f0' }}> AS (</span><br/>
+              <span style={{ color: '#93c5fd' }}>WITH</span><span style={{ color: 'var(--amber)' }}> nombre_cte</span><span style={{ color: '#e2e8f0' }}> AS (</span><br/>
               <span style={{ color: 'var(--sub)', marginLeft: 16 }}>  -- query que define el CTE</span><br/>
               <span style={{ color: '#93c5fd', marginLeft: 16 }}>  SELECT</span><span style={{ color: '#e2e8f0' }}> col1, COUNT(*) AS n</span><br/>
               <span style={{ color: '#93c5fd', marginLeft: 16 }}>  FROM</span><span style={{ color: '#a78bfa' }}> tabla</span><br/>
               <span style={{ color: '#93c5fd', marginLeft: 16 }}>  GROUP BY</span><span style={{ color: '#e2e8f0' }}> col1</span><br/>
               <span style={{ color: '#e2e8f0' }}>)</span><br/>
-              <span style={{ color: '#93c5fd' }}>SELECT</span><span style={{ color: '#e2e8f0' }}> * </span><span style={{ color: '#93c5fd' }}>FROM</span><span style={{ color: '#fbbf24' }}> nombre_cte</span><br/>
+              <span style={{ color: '#93c5fd' }}>SELECT</span><span style={{ color: '#e2e8f0' }}> * </span><span style={{ color: '#93c5fd' }}>FROM</span><span style={{ color: 'var(--amber)' }}> nombre_cte</span><br/>
               <span style={{ color: '#93c5fd' }}>WHERE</span><span style={{ color: '#e2e8f0' }}> n &gt; 5;</span>
             </div>
           </div>
@@ -855,12 +855,12 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
             <div style={{ fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--sub)', marginBottom: 12 }}>CTE vs Subquery — hacen lo mismo, diferente legibilidad</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div>
-                <div style={{ fontSize: '0.72rem', color: '#ef4444', marginBottom: 6, fontWeight: 600 }}>❌ Subquery anidada</div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--red)', marginBottom: 6, fontWeight: 600 }}>❌ Subquery anidada</div>
                 <pre style={{ background: 'var(--bg2)', borderRadius: 6, padding: '8px 10px', fontFamily: 'DM Mono', fontSize: '0.68rem', color: 'var(--sub)', lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap' }}>{'SELECT zona, total\nFROM (\n  SELECT zona,\n  SUM(peso_kg) AS total\n  FROM envios\n  GROUP BY zona\n)\nWHERE total > 500'}</pre>
               </div>
               <div>
                 <div style={{ fontSize: '0.72rem', color: '#10b981', marginBottom: 6, fontWeight: 600 }}>✓ Con CTE</div>
-                <pre style={{ background: 'var(--bg2)', borderRadius: 6, padding: '8px 10px', fontFamily: 'DM Mono', fontSize: '0.68rem', color: '#6ee7b7', lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap' }}>{'WITH totales AS (\n  SELECT zona,\n  SUM(peso_kg) AS total\n  FROM envios\n  GROUP BY zona\n)\nSELECT zona, total\nFROM totales\nWHERE total > 500'}</pre>
+                <pre style={{ background: 'var(--bg2)', borderRadius: 6, padding: '8px 10px', fontFamily: 'DM Mono', fontSize: '0.68rem', color: 'var(--green)', lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap' }}>{'WITH totales AS (\n  SELECT zona,\n  SUM(peso_kg) AS total\n  FROM envios\n  GROUP BY zona\n)\nSELECT zona, total\nFROM totales\nWHERE total > 500'}</pre>
               </div>
             </div>
           </div>
@@ -958,7 +958,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
         <TopBar title="Tipos de JOIN" module={getModuloLabel()} prog="Intro" onBack={() => router.replace('/dashboard')} />
         <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 26px) clamp(14px, 4vw, 20px)', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
 
-          <div style={{ background: 'rgba(77,166,255,0.06)', borderLeft: '3px solid rgba(77,166,255,0.6)', borderRadius: '0 10px 10px 0', padding: '14px 18px', marginBottom: 20, fontSize: '0.9rem', color: '#c8d8f0', lineHeight: 1.8, textAlign: 'justify' }}>
+          <div style={{ background: 'rgba(77,166,255,0.06)', borderLeft: '3px solid rgba(77,166,255,0.6)', borderRadius: '0 10px 10px 0', padding: '14px 18px', marginBottom: 20, fontSize: '0.9rem', color: 'var(--text)', lineHeight: 1.8, textAlign: 'justify' }}>
             Un <strong>JOIN</strong> combina filas de dos tablas basándose en una columna relacionada. La diferencia entre los tipos de JOIN está en <strong>qué filas incluye</strong> cuando no hay coincidencia. Pensá en cada tabla como un círculo: el resultado del JOIN es la parte del diagrama que está coloreada.
           </div>
 
@@ -970,7 +970,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                 </div>
                 <div style={{ padding: '12px 14px' }}>
                   <div style={{ marginBottom: 10 }}>{j.svg}</div>
-                  <div style={{ fontSize: '0.82rem', color: '#c8d8f0', lineHeight: 1.6, marginBottom: 8, textAlign: 'justify' }}>{j.desc}</div>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text)', lineHeight: 1.6, marginBottom: 8, textAlign: 'justify' }}>{j.desc}</div>
                   <div style={{ fontSize: '0.74rem', color: 'var(--sub)', fontStyle: 'italic', lineHeight: 1.5 }}>Ej: {j.ejemplo}</div>
                 </div>
               </div>
@@ -999,7 +999,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                     ['FULL OUTER JOIN', '✓ todas', '✓ todas', '✗ No'],
                   ].map(([join, a, b, solo], i) => (
                     <tr key={join} style={{ borderBottom: i < 3 ? '1px solid var(--border)' : 'none' }}>
-                      <td style={{ padding: '8px 12px', color: '#7dd3fc', fontWeight: 700 }}>{join}</td>
+                      <td style={{ padding: '8px 12px', color: 'var(--nova)', fontWeight: 700 }}>{join}</td>
                       <td style={{ padding: '8px 12px', color: 'var(--sub)' }}>{a}</td>
                       <td style={{ padding: '8px 12px', color: 'var(--sub)' }}>{b}</td>
                       <td style={{ padding: '8px 12px', color: solo === '✓ Sí' ? 'var(--green)' : 'var(--sub)' }}>{solo}</td>
@@ -1038,14 +1038,14 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
             {resumen.puntos.map((p, i) => (
               <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '8px 0', borderBottom: i < resumen.puntos.length - 1 ? '1px solid var(--border)' : 'none' }}>
                 <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(77,166,255,0.15)', color: 'var(--nova)', fontSize: '0.65rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
-                <div style={{ fontSize: '0.86rem', color: '#c8d8f0', lineHeight: 1.5 }}>{p}</div>
+                <div style={{ fontSize: '0.86rem', color: 'var(--text)', lineHeight: 1.5 }}>{p}</div>
               </div>
             ))}
           </div>
 
           <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px', marginBottom: 20 }}>
             <div style={{ fontSize: '0.68rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--sub)', marginBottom: 10 }}>Sintaxis del módulo</div>
-            <pre style={{ fontFamily: 'DM Mono', fontSize: '0.82rem', color: '#7dd3fc', lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap' }}>{resumen.sintaxis}</pre>
+            <pre style={{ fontFamily: 'DM Mono', fontSize: '0.82rem', color: 'var(--nova)', lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap' }}>{resumen.sintaxis}</pre>
           </div>
 
           <div style={{ display: 'flex', gap: 10 }}>
@@ -1079,8 +1079,8 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
                 <span style={{ fontFamily: 'DM Mono', fontSize: '0.9rem', fontWeight: 700, color: 'var(--nova)' }}>{g.termino}</span>
               </div>
-              <div style={{ fontSize: '0.85rem', color: '#c8d8f0', lineHeight: 1.6, marginBottom: 10 }}>{g.descripcion}</div>
-              <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 7, padding: '8px 12px', fontFamily: 'DM Mono', fontSize: '0.75rem', color: '#6ee7b7' }}>{g.ejemplo}</div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text)', lineHeight: 1.6, marginBottom: 10 }}>{g.descripcion}</div>
+              <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 7, padding: '8px 12px', fontFamily: 'DM Mono', fontSize: '0.75rem', color: 'var(--green)' }}>{g.ejemplo}</div>
             </div>
           ))}
           {filtrado.length === 0 && (
@@ -1217,7 +1217,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
         )}
 
         {/* Teoría */}
-        <div style={{ background: 'rgba(77,166,255,0.06)', borderLeft: '3px solid rgba(77,166,255,0.6)', borderRadius: '0 10px 10px 0', padding: '14px 18px', marginBottom: 18, fontSize: '0.9rem', color: '#c8d8f0', lineHeight: 1.8, textAlign: 'justify' }}
+        <div style={{ background: 'rgba(77,166,255,0.06)', borderLeft: '3px solid rgba(77,166,255,0.6)', borderRadius: '0 10px 10px 0', padding: '14px 18px', marginBottom: 18, fontSize: '0.9rem', color: 'var(--text)', lineHeight: 1.8, textAlign: 'justify' }}
           dangerouslySetInnerHTML={{ __html: l.teoria }} />
 
         {/* Tarjeta ejercicio */}
@@ -1283,7 +1283,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               </div>
             ) : (
               <div style={{ background: 'var(--bg2)', border: '1px solid var(--border2)', borderRadius: 11, overflow: 'hidden', marginBottom: 13 }}>
-                <div style={{ background: '#0e1018', padding: '6px 11px', display: 'flex', alignItems: 'center', gap: 5, borderBottom: '1px solid var(--border)' }}>
+                <div style={{ background: 'var(--bg3)', padding: '6px 11px', display: 'flex', alignItems: 'center', gap: 5, borderBottom: '1px solid var(--border)' }}>
                   {['#ff5f57','#ffbd2e','#28c840'].map(c => <div key={c} style={{ width: 7, height: 7, borderRadius: '50%', background: c }} />)}
                   <span style={{ fontFamily: 'DM Mono', fontSize: '0.61rem', color: 'var(--dim)', marginLeft: 4 }}>query.sql</span>
                 </div>
