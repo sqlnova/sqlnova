@@ -11,7 +11,12 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'SQLNova - Aprende SQL Jugando',
+  title: 'SQLNova',
+  description: 'Plataforma interactiva para dominar SQL con lecciones y retos diarios.',
+  icons: {
+    icon: '/icon-192x192.png',
+    apple: '/icon-192x192.png', // ESTO OBLIGA AL IPHONE A USAR EL LOGO
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
