@@ -3,8 +3,9 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { sb } from '@/lib/supabase'
 import Papa from 'papaparse'
+import * as XLSX from 'xlsx' // 1. Importamos la nueva librería
 
-// Tipos de datos limpios para que el compilador no se maree
+// Tipos de datos
 type TableInfo = {
   nombre: string;
   columnas: string[];
@@ -48,9 +49,7 @@ export default function PocketPage() {
   const [resultado, setResultado] = useState<{ columns: string[], values: any[][] } | null>(null)
   const [error, setError] = useState('')
   const [showGlosario, setShowGlosario] = useState(false)
-  
   const [tablePreview, setTablePreview] = useState<PreviewData | null>(null)
-  
   const dbRef = useRef<any>(null)
 
   const actualizarEsquema = () => {
@@ -129,31 +128,58 @@ export default function PocketPage() {
     init()
   }, [router])
 
-  const procesarCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 2. FUNCIÓN DE PROCESAMIENTO UNIFICADA (CSV + EXCEL)
+  const procesarArchivo = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !dbRef.current) return
     setError('')
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      transformHeader: (h) => h.trim().replace(/[^a-z0-9]/gi, '_').toLowerCase(),
-      complete: (results) => {
-        try {
-          const nombreTabla = file.name.replace(/\.[^/.]+$/, "").trim().replace(/[^a-z0-9]/gi, '_').toLowerCase()
-          const columnas = Object.keys(results.data[0] as object)
-          dbRef.current.run(`DROP TABLE IF EXISTS "${nombreTabla}"`)
-          dbRef.current.run(`CREATE TABLE "${nombreTabla}" (${columnas.map(c => `"${c}" TEXT`).join(', ')});`)
-          const sqlInsert = `INSERT INTO "${nombreTabla}" VALUES (${columnas.map(() => '?').join(', ')});`
-          results.data.forEach((fila: any) => {
-            const valores = Object.values(fila).map(v => typeof v === 'string' ? v.trim() : v)
-            dbRef.current.run(sqlInsert, valores)
-          })
-          
-          actualizarEsquema()
-          setQuery(`SELECT * FROM ${nombreTabla} LIMIT 10;`)
-        } catch (err: any) { setError(err.message) }
-      }
-    })
+
+    const reader = new FileReader()
+    const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls')
+
+    reader.onload = (event) => {
+      try {
+        let csvContent = ''
+
+        if (isExcel) {
+          // Si es Excel, usamos SheetJS para pasarlo a CSV
+          const data = new Uint8Array(event.target?.result as ArrayBuffer)
+          const workbook = XLSX.read(data, { type: 'array' })
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]]
+          csvContent = XLSX.utils.sheet_to_csv(firstSheet)
+        } else {
+          // Si es CSV, leemos el texto directamente
+          csvContent = event.target?.result as string
+        }
+
+        // Usamos PapaParse para procesar el string de CSV (venga de donde venga)
+        Papa.parse(csvContent, {
+          header: true,
+          skipEmptyLines: true,
+          transformHeader: (h) => h.trim().replace(/[^a-z0-9]/gi, '_').toLowerCase(),
+          complete: (results) => {
+            try {
+              const nombreTabla = file.name.replace(/\.[^/.]+$/, "").trim().replace(/[^a-z0-9]/gi, '_').toLowerCase()
+              const columnas = Object.keys(results.data[0] as object)
+              dbRef.current.run(`DROP TABLE IF EXISTS "${nombreTabla}"`)
+              dbRef.current.run(`CREATE TABLE "${nombreTabla}" (${columnas.map(c => `"${c}" TEXT`).join(', ')});`)
+              
+              const sqlInsert = `INSERT INTO "${nombreTabla}" VALUES (${columnas.map(() => '?').join(', ')});`
+              results.data.forEach((fila: any) => {
+                const valores = Object.values(fila).map(v => typeof v === 'string' ? v.trim() : v)
+                dbRef.current.run(sqlInsert, valores)
+              })
+              
+              actualizarEsquema()
+              setQuery(`SELECT * FROM ${nombreTabla} LIMIT 10;`)
+            } catch (err: any) { setError("Error SQL: " + err.message) }
+          }
+        })
+      } catch (err: any) { setError("Error al leer archivo: " + err.message) }
+    }
+
+    if (isExcel) reader.readAsArrayBuffer(file)
+    else reader.readAsText(file)
   }
 
   const ejecutarSQL = () => {
@@ -187,9 +213,6 @@ export default function PocketPage() {
     link.click()
   }
 
-  // ------------------------------------------------------------------
-  // Estos bloques `if` se separaron con llaves para evitar el error del compilador
-  // ------------------------------------------------------------------
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[var(--bg)]">
@@ -201,7 +224,6 @@ export default function PocketPage() {
   if (!esPremium) {
     return <Paywall router={router} />;
   }
-  // ------------------------------------------------------------------
 
   return (
     <div className="flex flex-col min-h-screen bg-[var(--bg)] text-[var(--text)]">
@@ -224,8 +246,8 @@ export default function PocketPage() {
             <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5">
               <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-[var(--border)] rounded-lg cursor-pointer hover:bg-[var(--bg3)] mb-6 transition-colors">
                 <span className="text-2xl mb-1">📤</span>
-                <span className="text-[10px] font-bold text-[var(--sub)] uppercase text-center">Subir CSV</span>
-                <input type="file" accept=".csv" onChange={procesarCSV} className="hidden" />
+                <span className="text-[10px] font-bold text-[var(--sub)] uppercase text-center">Subir CSV o Excel</span>
+                <input type="file" accept=".csv, .xlsx, .xls" onChange={procesarArchivo} className="hidden" />
               </label>
               
               <div className="flex items-center justify-between mb-4">
@@ -261,7 +283,6 @@ export default function PocketPage() {
           </aside>
 
           <main className="flex-1 min-w-0 space-y-4">
-            {/* PREVIEW UI */}
             {tablePreview && (
               <div className="bg-[var(--bg2)] border border-[var(--border)] rounded-xl overflow-hidden mb-4">
                 <div className="bg-[var(--bg3)] p-3 border-b border-[var(--border)] flex justify-between items-center">
