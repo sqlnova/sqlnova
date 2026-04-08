@@ -8,11 +8,14 @@ export async function POST(request: Request) {
   try {
     const { userId } = await request.json();
 
+    const token = process.env.MP_ACCESS_TOKEN;
+
     const client = new MercadoPagoConfig({ 
-      accessToken: process.env.MP_ACCESS_TOKEN || '' 
+      accessToken: token || '' 
     });
 
     const preference = new Preference(client);
+
     const result = await preference.create({
       body: {
         items: [
@@ -37,10 +40,15 @@ export async function POST(request: Request) {
       }
     });
 
-    // Devolvemos la URL de redirección (init_point)
     return Response.json({ url: result.init_point });
-  } catch (error) {
+
+  } catch (error: any) {
     console.error('Error MP:', error);
-    return Response.json({ error: 'Error al crear la preferencia' }, { status: 500 });
+    return Response.json({ 
+      error: 'Error al crear la preferencia',
+      detail: error?.message,
+      cause: String(error?.cause),
+      token_presente: !!process.env.MP_ACCESS_TOKEN
+    }, { status: 500 });
   }
 }
