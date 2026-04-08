@@ -2,7 +2,7 @@ import { MercadoPagoConfig, Preference } from 'mercadopago';
 import { PREMIUM_PRICE, PREMIUM_PLAN_NAME } from '@/lib/constants';
 
 // OBLIGATORIO para Cloudflare Pages
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 export async function POST(request: Request) {
   try {
