@@ -1,23 +1,19 @@
-import { MercadoPagoConfig, Preference } from 'mercadopago';
 import { PREMIUM_PRICE, PREMIUM_PLAN_NAME } from '@/lib/constants';
 
-// OBLIGATORIO para Cloudflare Pages
-export const runtime = 'nodejs';
+export const runtime = 'edge';
 
 export async function POST(request: Request) {
   try {
     const { userId } = await request.json();
-
     const token = process.env.MP_ACCESS_TOKEN;
 
-    const client = new MercadoPagoConfig({ 
-      accessToken: token || '' 
-    });
-
-    const preference = new Preference(client);
-
-    const result = await preference.create({
-      body: {
+    const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
         items: [
           {
             id: 'premium-lifetime',
@@ -27,9 +23,7 @@ export async function POST(request: Request) {
             currency_id: 'ARS',
           }
         ],
-        metadata: {
-          user_id: userId,
-        },
+        metadata: { user_id: userId },
         back_urls: {
           success: 'https://app.sqlnova.app/dashboard?pago=exitoso',
           failure: 'https://app.sqlnova.app/pocket?pago=error',
@@ -37,18 +31,18 @@ export async function POST(request: Request) {
         },
         auto_return: 'approved',
         notification_url: 'https://app.sqlnova.app/api/webhook',
-      }
+      }),
     });
 
-    return Response.json({ url: result.init_point });
+    const data = await response.json();
+
+    if (!response.ok) {
+      return Response.json({ error: 'Error MP', detail: data }, { status: 500 });
+    }
+
+    return Response.json({ url: data.init_point });
 
   } catch (error: any) {
-    console.error('Error MP:', error);
-    return Response.json({ 
-      error: 'Error al crear la preferencia',
-      detail: error?.message,
-      cause: String(error?.cause),
-      token_presente: !!process.env.MP_ACCESS_TOKEN
-    }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 }
