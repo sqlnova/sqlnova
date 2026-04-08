@@ -51,7 +51,6 @@ export default function Dashboard() {
         const { data: comp } = await sb.from('retos_completados').select('reto_id').eq('usuario_id', uid).eq('reto_id', retoId).maybeSingle()
         setTieneRetoHoy(true)
         
-        // LÓGICA ANTI-SPAM
         const popupVisto = localStorage.getItem(`reto_popup_${hoy}`)
         if (!comp && !popupVisto) {
           setRetoPopup(true)
@@ -61,6 +60,41 @@ export default function Dashboard() {
   }, [router])
 
   useEffect(() => { loadData() }, [loadData])
+
+  // ✅ NUEVO: Detectar retorno de MercadoPago
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('pago') === 'exitoso') {
+      // Limpiar URL inmediatamente
+      window.history.replaceState({}, '', '/dashboard')
+      
+      // Esperar 4 segundos para que el webhook procese
+      setTimeout(async () => {
+        const { data: { session } } = await sb.auth.getSession()
+        if (!session) return
+
+        // Reintentar hasta 5 veces cada 3 segundos
+        let intentos = 0
+        const verificar = async () => {
+          intentos++
+          const { data: p } = await sb.from('perfiles')
+            .select('es_premium')
+            .eq('id', session.user.id)
+            .single()
+
+          if (p?.es_premium) {
+            alert('✅ ¡Bienvenido a Premium! Ya tenés acceso completo a Pocket Database.')
+            loadData()
+          } else if (intentos < 5) {
+            setTimeout(verificar, 3000)
+          } else {
+            alert('⏳ Tu pago fue procesado. Si en unos minutos no tenés acceso, escribinos y lo resolvemos.')
+          }
+        }
+        verificar()
+      }, 4000)
+    }
+  }, [loadData])
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-screen bg-[var(--bg)]">
@@ -194,7 +228,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* POPUP DE RETOS DIARIOS */}
       {retoPopup && (
         <div className="fixed inset-0 z-[500] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 animate-fade-up">
           <div className="bg-[var(--card)] border border-amber-500/30 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">

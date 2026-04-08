@@ -15,13 +15,15 @@ export async function POST(request: Request) {
   const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   try {
-    const { searchParams } = new URL(request.url);
-    const paymentId = searchParams.get('data.id') || searchParams.get('id');
-    const type = searchParams.get('type');
+    // MP manda el payload en el BODY, no en la URL
+    const body = await request.json();
+    
+    const paymentId = body?.data?.id;
+    const action = body?.action;
 
-    if (type === 'payment' && paymentId) {
+    // Solo procesar pagos creados o actualizados
+    if ((action === 'payment.created' || action === 'payment.updated') && paymentId) {
       
-      // Llamada directa a la API REST de MP (sin SDK)
       const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
         headers: {
           'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
