@@ -1,20 +1,17 @@
-import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
 
-// OBLIGATORIO para Cloudflare Pages
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
-  const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN || '';
   const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN || '';
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
     return new Response('Config Error', { status: 200 });
   }
 
-  const client = new MercadoPagoConfig({ accessToken: MP_ACCESS_TOKEN });
   const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   try {
@@ -23,8 +20,15 @@ export async function POST(request: Request) {
     const type = searchParams.get('type');
 
     if (type === 'payment' && paymentId) {
-      const payment = new Payment(client);
-      const data = await payment.get({ id: paymentId });
+      
+      // Llamada directa a la API REST de MP (sin SDK)
+      const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+        headers: {
+          'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
+        },
+      });
+
+      const data = await mpResponse.json();
 
       if (data.status === 'approved') {
         const userId = data.metadata?.user_id;
@@ -41,9 +45,9 @@ export async function POST(request: Request) {
     }
 
     return new Response('OK', { status: 200 });
+
   } catch (error: any) {
     console.error('Webhook Exception:', error.message);
-    // Respondemos 200 siempre para que MP no reintente infinitamente en caso de error de código
     return new Response('OK', { status: 200 });
   }
 }
