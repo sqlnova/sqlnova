@@ -25,14 +25,56 @@ import {
 } from '@/lib/curriculum-m9m10'
 
 type Prog = Record<string, { completada: boolean; xp_ganado: number }>
-type Vista = 
-  | 'leccion' 
-  | 'resumen' 
-  | 'glosario' 
-  | 'intro-joins' 
-  | 'intro-windows' 
-  | 'intro-subqueries' 
+type Vista =
+  | 'leccion'
+  | 'resumen'
+  | 'glosario'
+  | 'intro-joins'
+  | 'intro-windows'
+  | 'intro-subqueries'
   | 'intro-ctes'
+
+// ── SQL KEYBOARD ──────────────────────────────────────────────────────────────
+const SQL_BUTTONS = [
+  { label: 'SELECT', snippet: 'SELECT ', color: '#93c5fd' },
+  { label: 'FROM', snippet: 'FROM ', color: '#93c5fd' },
+  { label: 'WHERE', snippet: 'WHERE ', color: '#93c5fd' },
+  { label: 'AND', snippet: 'AND ', color: '#93c5fd' },
+  { label: 'OR', snippet: 'OR ', color: '#93c5fd' },
+  { label: 'JOIN', snippet: 'JOIN ', color: '#a78bfa' },
+  { label: 'LEFT JOIN', snippet: 'LEFT JOIN ', color: '#a78bfa' },
+  { label: 'INNER JOIN', snippet: 'INNER JOIN ', color: '#a78bfa' },
+  { label: 'ON', snippet: 'ON ', color: '#a78bfa' },
+  { label: 'GROUP BY', snippet: 'GROUP BY ', color: '#6ee7b7' },
+  { label: 'ORDER BY', snippet: 'ORDER BY ', color: '#6ee7b7' },
+  { label: 'HAVING', snippet: 'HAVING ', color: '#6ee7b7' },
+  { label: 'LIMIT', snippet: 'LIMIT ', color: '#6ee7b7' },
+  { label: 'AS', snippet: 'AS ', color: '#fcd34d' },
+  { label: 'DISTINCT', snippet: 'DISTINCT ', color: '#fcd34d' },
+  { label: 'COUNT(*)', snippet: 'COUNT(*)', color: '#f9a8d4' },
+  { label: 'SUM()', snippet: 'SUM()', color: '#f9a8d4' },
+  { label: 'AVG()', snippet: 'AVG()', color: '#f9a8d4' },
+  { label: 'MAX()', snippet: 'MAX()', color: '#f9a8d4' },
+  { label: 'MIN()', snippet: 'MIN()', color: '#f9a8d4' },
+  { label: 'IS NULL', snippet: ' IS NULL', color: '#94a3b8' },
+  { label: 'IS NOT NULL', snippet: ' IS NOT NULL', color: '#94a3b8' },
+  { label: 'IN ()', snippet: ' IN ()', color: '#94a3b8' },
+  { label: 'NOT IN ()', snippet: ' NOT IN ()', color: '#94a3b8' },
+  { label: 'BETWEEN', snippet: ' BETWEEN ', color: '#94a3b8' },
+  { label: 'LIKE', snippet: ' LIKE ', color: '#94a3b8' },
+  { label: 'CASE', snippet: 'CASE WHEN  THEN  ELSE  END', color: '#fb923c' },
+  { label: 'WITH', snippet: 'WITH  AS (\n  \n)\n', color: '#fb923c' },
+  { label: 'OVER()', snippet: ' OVER()', color: '#fb923c' },
+  { label: 'PARTITION BY', snippet: 'PARTITION BY ', color: '#fb923c' },
+  { label: 'ROW_NUMBER()', snippet: 'ROW_NUMBER()', color: '#fb923c' },
+  { label: '*', snippet: '*', color: '#64748b' },
+  { label: ',', snippet: ', ', color: '#64748b' },
+  { label: '=', snippet: ' = ', color: '#64748b' },
+  { label: '!=', snippet: ' != ', color: '#64748b' },
+  { label: '>', snippet: ' > ', color: '#64748b' },
+  { label: '<', snippet: ' < ', color: '#64748b' },
+  { label: '\n', snippet: '\n', color: '#64748b' },
+]
 
 export default function LeccionClient({ moduloId }: { moduloId: number }) {
   const router = useRouter()
@@ -55,6 +97,25 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
   const [intentos, setIntentos] = useState(0)
   const [glosarioSearch, setGlosarioSearch] = useState('')
   const sqlDbRef = useRef<any>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // Inserta un snippet en la posición actual del cursor del textarea
+  const insertSnippet = (snippet: string) => {
+    const ta = textareaRef.current
+    if (!ta) return
+    const start = ta.selectionStart
+    const end = ta.selectionEnd
+    const before = queryText.slice(0, start)
+    const after = queryText.slice(end)
+    const newText = before + snippet + after
+    setQueryText(newText)
+    // Reposicionar el cursor justo después del snippet insertado
+    requestAnimationFrame(() => {
+      ta.focus()
+      const newPos = start + snippet.length
+      ta.setSelectionRange(newPos, newPos)
+    })
+  }
 
   const getLecciones = () => {
     if (moduloId === 1) return LECCIONES_M1
@@ -254,12 +315,8 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
         const uCols = JSON.stringify(res[0].columns.map((c: string) => c.toLowerCase()))
         const sCols = JSON.stringify(solRes[0].columns.map((c: string) => c.toLowerCase()))
 
-        // Coincidencia exacta: mismos valores Y mismos nombres de columna
         const exact = uRows === sRows && uCols === sCols
-        // Coincidencia de texto normalizado
         const normMatch = normalize(q) === normalize(l.solucion)
-        // Coincidencia flexible: mismos valores, misma cantidad de columnas
-        // (acepta aliases distintos — el usuario no tiene por qué saber el alias exacto)
         const sameColCount = res[0].columns.length === solRes[0].columns.length
         const flexMatch = uRows === sRows && sameColCount
 
@@ -279,7 +336,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     }
   }
 
-  // Navegar sin perder progreso
   const goToLesson = (idx: number) => {
     const lecciones = getLecciones()
     if (idx >= 0 && idx < lecciones.length) {
@@ -347,7 +403,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
           <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 15, overflow: 'hidden' }}>
             <div style={{ padding: '20px 20px 0' }}>
 
-              {/* Slide 1 — concepto visual */}
               {slide.tipo === 'concepto' && (
                 <div style={{ background: 'var(--bg2)', borderRadius: 12, padding: '20px', marginBottom: 16 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 16 }}>
@@ -377,7 +432,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                 </div>
               )}
 
-              {/* Apps grid */}
               {slide.tipo === 'apps' && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10, marginBottom: 16 }}>
                   {[['🏦','Bancos','Movimientos y saldos'],['🛒','Tiendas online','Productos y pedidos'],['📱','Redes sociales','Perfiles y posts'],['🏥','Hospitales','Historias clínicas']].map(([ico,n,d]) => (
@@ -392,7 +446,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                 </div>
               )}
 
-              {/* DER */}
               {slide.tipo === 'der' && (
                 <div style={{ background: 'var(--bg2)', borderRadius: 12, padding: '16px', marginBottom: 16 }}>
                   <svg viewBox="0 0 560 180" style={{ width: '100%', height: 'auto' }} xmlns="http://www.w3.org/2000/svg">
@@ -429,7 +482,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                 </div>
               )}
 
-              {/* Tabla highlight */}
               {slide.tipo === 'tabla' && (
                 <div style={{ overflowX: 'auto', marginBottom: 16 }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'DM Mono', fontSize: '0.76rem' }}>
@@ -449,7 +501,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                 </div>
               )}
 
-              {/* SQL slide */}
               {slide.tipo === 'sql' && (
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 14 }}>
@@ -482,7 +533,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                 </div>
               )}
 
-              {/* Resumen final */}
               {slide.tipo === 'resumen' && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 8, marginBottom: 16 }}>
                   {[
@@ -605,8 +655,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     )
   }
 
-
-// ── VISTA INTRO SUBQUERIES ──
+  // ── VISTA INTRO SUBQUERIES ──
   if (vista === 'intro-subqueries') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
@@ -687,7 +736,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
       </div>
     )
   }
-  
+
   // ── VISTA INTRO JOINS ──
   if (vista === 'intro-joins') {
     const joins = [
@@ -701,7 +750,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
           <svg viewBox="0 0 200 120" style={{ width: '100%', height: 80 }}>
             <circle cx="75" cy="60" r="45" fill="rgba(77,166,255,0.08)" stroke="rgba(77,166,255,0.4)" strokeWidth="1.5"/>
             <circle cx="125" cy="60" r="45" fill="rgba(77,166,255,0.08)" stroke="rgba(77,166,255,0.4)" strokeWidth="1.5"/>
-            {/* Intersección resaltada */}
             <clipPath id="clip-inner">
               <circle cx="125" cy="60" r="45"/>
             </clipPath>
@@ -722,7 +770,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
           <svg viewBox="0 0 200 120" style={{ width: '100%', height: 80 }}>
             <circle cx="75" cy="60" r="45" fill="rgba(16,185,129,0.5)" stroke="rgba(16,185,129,0.5)" strokeWidth="1.5"/>
             <circle cx="125" cy="60" r="45" fill="rgba(77,166,255,0.08)" stroke="rgba(77,166,255,0.35)" strokeWidth="1.5"/>
-            {/* Intersección misma pero más clara */}
             <clipPath id="clip-left">
               <circle cx="125" cy="60" r="45"/>
             </clipPath>
@@ -793,7 +840,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
             ))}
           </div>
 
-          {/* Tabla comparativa */}
           <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden', marginBottom: 20 }}>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--sub)' }}>
               Comparativa rápida
@@ -908,12 +954,9 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
   }
 
   // ── VISTA LECCIÓN ──
-  // Tablas a mostrar por lección — para JOINs y lecciones multi-tabla
   const TABLAS_JOIN: Record<string, string[]> = {
-    // M5
     '05-11': ['transacciones', 'cuentas'],
     '05-12': ['transacciones', 'cuentas'],
-    // M6
     '06-01': ['medicos', 'consultas'],
     '06-02': ['medicos'],
     '06-03': ['consultas', 'medicos'],
@@ -924,7 +967,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     '06-08': ['medicos', 'consultas'],
     '06-09': ['pacientes', 'consultas'],
     '06-10': ['medicos', 'consultas'],
-    // M3
     '03-01': ['pedidos', 'clientes'],
     '03-02': ['pedidos', 'clientes'],
     '03-03': ['pedidos', 'clientes', 'productos'],
@@ -937,9 +979,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     '03-10': ['pedidos', 'productos'],
     '03-11': ['pedidos', 'clientes', 'productos'],
     '03-12': ['pedidos', 'clientes'],
-    // M9
     '09-10': ['posts', 'usuarios'],
-    // M10
     '10-03': ['usuarios', 'posts'],
     '10-05': ['posts'],
     '10-06': ['posts'],
@@ -1047,7 +1087,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
             <div style={{ fontSize: '0.97rem', fontWeight: 500, letterSpacing: '-0.01em', lineHeight: 1.6, marginBottom: 15, color: 'var(--text)' }}
               dangerouslySetInnerHTML={{ __html: l.enunciado.replace(/\n/g, '<br/>') }} />
 
-            {/* Tablas relacionadas — para JOINs muestra todas las involucradas */}
+            {/* Tablas relacionadas */}
             {(() => {
               const tablaNames = TABLAS_JOIN[l.id] || [l.tabla]
               return (
@@ -1099,11 +1139,53 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               </div>
             ) : (
               <div style={{ background: 'var(--bg2)', border: '1px solid var(--border2)', borderRadius: 11, overflow: 'hidden', marginBottom: 13 }}>
+                {/* Barra de título del editor */}
                 <div style={{ background: 'var(--bg3)', padding: '6px 11px', display: 'flex', alignItems: 'center', gap: 5, borderBottom: '1px solid var(--border)' }}>
                   {['#ff5f57','#ffbd2e','#28c840'].map(c => <div key={c} style={{ width: 7, height: 7, borderRadius: '50%', background: c }} />)}
                   <span style={{ fontFamily: 'DM Mono', fontSize: '0.61rem', color: 'var(--dim)', marginLeft: 4 }}>query.sql</span>
                 </div>
+
+                {/* ── SQL KEYBOARD ── */}
+                <div style={{ borderBottom: '1px solid var(--border)', padding: '8px 10px', display: 'flex', gap: 5, flexWrap: 'wrap', background: 'rgba(0,0,0,0.18)' }}>
+                  {SQL_BUTTONS.map(btn => (
+                    <button
+                      key={btn.label}
+                      onMouseDown={e => {
+                        // Usamos onMouseDown con preventDefault para no perder el foco del textarea
+                        e.preventDefault()
+                        insertSnippet(btn.snippet)
+                      }}
+                      style={{
+                        fontFamily: 'DM Mono',
+                        fontSize: '0.68rem',
+                        fontWeight: 600,
+                        color: btn.color,
+                        background: `${btn.color}12`,
+                        border: `1px solid ${btn.color}30`,
+                        borderRadius: 5,
+                        padding: '3px 8px',
+                        cursor: 'pointer',
+                        lineHeight: 1.6,
+                        whiteSpace: 'nowrap',
+                        transition: 'background 0.1s, border-color 0.1s',
+                        userSelect: 'none',
+                      }}
+                      onMouseEnter={e => {
+                        (e.target as HTMLButtonElement).style.background = `${btn.color}28`
+                        ;(e.target as HTMLButtonElement).style.borderColor = `${btn.color}60`
+                      }}
+                      onMouseLeave={e => {
+                        (e.target as HTMLButtonElement).style.background = `${btn.color}12`
+                        ;(e.target as HTMLButtonElement).style.borderColor = `${btn.color}30`
+                      }}
+                    >
+                      {btn.label === '\n' ? '↵ Enter' : btn.label}
+                    </button>
+                  ))}
+                </div>
+
                 <textarea
+                  ref={textareaRef}
                   className="sql-editor"
                   value={queryText}
                   onChange={e => setQueryText(e.target.value)}
