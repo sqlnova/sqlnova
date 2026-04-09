@@ -367,11 +367,11 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                     <span style={{ color: '#475569' }}>-- Pregunta en lenguaje natural:</span><br/>
                     <span style={{ color: 'var(--sub)' }}>¿Cuáles son mis clientes de Buenos Aires que gastaron más de $10.000?</span><br/><br/>
                     <span style={{ color: '#475569' }}>-- Misma pregunta en SQL:</span><br/>
-                    <span style={{ color: '#93c5fd' }}>SELECT</span><span style={{ color: '#e2e8f0' }}> nombre, email </span>
+                    <span style={{ color: '#93c5fd' }}>SELECT</span><span style={{ color: 'var(--text)' }}> nombre, email </span>
                     <span style={{ color: '#93c5fd' }}>FROM</span><span style={{ color: '#a78bfa' }}> clientes </span>
-                    <span style={{ color: '#93c5fd' }}>WHERE</span><span style={{ color: '#e2e8f0' }}> ciudad = </span>
+                    <span style={{ color: '#93c5fd' }}>WHERE</span><span style={{ color: 'var(--text)' }}> ciudad = </span>
                     <span style={{ color: 'var(--green)' }}>'Buenos Aires'</span>
-                    <span style={{ color: '#93c5fd' }}> AND</span><span style={{ color: '#e2e8f0' }}> gasto_total </span>
+                    <span style={{ color: '#93c5fd' }}> AND</span><span style={{ color: 'var(--text)' }}> gasto_total </span>
                     <span style={{ color: 'var(--green)' }}>&gt; </span><span style={{ color: 'var(--amber)' }}>10000</span><span style={{ color: '#475569' }}>;</span>
                   </div>
                 </div>
@@ -468,11 +468,11 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                   </div>
                   <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 16px', fontFamily: 'DM Mono', fontSize: '0.8rem', lineHeight: 2 }}>
                     <span style={{ color: '#93c5fd' }}>SELECT</span>
-                    <span style={{ color: '#e2e8f0' }}> nombre, salario </span>
+                    <span style={{ color: 'var(--text)' }}> nombre, salario </span>
                     <span style={{ color: '#93c5fd' }}>FROM</span>
                     <span style={{ color: '#a78bfa' }}> empleados </span>
                     <span style={{ color: '#93c5fd' }}>WHERE</span>
-                    <span style={{ color: '#e2e8f0' }}> salario </span>
+                    <span style={{ color: 'var(--text)' }}> salario </span>
                     <span style={{ color: 'var(--green)' }}>&gt; </span>
                     <span style={{ color: 'var(--amber)' }}>80000</span>
                     <span style={{ color: '#475569' }}>;</span>
@@ -616,24 +616,30 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
             Una <strong>subquery</strong> es un SELECT dentro de otro SELECT. SQL la ejecuta primero y usa su resultado en el query principal. Son como preguntas anidadas: primero respondés la de adentro, luego la de afuera.
           </div>
 
-          {/* Diagrama de flujo */}
-          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: '20px', marginBottom: 16 }}>
-            <div style={{ fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--sub)', marginBottom: 16 }}>Estructura y flujo de ejecución</div>
-            <div style={{ background: 'var(--bg2)', borderRadius: 10, padding: '16px', fontFamily: 'DM Mono', fontSize: '0.8rem', lineHeight: 2, marginBottom: 16 }}>
-              <span style={{ color: '#93c5fd' }}>SELECT</span><span style={{ color: '#e2e8f0' }}> nombre </span>
-              <span style={{ color: '#93c5fd' }}>FROM</span><span style={{ color: '#a78bfa' }}> pacientes</span><br/>
-              <span style={{ color: '#93c5fd' }}>WHERE</span><span style={{ color: '#e2e8f0' }}> medico_id </span>
-              <span style={{ color: '#93c5fd' }}>IN</span><span style={{ color: '#e2e8f0' }}> (</span>
-              <span style={{ color: 'var(--amber)' }}> ← query externo</span><br/>
-              <span style={{ color: '#e2e8f0' }}>   </span>
-              <span style={{ color: '#93c5fd' }}>SELECT</span><span style={{ color: '#e2e8f0' }}> id </span>
-              <span style={{ color: '#93c5fd' }}>FROM</span><span style={{ color: '#a78bfa' }}> medicos</span><br/>
-              <span style={{ color: '#e2e8f0' }}>   </span>
-              <span style={{ color: '#93c5fd' }}>WHERE</span><span style={{ color: '#e2e8f0' }}> experiencia </span>
-              <span style={{ color: 'var(--green)' }}>&gt; </span><span style={{ color: 'var(--amber)' }}>5</span>
-              <span style={{ color: 'var(--green)' }}> ← subquery (se ejecuta primero)</span><br/>
-              <span style={{ color: '#e2e8f0' }}>)</span>
-            </div>
+         {/* Diagrama de flujo */}
+<div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: '20px', marginBottom: 16 }}>
+  <div style={{ fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--sub)', marginBottom: 16 }}>
+    Estructura y flujo de ejecución
+  </div>
+  <div style={{ background: 'var(--bg2)', borderRadius: 10, padding: '16px', fontFamily: 'DM Mono', fontSize: '0.8rem', lineHeight: 2, marginBottom: 16 }}>
+    {/* Usamos var(--nova) para keywords y var(--text) para el resto */}
+    <span style={{ color: 'var(--nova)' }}>SELECT</span><span style={{ color: 'var(--text)' }}> nombre </span>
+    <span style={{ color: 'var(--nova)' }}>FROM</span><span style={{ color: '#a78bfa' }}> pacientes</span><br/>
+    <span style={{ color: 'var(--nova)' }}>WHERE</span><span style={{ color: 'var(--text)' }}> medico_id </span>
+    <span style={{ color: 'var(--nova)' }}>IN</span><span style={{ color: 'var(--text)' }}> (</span>
+    <span style={{ color: 'var(--amber)' }}> ← query externo</span><br/>
+    
+    <span style={{ color: 'var(--text)' }}>&nbsp;&nbsp;&nbsp;&nbsp;</span>
+    <span style={{ color: 'var(--nova)' }}>SELECT</span><span style={{ color: 'var(--text)' }}> id </span>
+    <span style={{ color: 'var(--nova)' }}>FROM</span><span style={{ color: '#a78bfa' }}> medicos</span><br/>
+    
+    <span style={{ color: 'var(--text)' }}>&nbsp;&nbsp;&nbsp;&nbsp;</span>
+    <span style={{ color: 'var(--nova)' }}>WHERE</span><span style={{ color: 'var(--text)' }}> experiencia </span>
+    <span style={{ color: 'var(--green)' }}>&gt; </span><span style={{ color: 'var(--amber)' }}>5</span>
+    <span style={{ color: 'var(--green)' }}> ← subquery (se ejecuta primero)</span><br/>
+    <span style={{ color: 'var(--text)' }}>)</span>
+  </div>
+</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {[
                 ['1', 'var(--amber)', 'SQL ejecuta la subquery interna', 'SELECT id FROM medicos WHERE experiencia > 5 → [1, 3, 5]'],
@@ -679,48 +685,52 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     )
   }
 
-  // ── VISTA INTRO CTEs ──
-  if ((vista as string) === 'intro-ctes') {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
-        <TopBar title="Cómo funcionan los CTEs" module={getModuloLabel()} prog="Intro" onBack={() => router.replace('/dashboard')} />
-        <div style={{ flex: 1, padding: 'clamp(16px,4vw,26px) clamp(14px,4vw,20px)', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
-          <div style={{ background: 'rgba(77,166,255,0.06)', borderLeft: '3px solid rgba(77,166,255,0.6)', borderRadius: '0 10px 10px 0', padding: '14px 18px', marginBottom: 20, fontSize: '0.9rem', color: 'var(--text)', lineHeight: 1.8, textAlign: 'justify' }}>
-            Un <strong>CTE</strong> (Common Table Expression) es una consulta con nombre que definís antes del SELECT principal. Se comporta como una tabla temporal que solo existe durante esa consulta. Son la forma más limpia de organizar queries complejos.
-          </div>
+  // // ── VISTA INTRO CTEs ──
+if ((vista as string) === 'intro-ctes') {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
+      <TopBar title="Cómo funcionan los CTEs" module={getModuloLabel()} prog="Intro" onBack={() => router.replace('/dashboard')} />
+      <div style={{ flex: 1, padding: 'clamp(16px,4vw,26px) clamp(14px,4vw,20px)', maxWidth: 1200, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
+        <div style={{ background: 'rgba(77,166,255,0.06)', borderLeft: '3px solid rgba(77,166,255,0.6)', borderRadius: '0 10px 10px 0', padding: '14px 18px', marginBottom: 20, fontSize: '0.9rem', color: 'var(--text)', lineHeight: 1.8, textAlign: 'justify' }}>
+          Un <strong>CTE</strong> (Common Table Expression) es una consulta con nombre que definís antes del SELECT principal. Se comporta como una tabla temporal que solo existe durante esa consulta. Son la forma más limpia de organizar queries complejos.
+        </div>
 
-          {/* Estructura de un CTE */}
-          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: '20px', marginBottom: 16 }}>
-            <div style={{ fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--sub)', marginBottom: 14 }}>Un solo CTE</div>
-            <div style={{ background: 'var(--bg2)', borderRadius: 10, padding: '16px', fontFamily: 'DM Mono', fontSize: '0.8rem', lineHeight: 2, marginBottom: 14 }}>
-              <span style={{ color: 'var(--green)' }}>-- 1. Definís el CTE con un nombre</span><br/>
-              <span style={{ color: '#93c5fd' }}>WITH</span><span style={{ color: 'var(--amber)' }}> grandes_envios </span><span style={{ color: '#93c5fd' }}>AS</span><span style={{ color: '#e2e8f0' }}> (</span><br/>
-              <span style={{ color: '#e2e8f0' }}>  </span><span style={{ color: '#93c5fd' }}>SELECT</span><span style={{ color: '#e2e8f0' }}> * </span><span style={{ color: '#93c5fd' }}>FROM</span><span style={{ color: '#a78bfa' }}> envios </span><span style={{ color: '#93c5fd' }}>WHERE</span><span style={{ color: '#e2e8f0' }}> peso_kg </span><span style={{ color: 'var(--green)' }}>&gt; </span><span style={{ color: 'var(--amber)' }}>50</span><br/>
-              <span style={{ color: '#e2e8f0' }}>)</span><br/>
-              <span style={{ color: 'var(--green)' }}>-- 2. Lo usás como si fuera una tabla</span><br/>
-              <span style={{ color: '#93c5fd' }}>SELECT</span><span style={{ color: '#e2e8f0' }}> * </span><span style={{ color: '#93c5fd' }}>FROM</span><span style={{ color: 'var(--amber)' }}> grandes_envios</span>
-            </div>
+        {/* Estructura de un CTE */}
+        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: '20px', marginBottom: 16 }}>
+          <div style={{ fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--sub)', marginBottom: 14 }}>Un solo CTE</div>
+          <div style={{ background: 'var(--bg2)', borderRadius: 10, padding: '16px', fontFamily: 'DM Mono', fontSize: '0.8rem', lineHeight: 2, marginBottom: 14 }}>
+            <span style={{ color: 'var(--green)' }}>-- 1. Definís el CTE con un nombre</span><br/>
+            <span style={{ color: 'var(--nova)' }}>WITH</span><span style={{ color: 'var(--amber)' }}> grandes_envios </span><span style={{ color: 'var(--nova)' }}>AS</span><span style={{ color: 'var(--text)' }}> (</span><br/>
+            <span style={{ color: 'var(--text)' }}>&nbsp;&nbsp;</span><span style={{ color: 'var(--nova)' }}>SELECT</span><span style={{ color: 'var(--text)' }}> * </span><span style={{ color: 'var(--nova)' }}>FROM</span><span style={{ color: '#a78bfa' }}> envios </span><span style={{ color: 'var(--nova)' }}>WHERE</span><span style={{ color: 'var(--text)' }}> peso_kg </span><span style={{ color: 'var(--green)' }}>&gt; </span><span style={{ color: 'var(--amber)' }}>50</span><br/>
+            <span style={{ color: 'var(--text)' }}>)</span><br/>
+            <span style={{ color: 'var(--green)' }}>-- 2. Lo usás como si fuera una tabla</span><br/>
+            <span style={{ color: 'var(--nova)' }}>SELECT</span><span style={{ color: 'var(--text)' }}> * </span><span style={{ color: 'var(--nova)' }}>FROM</span><span style={{ color: 'var(--amber)' }}> grandes_envios</span>
           </div>
+        </div>
 
-          {/* CTEs múltiples */}
-          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: '20px', marginBottom: 16 }}>
-            <div style={{ fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--sub)', marginBottom: 14 }}>Múltiples CTEs — separados por coma</div>
-            <div style={{ background: 'var(--bg2)', borderRadius: 10, padding: '16px', fontFamily: 'DM Mono', fontSize: '0.78rem', lineHeight: 2 }}>
-              <span style={{ color: '#93c5fd' }}>WITH</span><br/>
-              <span style={{ color: 'var(--amber)' }}>paso1 </span><span style={{ color: '#93c5fd' }}>AS</span><span style={{ color: '#e2e8f0' }}> (</span><br/>
-              <span style={{ color: '#e2e8f0' }}>  </span><span style={{ color: '#93c5fd' }}>SELECT</span><span style={{ color: '#e2e8f0' }}> chofer_id, </span><span style={{ color: '#93c5fd' }}>COUNT</span><span style={{ color: '#e2e8f0' }}>(*) </span><span style={{ color: '#93c5fd' }}>AS</span><span style={{ color: '#e2e8f0' }}> total</span><br/>
-              <span style={{ color: '#e2e8f0' }}>  </span><span style={{ color: '#93c5fd' }}>FROM</span><span style={{ color: '#a78bfa' }}> envios </span><span style={{ color: '#93c5fd' }}>GROUP BY</span><span style={{ color: '#e2e8f0' }}> chofer_id</span><br/>
-              <span style={{ color: '#e2e8f0' }}>)<span style={{ color: 'var(--amber)' }}>,   </span></span>
-              <span style={{ color: 'var(--green)' }}>← coma entre CTEs</span><br/>
-              <span style={{ color: 'var(--amber)' }}>paso2 </span><span style={{ color: '#93c5fd' }}>AS</span><span style={{ color: '#e2e8f0' }}> (</span><br/>
-              <span style={{ color: '#e2e8f0' }}>  </span><span style={{ color: '#93c5fd' }}>SELECT</span><span style={{ color: '#e2e8f0' }}> c.nombre, p.total</span><br/>
-              <span style={{ color: '#e2e8f0' }}>  </span><span style={{ color: '#93c5fd' }}>FROM</span><span style={{ color: 'var(--amber)' }}> paso1 </span><span style={{ color: '#e2e8f0' }}>p </span>
-              <span style={{ color: '#93c5fd' }}>JOIN</span><span style={{ color: '#a78bfa' }}> choferes </span><span style={{ color: '#e2e8f0' }}>c </span><span style={{ color: '#93c5fd' }}>ON</span><span style={{ color: '#e2e8f0' }}> p.chofer_id = c.id</span><br/>
-              <span style={{ color: 'var(--green)' }}>  -- paso2 puede usar paso1</span><br/>
-              <span style={{ color: '#e2e8f0' }}>)</span><br/>
-              <span style={{ color: '#93c5fd' }}>SELECT</span><span style={{ color: '#e2e8f0' }}> * </span><span style={{ color: '#93c5fd' }}>FROM</span><span style={{ color: 'var(--amber)' }}> paso2 </span><span style={{ color: '#93c5fd' }}>WHERE</span><span style={{ color: '#e2e8f0' }}> total </span><span style={{ color: 'var(--green)' }}>&gt; </span><span style={{ color: 'var(--amber)' }}>5</span>
-            </div>
+        {/* CTEs múltiples */}
+        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: '20px', marginBottom: 16 }}>
+          <div style={{ fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--sub)', marginBottom: 14 }}>Múltiples CTEs — separados por coma</div>
+          <div style={{ background: 'var(--bg2)', borderRadius: 10, padding: '16px', fontFamily: 'DM Mono', fontSize: '0.78rem', lineHeight: 2 }}>
+            <span style={{ color: 'var(--nova)' }}>WITH</span><br/>
+            <span style={{ color: 'var(--amber)' }}>paso1 </span><span style={{ color: 'var(--nova)' }}>AS</span><span style={{ color: 'var(--text)' }}> (</span><br/>
+            <span style={{ color: 'var(--text)' }}>&nbsp;&nbsp;</span><span style={{ color: 'var(--nova)' }}>SELECT</span><span style={{ color: 'var(--text)' }}> chofer_id, </span><span style={{ color: 'var(--nova)' }}>COUNT</span><span style={{ color: 'var(--text)' }}>(*) </span><span style={{ color: 'var(--nova)' }}>AS</span><span style={{ color: 'var(--text)' }}> total</span><br/>
+            <span style={{ color: 'var(--text)' }}>&nbsp;&nbsp;</span><span style={{ color: 'var(--nova)' }}>FROM</span><span style={{ color: '#a78bfa' }}> envios </span><span style={{ color: 'var(--nova)' }}>GROUP BY</span><span style={{ color: 'var(--text)' }}> chofer_id</span><br/>
+            <span style={{ color: 'var(--text)' }}>)</span><span style={{ color: 'var(--amber)' }}>,</span><span style={{ color: 'var(--green)' }}> ← coma entre CTEs</span><br/>
+            
+            <span style={{ color: 'var(--amber)' }}>paso2 </span><span style={{ color: 'var(--nova)' }}>AS</span><span style={{ color: 'var(--text)' }}> (</span><br/>
+            <span style={{ color: 'var(--text)' }}>&nbsp;&nbsp;</span><span style={{ color: 'var(--nova)' }}>SELECT</span><span style={{ color: 'var(--text)' }}> c.nombre, p.total</span><br/>
+            <span style={{ color: 'var(--text)' }}>&nbsp;&nbsp;</span><span style={{ color: 'var(--nova)' }}>FROM</span><span style={{ color: 'var(--amber)' }}> paso1 </span><span style={{ color: 'var(--text)' }}>p </span>
+            <span style={{ color: 'var(--nova)' }}>JOIN</span><span style={{ color: '#a78bfa' }}> choferes </span><span style={{ color: 'var(--text)' }}>c </span><span style={{ color: 'var(--nova)' }}>ON</span><span style={{ color: 'var(--text)' }}> p.chofer_id = c.id</span><br/>
+            <span style={{ color: 'var(--green)' }}>&nbsp;&nbsp;-- paso2 puede usar paso1</span><br/>
+            <span style={{ color: 'var(--text)' }}>)</span><br/>
+            <span style={{ color: 'var(--nova)' }}>SELECT</span><span style={{ color: 'var(--text)' }}> * </span><span style={{ color: 'var(--nova)' }}>FROM</span><span style={{ color: 'var(--amber)' }}> paso2 </span><span style={{ color: 'var(--nova)' }}>WHERE</span><span style={{ color: 'var(--text)' }}> total </span><span style={{ color: 'var(--green)' }}>&gt; </span><span style={{ color: 'var(--amber)' }}>5</span>
           </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
           {/* CTE vs Subquery */}
           <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden', marginBottom: 20 }}>
@@ -819,14 +829,14 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
           <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px', marginBottom: 16 }}>
             <div style={{ fontSize: '0.68rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--sub)', marginBottom: 12 }}>Sintaxis</div>
             <div style={{ fontFamily: 'DM Mono', fontSize: '0.82rem', lineHeight: 2 }}>
-              <span style={{ color: '#93c5fd' }}>WITH</span><span style={{ color: 'var(--amber)' }}> nombre_cte</span><span style={{ color: '#e2e8f0' }}> AS (</span><br/>
+              <span style={{ color: '#93c5fd' }}>WITH</span><span style={{ color: 'var(--amber)' }}> nombre_cte</span><span style={{ color: 'var(--text)' }}> AS (</span><br/>
               <span style={{ color: 'var(--sub)', marginLeft: 16 }}>  -- query que define el CTE</span><br/>
-              <span style={{ color: '#93c5fd', marginLeft: 16 }}>  SELECT</span><span style={{ color: '#e2e8f0' }}> col1, COUNT(*) AS n</span><br/>
+              <span style={{ color: '#93c5fd', marginLeft: 16 }}>  SELECT</span><span style={{ color: 'var(--text)' }}> col1, COUNT(*) AS n</span><br/>
               <span style={{ color: '#93c5fd', marginLeft: 16 }}>  FROM</span><span style={{ color: '#a78bfa' }}> tabla</span><br/>
-              <span style={{ color: '#93c5fd', marginLeft: 16 }}>  GROUP BY</span><span style={{ color: '#e2e8f0' }}> col1</span><br/>
-              <span style={{ color: '#e2e8f0' }}>)</span><br/>
-              <span style={{ color: '#93c5fd' }}>SELECT</span><span style={{ color: '#e2e8f0' }}> * </span><span style={{ color: '#93c5fd' }}>FROM</span><span style={{ color: 'var(--amber)' }}> nombre_cte</span><br/>
-              <span style={{ color: '#93c5fd' }}>WHERE</span><span style={{ color: '#e2e8f0' }}> n &gt; 5;</span>
+              <span style={{ color: '#93c5fd', marginLeft: 16 }}>  GROUP BY</span><span style={{ color: 'var(--text)' }}> col1</span><br/>
+              <span style={{ color: 'var(--text)' }}>)</span><br/>
+              <span style={{ color: '#93c5fd' }}>SELECT</span><span style={{ color: 'var(--text)' }}> * </span><span style={{ color: '#93c5fd' }}>FROM</span><span style={{ color: 'var(--amber)' }}> nombre_cte</span><br/>
+              <span style={{ color: '#93c5fd' }}>WHERE</span><span style={{ color: 'var(--text)' }}> n &gt; 5;</span>
             </div>
           </div>
           {/* CTEs múltiples */}
