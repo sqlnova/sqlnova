@@ -56,14 +56,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
   const [glosarioSearch, setGlosarioSearch] = useState('')
   const sqlDbRef = useRef<any>(null)
 
-  const insertToken = (token: string) => {
-    setQueryText((prev) => {
-      // Evita que las palabras se peguen (agrega espacio si es necesario)
-      const space = prev.length > 0 && !prev.endsWith(' ') && !prev.endsWith('\n') ? ' ' : '';
-      return prev + space + token;
-    });
-  };
-
   const getLecciones = () => {
     if (moduloId === 1) return LECCIONES_M1
     if (moduloId === 2) return LECCIONES_M2
@@ -1106,115 +1098,36 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                 ))}
               </div>
             ) : (
-              {/* SQL QUICK TOKENS BAR - Botones afuera */}
-          {l.tipo !== 'completar' && (
-            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '12px', scrollbarWidth: 'none' }} className="no-scrollbar">
-              {[
-                { label: 'SELECT', color: 'var(--nova)' }, { label: '*', color: 'var(--text)' },
-                { label: 'FROM', color: 'var(--nova)' }, { label: 'WHERE', color: 'var(--nova)' },
-                { label: 'GROUP BY', color: 'var(--nova)' }, { label: 'JOIN', color: 'var(--nova)' },
-                { label: 'ON', color: 'var(--nova)' }, { label: '=', color: 'var(--green)' },
-                { label: 'AND', color: 'var(--nova)' }, { label: 'COUNT()', color: 'var(--amber)' }
-              ].map((token) => (
-                <button
-                  key={token.label}
-                  onClick={() => insertToken(token.label)}
-                  style={{
-                    background: 'var(--bg3)', border: '1px solid var(--border2)', borderRadius: '8px',
-                    padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, fontFamily: 'DM Mono',
-                    color: token.color, whiteSpace: 'nowrap', cursor: 'pointer'
-                  }}
-                >
-                  {token.label}
-                </button>
-              ))}
-            </div>
-          )}
-
-         {/* SQL QUICK TOKENS BAR - Botones afuera */}
-          {l.tipo !== 'completar' && (
-            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '12px', scrollbarWidth: 'none' }} className="no-scrollbar">
-              {[
-                { label: 'SELECT', color: 'var(--nova)' }, { label: '*', color: 'var(--text)' },
-                { label: 'FROM', color: 'var(--nova)' }, { label: 'WHERE', color: 'var(--nova)' },
-                { label: 'GROUP BY', color: 'var(--nova)' }, { label: 'JOIN', color: 'var(--nova)' },
-                { label: 'ON', color: 'var(--nova)' }, { label: '=', color: 'var(--green)' },
-                { label: 'AND', color: 'var(--nova)' }, { label: 'COUNT()', color: 'var(--amber)' }
-              ].map((token) => (
-                <button
-                  key={token.label}
-                  onClick={() => insertToken(token.label)}
-                  style={{
-                    background: 'var(--bg3)', border: '1px solid var(--border2)', borderRadius: '8px',
-                    padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, fontFamily: 'DM Mono',
-                    color: token.color, whiteSpace: 'nowrap', cursor: 'pointer'
-                  }}
-                >
-                  {token.label}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {l.tipo === 'completar' && l.template && l.blanks ? (
-            <div style={{ fontFamily: 'DM Mono', fontSize: '0.88rem', lineHeight: 2.4, padding: '13px 15px', background: 'var(--bg2)', border: '1px solid var(--border2)', borderRadius: 11, marginBottom: 13 }}>
-              {l.template.split('___').map((part, i) => (
-                <span key={i}>
-                  {part}
-                  {i < (l.blanks?.length || 0) && (
-                    <input
-                      value={blanks[i] || ''}
-                      onChange={e => { const nb = [...blanks]; nb[i] = e.target.value; setBlanks(nb) }}
-                      placeholder="..."
-                      style={{ background: 'rgba(77,166,255,0.08)', border: '1px dashed rgba(77,166,255,0.32)', borderRadius: 5, color: 'var(--nova)', fontFamily: 'DM Mono', fontSize: '0.85rem', padding: '2px 7px', minWidth: 68, outline: 'none' }}
-                    />
-                  )}
-                </span>
-              ))}
-            </div>
-          ) : (
-            /* El Editor de SQL (Pocket Database) */
-            <div style={{ background: 'var(--bg2)', border: '1px solid var(--border2)', borderRadius: 11, overflow: 'hidden', marginBottom: 13 }}>
-              <div style={{ background: 'var(--bg3)', padding: '6px 11px', display: 'flex', alignItems: 'center', gap: 5, borderBottom: '1px solid var(--border)' }}>
-                {['#ff5f57','#ffbd2e','#28c840'].map(c => <div key={c} style={{ width: 7, height: 7, borderRadius: '50%', background: c }} />)}
-                <span style={{ fontFamily: 'DM Mono', fontSize: '0.61rem', color: 'var(--dim)', marginLeft: 4 }}>POCKET DATABASE v1.0</span>
+              <div style={{ background: 'var(--bg2)', border: '1px solid var(--border2)', borderRadius: 11, overflow: 'hidden', marginBottom: 13 }}>
+                <div style={{ background: 'var(--bg3)', padding: '6px 11px', display: 'flex', alignItems: 'center', gap: 5, borderBottom: '1px solid var(--border)' }}>
+                  {['#ff5f57','#ffbd2e','#28c840'].map(c => <div key={c} style={{ width: 7, height: 7, borderRadius: '50%', background: c }} />)}
+                  <span style={{ fontFamily: 'DM Mono', fontSize: '0.61rem', color: 'var(--dim)', marginLeft: 4 }}>query.sql</span>
+                </div>
+                <textarea
+                  className="sql-editor"
+                  value={queryText}
+                  onChange={e => setQueryText(e.target.value)}
+                  onKeyDown={e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); runQuery() } }}
+                  style={{ minHeight: 80, width: '100%', resize: 'vertical' }}
+                />
               </div>
-              <textarea
-                className="sql-editor"
-                value={queryText}
-                onChange={e => setQueryText(e.target.value)}
-                onKeyDown={e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); runQuery() } }}
-                style={{ 
-                  minHeight: 120, 
-                  width: '100%', 
-                  resize: 'vertical',
-                  background: 'transparent',
-                  color: 'var(--text)',
-                  border: 'none',
-                  padding: '15px',
-                  fontFamily: 'DM Mono',
-                  outline: 'none'
-                }}
-                placeholder="Escribe tu consulta SQL aquí..."
-              />
-            </div>
-          )}
+            )}
 
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-            <button onClick={runQuery} style={{ background: 'var(--nova2)', color: '#fff', border: 'none', borderRadius: 9, padding: '9px 17px', fontWeight: 600, cursor: 'pointer', fontSize: '0.84rem', flexShrink: 0 }}>▶ Ejecutar</button>
-            <button onClick={() => setHintOpen(!hintOpen)} style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 9, padding: '8px 15px', color: hintOpen ? 'var(--amber)' : 'var(--sub)', cursor: 'pointer', fontSize: '0.84rem' }}>💡 Pista</button>
-            {(intentos >= 2 || l.dificultad === 'avanzado') && !answered && (
-              <button onClick={nextLesson} style={{ background: 'transparent', border: '1px solid rgba(100,116,139,0.4)', borderRadius: 9, padding: '8px 15px', color: 'var(--sub)', cursor: 'pointer', fontSize: '0.84rem', opacity: 0.8 }} title="Podés continuar sin completar esta lección">Saltar →</button>
-            )}
-            {curIdx > 0 && (
-              <button onClick={() => goToLesson(curIdx - 1)} style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 9, padding: '8px 15px', color: 'var(--sub)', cursor: 'pointer', fontSize: '0.84rem' }}>← Anterior</button>
-            )}
-            {answered && (
-              <button onClick={nextLesson} style={{ background: 'var(--green)', color: '#0a2417', border: 'none', borderRadius: 9, padding: '9px 17px', fontWeight: 600, cursor: 'pointer', fontSize: '0.84rem' }}>
-                {curIdx < lecciones.length - 1 ? 'Siguiente →' : '🏆 Ver resumen'}
-              </button>
-            )}
-          </div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+              <button onClick={runQuery} style={{ background: 'var(--nova2)', color: '#fff', border: 'none', borderRadius: 9, padding: '9px 17px', fontWeight: 600, cursor: 'pointer', fontSize: '0.84rem', flexShrink: 0 }}>▶ Ejecutar</button>
+              <button onClick={() => setHintOpen(!hintOpen)} style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 9, padding: '8px 15px', color: hintOpen ? 'var(--amber)' : 'var(--sub)', cursor: 'pointer', fontSize: '0.84rem' }}>💡 Pista</button>
+              {(intentos >= 2 || l.dificultad === 'avanzado') && !answered && (
+                <button onClick={nextLesson} style={{ background: 'transparent', border: '1px solid rgba(100,116,139,0.4)', borderRadius: 9, padding: '8px 15px', color: 'var(--sub)', cursor: 'pointer', fontSize: '0.84rem', opacity: 0.8 }} title="Podés continuar sin completar esta lección">Saltar →</button>
+              )}
+              {curIdx > 0 && (
+                <button onClick={() => goToLesson(curIdx - 1)} style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 9, padding: '8px 15px', color: 'var(--sub)', cursor: 'pointer', fontSize: '0.84rem' }}>← Anterior</button>
+              )}
+              {answered && (
+                <button onClick={nextLesson} style={{ background: 'var(--green)', color: '#0a2417', border: 'none', borderRadius: 9, padding: '9px 17px', fontWeight: 600, cursor: 'pointer', fontSize: '0.84rem' }}>
+                  {curIdx < lecciones.length - 1 ? 'Siguiente →' : '🏆 Ver resumen'}
+                </button>
+              )}
+            </div>
 
             {hintOpen && (
               <div style={{ marginTop: 11, background: 'rgba(232,168,56,0.045)', border: '1px solid rgba(232,168,56,0.16)', borderRadius: 9, padding: '11px 14px' }}>
