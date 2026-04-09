@@ -1292,7 +1292,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                   value={queryText}
                   onChange={e => setQueryText(e.target.value)}
                   onKeyDown={e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); runQuery() } }}
-                  style={{ minHeight: 80 }}
+                  style={{ minHeight: 80, width: '100%', resize: 'vertical' }}
                 />
               </div>
             )}
