@@ -343,7 +343,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
         <TopBar title={slide.titulo} module="Módulo 0 · Introducción" prog={`${curSlide + 1} / ${total}`} onBack={() => router.replace('/dashboard')} />
-        <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 28px) clamp(14px, 4vw, 20px)', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
+        <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 28px) clamp(14px, 4vw, 20px)', maxWidth: 1200, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
           <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 15, overflow: 'hidden' }}>
             <div style={{ padding: '20px 20px 0' }}>
 
@@ -1026,7 +1026,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
         <TopBar title="Resumen del módulo" module={getModuloLabel()} prog="✓ Completado" onBack={() => router.replace('/dashboard')} />
-        <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 28px) clamp(14px, 4vw, 20px)', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
+        <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 28px) clamp(14px, 4vw, 20px)', maxWidth: 1200, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
           <div style={{ background: 'rgba(62,207,142,0.05)', border: '1px solid rgba(62,207,142,0.2)', borderRadius: 15, padding: '24px', marginBottom: 20 }}>
             <div style={{ fontSize: '1.5rem', marginBottom: 8 }}>🏆</div>
             <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--green)', marginBottom: 4 }}>{resumen.titulo}</div>
@@ -1067,7 +1067,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
         <TopBar title="Glosario" module={getModuloLabel()} prog={`${glosario.length} términos`} onBack={() => setVista('leccion')} />
-        <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 28px) clamp(14px, 4vw, 20px)', maxWidth: 800, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
+        <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 28px) clamp(14px, 4vw, 20px)', maxWidth: 1200, margin: '0 auto', width: '100%', animation: 'fadeUp 0.28s ease both' }}>
           <input
             value={glosarioSearch}
             onChange={e => setGlosarioSearch(e.target.value)}
