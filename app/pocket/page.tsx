@@ -17,6 +17,43 @@ type PreviewData = {
   data: { columns: string[]; values: any[][] };
 };
 
+const SQL_BUTTONS = [
+  { label: 'SELECT', snippet: 'SELECT ', color: '#93c5fd' },
+  { label: 'FROM', snippet: 'FROM ', color: '#93c5fd' },
+  { label: 'WHERE', snippet: 'WHERE ', color: '#93c5fd' },
+  { label: 'AND', snippet: 'AND ', color: '#93c5fd' },
+  { label: 'OR', snippet: 'OR ', color: '#93c5fd' },
+  { label: 'JOIN', snippet: 'JOIN ', color: '#a78bfa' },
+  { label: 'LEFT JOIN', snippet: 'LEFT JOIN ', color: '#a78bfa' },
+  { label: 'INNER JOIN', snippet: 'INNER JOIN ', color: '#a78bfa' },
+  { label: 'ON', snippet: 'ON ', color: '#a78bfa' },
+  { label: 'GROUP BY', snippet: 'GROUP BY ', color: '#6ee7b7' },
+  { label: 'ORDER BY', snippet: 'ORDER BY ', color: '#6ee7b7' },
+  { label: 'HAVING', snippet: 'HAVING ', color: '#6ee7b7' },
+  { label: 'LIMIT', snippet: 'LIMIT ', color: '#6ee7b7' },
+  { label: 'AS', snippet: 'AS ', color: '#fcd34d' },
+  { label: 'DISTINCT', snippet: 'DISTINCT ', color: '#fcd34d' },
+  { label: 'COUNT(*)', snippet: 'COUNT(*)', color: '#f9a8d4' },
+  { label: 'SUM()', snippet: 'SUM()', color: '#f9a8d4' },
+  { label: 'AVG()', snippet: 'AVG()', color: '#f9a8d4' },
+  { label: 'MAX()', snippet: 'MAX()', color: '#f9a8d4' },
+  { label: 'MIN()', snippet: 'MIN()', color: '#f9a8d4' },
+  { label: 'IS NULL', snippet: ' IS NULL', color: '#94a3b8' },
+  { label: 'IS NOT NULL', snippet: ' IS NOT NULL', color: '#94a3b8' },
+  { label: 'IN ()', snippet: ' IN ()', color: '#94a3b8' },
+  { label: 'LIKE', snippet: ' LIKE ', color: '#94a3b8' },
+  { label: 'BETWEEN', snippet: ' BETWEEN ', color: '#94a3b8' },
+  { label: 'CASE', snippet: 'CASE WHEN  THEN  ELSE  END', color: '#fb923c' },
+  { label: 'WITH', snippet: 'WITH  AS (\n  \n)\n', color: '#fb923c' },
+  { label: '*', snippet: '*', color: '#64748b' },
+  { label: ',', snippet: ', ', color: '#64748b' },
+  { label: '=', snippet: ' = ', color: '#64748b' },
+  { label: '!=', snippet: ' != ', color: '#64748b' },
+  { label: '>', snippet: ' > ', color: '#64748b' },
+  { label: '<', snippet: ' < ', color: '#64748b' },
+  { label: '\n', snippet: '\n', color: '#64748b' },
+]
+
 const GLOSARIO = [
   { cat: 'Agregación', funcs: [
     { n: 'COUNT(*)', d: 'Cuenta el total de filas.' },
@@ -53,6 +90,21 @@ export default function PocketPage() {
   const [isModalOpen, setIsModalOpen] = useState(false) 
   const [tablePreview, setTablePreview] = useState<PreviewData | null>(null)
   const dbRef = useRef<any>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const insertSnippet = (snippet: string) => {
+    const ta = textareaRef.current
+    if (!ta) return
+    const start = ta.selectionStart
+    const end = ta.selectionEnd
+    const newText = query.slice(0, start) + snippet + query.slice(end)
+    setQuery(newText)
+    requestAnimationFrame(() => {
+      ta.focus()
+      const newPos = start + snippet.length
+      ta.setSelectionRange(newPos, newPos)
+    })
+  }
 
   const actualizarEsquema = () => {
     if (!dbRef.current) return;
@@ -273,10 +325,54 @@ export default function PocketPage() {
             )}
 
             <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden shadow-sm">
-              <textarea 
-                className="w-full bg-transparent p-5 text-sm font-mono text-[var(--text)] outline-none min-h-[300px] resize-none focus:bg-[var(--bg)] transition-colors"
+              {/* Editor header */}
+              <div className="bg-[var(--bg3)] px-3 py-1.5 flex items-center gap-1.5 border-b border-[var(--border)]">
+                {['#ff5f57','#ffbd2e','#28c840'].map(c => <div key={c} style={{ width: 7, height: 7, borderRadius: '50%', background: c }} />)}
+                <span className="font-mono text-[10px] text-[var(--dim)] ml-1">query.sql</span>
+              </div>
+
+              {/* SQL Keyboard */}
+              <div className="sql-keyboard" style={{ borderBottom: '1px solid var(--border)', padding: '8px 10px', display: 'flex', gap: 5, flexWrap: 'wrap', background: 'var(--bg3)' }}>
+                {SQL_BUTTONS.map(btn => (
+                  <button
+                    key={btn.label}
+                    onMouseDown={e => { e.preventDefault(); insertSnippet(btn.snippet) }}
+                    style={{
+                      fontFamily: 'DM Mono',
+                      fontSize: '0.68rem',
+                      fontWeight: 600,
+                      color: btn.color,
+                      background: `${btn.color}12`,
+                      border: `1px solid ${btn.color}30`,
+                      borderRadius: 5,
+                      padding: '3px 8px',
+                      cursor: 'pointer',
+                      lineHeight: 1.6,
+                      whiteSpace: 'nowrap',
+                      transition: 'background 0.1s, border-color 0.1s',
+                      userSelect: 'none',
+                    }}
+                    onMouseEnter={e => {
+                      (e.target as HTMLButtonElement).style.background = `${btn.color}28`
+                      ;(e.target as HTMLButtonElement).style.borderColor = `${btn.color}60`
+                    }}
+                    onMouseLeave={e => {
+                      (e.target as HTMLButtonElement).style.background = `${btn.color}12`
+                      ;(e.target as HTMLButtonElement).style.borderColor = `${btn.color}30`
+                    }}
+                  >
+                    {btn.label === '\n' ? '↵ Enter' : btn.label}
+                  </button>
+                ))}
+              </div>
+
+              <textarea
+                ref={textareaRef}
+                className="sql-editor w-full outline-none resize-y"
+                style={{ minHeight: 220, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--border)' }}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); ejecutarSQL() } }}
                 placeholder="Escribí tu query SQL..."
               />
               <div className="p-4 bg-[var(--bg2)] border-t border-[var(--border)] flex justify-end">
