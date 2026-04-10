@@ -1146,7 +1146,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                 </div>
 
                 {/* ── SQL KEYBOARD ── */}
-                <div style={{ borderBottom: '1px solid var(--border)', padding: '8px 10px', display: 'flex', gap: 5, flexWrap: 'wrap', background: 'rgba(0,0,0,0.18)' }}>
+                <div className="sql-keyboard" style={{ borderBottom: '1px solid var(--border)', padding: '8px 10px', display: 'flex', gap: 5, flexWrap: 'wrap', background: 'var(--bg3)' }}>
                   {SQL_BUTTONS.map(btn => (
                     <button
                       key={btn.label}
@@ -1190,7 +1190,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                   value={queryText}
                   onChange={e => setQueryText(e.target.value)}
                   onKeyDown={e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); runQuery() } }}
-                  style={{ minHeight: 80, width: '100%', resize: 'vertical' }}
+                  style={{ minHeight: 180, width: '100%', resize: 'vertical' }}
                 />
               </div>
             )}
