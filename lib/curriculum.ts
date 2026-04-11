@@ -9,7 +9,7 @@ export const MODULOS = [
   { id: 7, titulo: 'CTEs', icono: '🔄', contexto: 'Logística', lecciones_total: 8, descripcion: 'Consultas organizadas' },
   { id: 8, titulo: 'Window Functions', icono: '🪟', contexto: 'Ventas', lecciones_total: 12, descripcion: 'Análisis avanzado' },
   { id: 9, titulo: 'Optimización', icono: '⚡', contexto: 'Redes sociales', lecciones_total: 8, descripcion: 'Queries rápidos y eficientes' },
-  { id: 10, titulo: 'Modo Entrevista', icono: '🎯', contexto: 'Mixto', lecciones_total: 20, descripcion: 'Desafíos técnicos reales' },
+  { id: 10, titulo: 'Modo Entrevista', icono: '🎯', contexto: 'Mixto', lecciones_total: 10, descripcion: 'Desafíos técnicos reales' },
 ]
 
 export type Leccion = {

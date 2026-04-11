@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { sb } from '@/lib/supabase'
+import { MODULOS } from '@/lib/curriculum'
 
 export default function PerfilPage() {
   const router = useRouter()
@@ -12,21 +13,25 @@ export default function PerfilPage() {
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState<{ tipo: 'ok' | 'error'; texto: string } | null>(null)
   const [loading, setLoading] = useState(true)
+  const [leccionesCompletadas, setLeccionesCompletadas] = useState(0)
+  const [modulosCompletados, setModulosCompletados] = useState(0)
 
   useEffect(() => {
     const load = async () => {
       const { data: { session } } = await sb.auth.getSession()
       if (!session) { router.replace('/auth'); return }
 
-      const { data: p } = await sb.from('perfiles').select('*').eq('id', session.user.id).single()
-      
+      const [{ data: p }, { data: progreso }] = await Promise.all([
+        sb.from('perfiles').select('*').eq('id', session.user.id).single(),
+        sb.from('progreso').select('leccion_id, completada').eq('usuario_id', session.user.id),
+      ])
+
       if (p) {
         setPerfil(p)
         setAlias(p.alias || '')
         setTema(p.tema || 'oscuro')
         setMostrarLeaderboard(p.mostrar_en_leaderboard ?? true)
-        
-        // Aplicar tema guardado al cargar
+
         const t = p.tema || 'oscuro'
         if (t === 'claro') {
           document.documentElement.setAttribute('data-theme', 'claro')
@@ -34,6 +39,22 @@ export default function PerfilPage() {
           document.documentElement.removeAttribute('data-theme')
         }
       }
+
+      if (progreso) {
+        const prog: Record<string, boolean> = {}
+        for (const r of progreso) { prog[r.leccion_id] = r.completada }
+
+        const totalDone = Object.values(prog).filter(Boolean).length
+        setLeccionesCompletadas(totalDone)
+
+        const modulosDone = MODULOS.filter(m => {
+          const prefix = String(m.id).padStart(2, '0') + '-'
+          const done = Object.keys(prog).filter(k => k.startsWith(prefix) && prog[k]).length
+          return done >= m.lecciones_total
+        }).length
+        setModulosCompletados(modulosDone)
+      }
+
       setLoading(false)
     }
     load()
@@ -128,18 +149,32 @@ const save = async () => {
       <div style={{ flex: 1, padding: '28px 20px', maxWidth: 600, margin: '0 auto', width: '100%' }}>
 
         {/* Stats */}
-        <div style={{ ...card, display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, textAlign: 'center' }}>
-          {[
-            ['⭐', perfil?.xp_total ?? 0, 'XP Total'],
-            ['🔥', perfil?.racha_actual ?? 0, 'Racha'],
-            ['🏆', perfil?.racha_maxima ?? 0, 'Máx. racha'],
-          ].map(([ico, val, lbl]) => (
-            <div key={String(lbl)}>
-              <div style={{ fontSize: '1.3rem', marginBottom: 4 }}>{ico}</div>
-              <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--nova)', fontFamily: 'DM Mono' }}>{val}</div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--sub)' }}>{lbl}</div>
+        <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, textAlign: 'center' }}>
+            {[
+              ['⭐', perfil?.xp_total ?? 0, 'XP Total'],
+              ['🔥', perfil?.racha_actual ?? 0, 'Racha'],
+              ['🏆', perfil?.racha_maxima ?? 0, 'Máx. racha'],
+            ].map(([ico, val, lbl]) => (
+              <div key={String(lbl)}>
+                <div style={{ fontSize: '1.3rem', marginBottom: 4 }}>{ico}</div>
+                <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--nova)', fontFamily: 'DM Mono' }}>{val}</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--sub)' }}>{lbl}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, textAlign: 'center' }}>
+            <div>
+              <div style={{ fontSize: '1.3rem', marginBottom: 4 }}>📚</div>
+              <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--nova)', fontFamily: 'DM Mono' }}>{leccionesCompletadas}</div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--sub)' }}>Lecciones</div>
             </div>
-          ))}
+            <div>
+              <div style={{ fontSize: '1.3rem', marginBottom: 4 }}>🎓</div>
+              <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--nova)', fontFamily: 'DM Mono' }}>{modulosCompletados}/{MODULOS.length}</div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--sub)' }}>Módulos</div>
+            </div>
+          </div>
         </div>
 
         {/* Alias */}
