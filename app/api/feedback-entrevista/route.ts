@@ -9,7 +9,7 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Campos requeridos faltantes: consulta_usuario, consulta_correcta, enunciado' }, { status: 400 })
     }
 
-    const apiKey = process.env.ANTHROPIC_API_KEY?.trim()
+    const apiKey = process.env.ANTHROPIC_API_KEY?.replace(/\s+/g, '')
     if (!apiKey) {
       return Response.json({ error: 'Servicio de análisis no configurado' }, { status: 500 })
     }
@@ -46,22 +46,28 @@ El campo feedback debe:
 - Usar tono constructivo y profesional, como en una entrevista técnica real
 - Tener entre 3 y 5 oraciones en español`
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1024,
-        messages: [{ role: 'user', content: prompt }],
-      }),
-    })
+    let response: Response
+    try {
+      response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'claude-3-5-sonnet-20241022',
+          max_tokens: 800,
+          messages: [{ role: 'user', content: prompt }],
+        }),
+      })
+    } catch (fetchErr: any) {
+      return Response.json({ error: `No se pudo conectar con Anthropic: ${fetchErr.message}` }, { status: 502 })
+    }
 
     if (!response.ok) {
-      return Response.json({ error: 'Error al contactar el servicio de análisis' }, { status: 502 })
+      const errBody = await response.text()
+      return Response.json({ error: `Anthropic ${response.status}: ${errBody.slice(0, 200)}` }, { status: 502 })
     }
 
     const data = await response.json() as { content: { type: string; text: string }[] }
