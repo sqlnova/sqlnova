@@ -2,6 +2,8 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { sb } from '@/lib/supabase'
+import { SQL_BUTTONS } from '@/lib/constants'
+import { loadSqlJs } from '@/lib/utils'
 import Papa from 'papaparse'
 import * as XLSX from 'xlsx'
 import PremiumModal from '@/app/components/PremiumModal'
@@ -16,43 +18,6 @@ type PreviewData = {
   name: string;
   data: { columns: string[]; values: any[][] };
 };
-
-const SQL_BUTTONS = [
-  { label: 'SELECT', snippet: 'SELECT ', color: '#93c5fd' },
-  { label: 'FROM', snippet: 'FROM ', color: '#93c5fd' },
-  { label: 'WHERE', snippet: 'WHERE ', color: '#93c5fd' },
-  { label: 'AND', snippet: 'AND ', color: '#93c5fd' },
-  { label: 'OR', snippet: 'OR ', color: '#93c5fd' },
-  { label: 'JOIN', snippet: 'JOIN ', color: '#a78bfa' },
-  { label: 'LEFT JOIN', snippet: 'LEFT JOIN ', color: '#a78bfa' },
-  { label: 'INNER JOIN', snippet: 'INNER JOIN ', color: '#a78bfa' },
-  { label: 'ON', snippet: 'ON ', color: '#a78bfa' },
-  { label: 'GROUP BY', snippet: 'GROUP BY ', color: '#6ee7b7' },
-  { label: 'ORDER BY', snippet: 'ORDER BY ', color: '#6ee7b7' },
-  { label: 'HAVING', snippet: 'HAVING ', color: '#6ee7b7' },
-  { label: 'LIMIT', snippet: 'LIMIT ', color: '#6ee7b7' },
-  { label: 'AS', snippet: 'AS ', color: '#fcd34d' },
-  { label: 'DISTINCT', snippet: 'DISTINCT ', color: '#fcd34d' },
-  { label: 'COUNT(*)', snippet: 'COUNT(*)', color: '#f9a8d4' },
-  { label: 'SUM()', snippet: 'SUM()', color: '#f9a8d4' },
-  { label: 'AVG()', snippet: 'AVG()', color: '#f9a8d4' },
-  { label: 'MAX()', snippet: 'MAX()', color: '#f9a8d4' },
-  { label: 'MIN()', snippet: 'MIN()', color: '#f9a8d4' },
-  { label: 'IS NULL', snippet: ' IS NULL', color: '#94a3b8' },
-  { label: 'IS NOT NULL', snippet: ' IS NOT NULL', color: '#94a3b8' },
-  { label: 'IN ()', snippet: ' IN ()', color: '#94a3b8' },
-  { label: 'LIKE', snippet: ' LIKE ', color: '#94a3b8' },
-  { label: 'BETWEEN', snippet: ' BETWEEN ', color: '#94a3b8' },
-  { label: 'CASE', snippet: 'CASE WHEN  THEN  ELSE  END', color: '#fb923c' },
-  { label: 'WITH', snippet: 'WITH  AS (\n  \n)\n', color: '#fb923c' },
-  { label: '*', snippet: '*', color: '#64748b' },
-  { label: ',', snippet: ', ', color: '#64748b' },
-  { label: '=', snippet: ' = ', color: '#64748b' },
-  { label: '!=', snippet: ' != ', color: '#64748b' },
-  { label: '>', snippet: ' > ', color: '#64748b' },
-  { label: '<', snippet: ' < ', color: '#64748b' },
-  { label: '\n', snippet: '\n', color: '#64748b' },
-]
 
 const GLOSARIO = [
   { cat: 'Agregación', funcs: [
@@ -145,14 +110,7 @@ export default function PocketPage() {
       
       setEsPremium(!!p?.es_premium)
 
-      const script = document.createElement('script')
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js'
-      document.head.appendChild(script)
-      await new Promise(resolve => { script.onload = resolve })
-      const SQL = await (window as any).initSqlJs({
-        locateFile: (f: string) => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}`
-      })
-      
+      const SQL = await loadSqlJs()
       dbRef.current = new SQL.Database()
       setLoading(false)
     }

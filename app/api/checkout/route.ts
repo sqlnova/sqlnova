@@ -7,6 +7,13 @@ export async function POST(request: Request) {
     const { userId } = await request.json();
     const token = process.env.MP_ACCESS_TOKEN;
 
+    if (!token) {
+      return Response.json({ error: 'Payment system not configured' }, { status: 500 });
+    }
+    if (!userId) {
+      return Response.json({ error: 'userId requerido' }, { status: 400 });
+    }
+
     const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
       headers: {

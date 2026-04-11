@@ -52,6 +52,15 @@ export async function POST(request: Request) {
   const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN || '';
   const MP_WEBHOOK_SECRET = process.env.MP_WEBHOOK_SECRET || '';
 
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+    console.error('Webhook rechazado: variables de Supabase no configuradas');
+    return new Response('Internal Server Error', { status: 500 });
+  }
+  if (!MP_ACCESS_TOKEN) {
+    console.error('Webhook rechazado: MP_ACCESS_TOKEN no está configurado');
+    return new Response('Internal Server Error', { status: 500 });
+  }
+
   // Sin secret configurado no operamos: cualquier POST sería aceptado sin validar
   if (!MP_WEBHOOK_SECRET) {
     console.error('Webhook rechazado: MP_WEBHOOK_SECRET no está configurado');
@@ -95,12 +104,21 @@ export async function POST(request: Request) {
         const userId = data.metadata?.user_id;
 
         if (userId) {
-          const { error } = await supabaseAdmin
+          // Deduplicación: si ya es premium no hacemos nada (webhook reintentado)
+          const { data: existing } = await supabaseAdmin
             .from('perfiles')
-            .update({ es_premium: true })
-            .eq('id', userId);
+            .select('es_premium')
+            .eq('id', userId)
+            .single();
 
-          if (error) console.error('Error Supabase:', error.message);
+          if (!existing?.es_premium) {
+            const { error } = await supabaseAdmin
+              .from('perfiles')
+              .update({ es_premium: true })
+              .eq('id', userId);
+
+            if (error) console.error('Error Supabase:', error.message);
+          }
         }
       }
     }

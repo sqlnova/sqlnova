@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { sb } from '@/lib/supabase'
+import { normalize, loadSqlJs } from '@/lib/utils'
 import ShareRetoCard from '@/components/ShareRetoCard'
 
 type Reto = {
@@ -77,20 +78,7 @@ export default function RetosPage() {
         const dataset = retosData[0].dataset_sql
         if (dataset && !dbInitRef.current) {
           dbInitRef.current = true
-          let SQL: any
-          if ((window as any)._sqljsReady && (window as any)._sqljsInstance) {
-            SQL = (window as any)._sqljsInstance
-          } else if ((window as any)._sqljsPromise) {
-            SQL = await (window as any)._sqljsPromise
-          } else {
-            const script = document.createElement('script')
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js'
-            document.head.appendChild(script)
-            await new Promise(resolve => { script.onload = resolve })
-            SQL = await (window as any).initSqlJs({
-              locateFile: (f: string) => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}`
-            })
-          }
+          const SQL = await loadSqlJs()
           const db = new SQL.Database()
           db.run(dataset)
           sqlDbRef.current = db
@@ -136,8 +124,6 @@ export default function RetosPage() {
   useEffect(() => {
     if (yaCompletado) setAnswered(true)
   }, [yaCompletado, nivelActivo])
-
-  const normalize = (q: string) => q.replace(/;$/, '').replace(/\s+/g, ' ').trim().toUpperCase()
 
   const openTablePreview = (t: string) => {
     if (!sqlDbRef.current) return;
