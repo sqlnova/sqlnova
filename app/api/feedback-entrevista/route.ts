@@ -9,7 +9,7 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Campos requeridos faltantes: consulta_usuario, consulta_correcta, enunciado' }, { status: 400 })
     }
 
-    const apiKey = process.env.ANTHROPIC_API_KEY
+    const apiKey = process.env.ANTHROPIC_API_KEY?.trim()
     if (!apiKey) {
       return Response.json({ error: 'Servicio de análisis no configurado' }, { status: 500 })
     }

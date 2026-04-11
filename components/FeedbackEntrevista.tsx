@@ -36,15 +36,22 @@ export default function FeedbackEntrevista({
           resultado_correcto: resultadoCorrecto,
         }),
       })
-      const data = await res.json()
+      const text = await res.text()
+      let data: any
+      try {
+        data = JSON.parse(text)
+      } catch {
+        setError(`Error del servidor (${res.status}): respuesta no válida`)
+        return
+      }
       if (data.feedback) {
         setFeedback(data.feedback)
         setEsCorrecta(data.es_correcta)
       } else {
-        setError('No se pudo obtener el análisis. Intentá de nuevo.')
+        setError(`Error: ${data.error ?? 'No se pudo obtener el análisis'}`)
       }
-    } catch {
-      setError('Error al conectar con el servicio de análisis.')
+    } catch (e: any) {
+      setError(`Error de red: ${e.message}`)
     } finally {
       setLoading(false)
     }
