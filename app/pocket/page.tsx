@@ -5,7 +5,7 @@ import { sb } from '@/lib/supabase'
 import { SQL_BUTTONS } from '@/lib/constants'
 import { loadSqlJs } from '@/lib/utils'
 import Papa from 'papaparse'
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 import PremiumModal from '@/app/components/PremiumModal'
 
 // Tipos de datos .
@@ -132,13 +132,24 @@ export default function PocketPage() {
     const reader = new FileReader()
     const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls')
 
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
         let csvContent = ''
         if (isExcel) {
-          const data = new Uint8Array(event.target?.result as ArrayBuffer)
-          const workbook = XLSX.read(data, { type: 'array' })
-          csvContent = XLSX.utils.sheet_to_csv(workbook.Sheets[workbook.SheetNames[0]])
+          const buffer = event.target?.result as ArrayBuffer
+          const workbook = new ExcelJS.Workbook()
+          await workbook.xlsx.load(buffer)
+          const worksheet = workbook.worksheets[0]
+          const rows: string[][] = []
+          worksheet.eachRow({ includeEmpty: false }, (row) => {
+            const values: string[] = []
+            row.eachCell({ includeEmpty: true }, (cell) => {
+              const v = cell.value
+              values.push(v !== null && v !== undefined ? String(v) : '')
+            })
+            rows.push(values)
+          })
+          csvContent = rows.map(r => r.map(v => v.includes(',') ? `"${v}"` : v).join(',')).join('\n')
         } else {
           csvContent = event.target?.result as string
         }
