@@ -6,7 +6,7 @@ export async function POST(request: Request) {
     const { consulta_usuario, consulta_correcta, enunciado, resultado_usuario, resultado_correcto } = body
 
     if (!consulta_usuario || !consulta_correcta || !enunciado) {
-      return Response.json({ error: 'Campos requeridos faltantes: consulta_usuario, consulta_correcta, enunciado' }, { status: 400 })
+      return Response.json({ error: 'Campos requeridos faltantes' }, { status: 400 })
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY?.replace(/\s+/g, '')
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
 
     const formatResult = (rows: any[][]) => {
       if (!rows || rows.length === 0) return '(sin resultados)'
-      return rows.slice(0, 5).map(row => row.join(' | ')).join('\n')
+      return rows.slice(0, 5).map((row: any[]) => row.join(' | ')).join('\n')
     }
 
     const prompt = `Sos un entrevistador técnico senior evaluando una solución SQL de un candidato en una entrevista de trabajo.
@@ -46,6 +46,9 @@ El campo feedback debe:
 - Usar tono constructivo y profesional, como en una entrevista técnica real
 - Tener entre 3 y 5 oraciones en español`
 
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 25000)
+
     let response: Response
     try {
       response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -60,14 +63,20 @@ El campo feedback debe:
           max_tokens: 800,
           messages: [{ role: 'user', content: prompt }],
         }),
+        signal: controller.signal,
       })
     } catch (fetchErr: any) {
-      return Response.json({ error: `No se pudo conectar con Anthropic: ${fetchErr.message}` }, { status: 502 })
+      const msg = fetchErr.name === 'AbortError'
+        ? 'Timeout: Anthropic no respondió en 25s'
+        : `No se pudo conectar con Anthropic: ${fetchErr.message}`
+      return Response.json({ error: msg }, { status: 502 })
+    } finally {
+      clearTimeout(timeoutId)
     }
 
     if (!response.ok) {
       const errBody = await response.text()
-      return Response.json({ error: `Anthropic ${response.status}: ${errBody.slice(0, 200)}` }, { status: 502 })
+      return Response.json({ error: `Anthropic ${response.status}: ${errBody.slice(0, 300)}` }, { status: 502 })
     }
 
     const data = await response.json() as { content: { type: string; text: string }[] }
@@ -78,7 +87,7 @@ El campo feedback debe:
       const jsonMatch = text.match(/\{[\s\S]*\}/)
       parsed = JSON.parse(jsonMatch ? jsonMatch[0] : text)
     } catch {
-      return Response.json({ feedback: text, es_correcta: false })
+      return Response.json({ feedback: text || 'Sin respuesta del modelo', es_correcta: false })
     }
 
     return Response.json({ feedback: parsed.feedback, es_correcta: parsed.es_correcta })
