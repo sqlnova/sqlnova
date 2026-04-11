@@ -52,8 +52,9 @@ export default function PocketPage() {
   const [resultado, setResultado] = useState<{ columns: string[], values: any[][] } | null>(null)
   const [error, setError] = useState('')
   const [showGlosario, setShowGlosario] = useState(false)
-  const [isModalOpen, setIsModalOpen] = useState(false) 
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [tablePreview, setTablePreview] = useState<PreviewData | null>(null)
+  const [kbOpen, setKbOpen] = useState(false)
   const dbRef = useRef<any>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -291,10 +292,17 @@ export default function PocketPage() {
               <div className="bg-[var(--bg3)] px-3 py-1.5 flex items-center gap-1.5 border-b border-[var(--border)]">
                 {['#ff5f57','#ffbd2e','#28c840'].map(c => <div key={c} style={{ width: 7, height: 7, borderRadius: '50%', background: c }} />)}
                 <span className="font-mono text-[10px] text-[var(--dim)] ml-1">query.sql</span>
+                <button
+                  onMouseDown={e => { e.preventDefault(); setKbOpen(o => !o) }}
+                  title={kbOpen ? 'Ocultar atajos' : 'Mostrar atajos SQL'}
+                  style={{ marginLeft: 'auto', background: kbOpen ? 'rgba(77,166,255,0.12)' : 'transparent', border: '1px solid var(--border2)', borderRadius: 5, padding: '2px 8px', color: kbOpen ? 'var(--nova)' : 'var(--dim)', fontSize: '0.6rem', fontWeight: 600, cursor: 'pointer', letterSpacing: '0.04em', userSelect: 'none' }}
+                >
+                  {kbOpen ? '▴ SQL' : '▾ SQL'}
+                </button>
               </div>
 
               {/* SQL Keyboard */}
-              <div className="sql-keyboard" style={{ borderBottom: '1px solid var(--border)', padding: '8px 10px', display: 'flex', gap: 5, flexWrap: 'wrap', background: 'var(--bg3)' }}>
+              {kbOpen && <div className="sql-keyboard" style={{ borderBottom: '1px solid var(--border)', padding: '8px 10px', display: 'flex', gap: 5, flexWrap: 'wrap', background: 'var(--bg3)' }}>
                 {SQL_BUTTONS.map(btn => (
                   <button
                     key={btn.label}
@@ -326,7 +334,7 @@ export default function PocketPage() {
                     {btn.label === '\n' ? '↵ Enter' : btn.label}
                   </button>
                 ))}
-              </div>
+              </div>}
 
               <textarea
                 ref={textareaRef}
