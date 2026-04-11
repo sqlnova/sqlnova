@@ -2,11 +2,14 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { sb } from '@/lib/supabase'
+import { SQL_BUTTONS } from '@/lib/constants'
+import { normalize, sameColumns, loadSqlJs } from '@/lib/utils'
 import {
   LECCIONES_M1, LECCIONES_M2, LECCIONES_M3, LECCIONES_M4,
   INTRO_SLIDES, DATASET_SQL,
   GLOSARIO_M1, GLOSARIO_M2, GLOSARIO_M3, GLOSARIO_M4,
   RESUMEN_M1, RESUMEN_M2, RESUMEN_M3, RESUMEN_M4,
+  type Leccion, type GlosarioItem, type ResumenModulo,
 } from '@/lib/curriculum'
 import {
   LECCIONES_M5, LECCIONES_M6,
@@ -34,47 +37,19 @@ type Vista =
   | 'intro-subqueries'
   | 'intro-ctes'
 
-// ── SQL KEYBOARD ──────────────────────────────────────────────────────────────
-const SQL_BUTTONS = [
-  { label: 'SELECT', snippet: 'SELECT ', color: '#93c5fd' },
-  { label: 'FROM', snippet: 'FROM ', color: '#93c5fd' },
-  { label: 'WHERE', snippet: 'WHERE ', color: '#93c5fd' },
-  { label: 'AND', snippet: 'AND ', color: '#93c5fd' },
-  { label: 'OR', snippet: 'OR ', color: '#93c5fd' },
-  { label: 'JOIN', snippet: 'JOIN ', color: '#a78bfa' },
-  { label: 'LEFT JOIN', snippet: 'LEFT JOIN ', color: '#a78bfa' },
-  { label: 'INNER JOIN', snippet: 'INNER JOIN ', color: '#a78bfa' },
-  { label: 'ON', snippet: 'ON ', color: '#a78bfa' },
-  { label: 'GROUP BY', snippet: 'GROUP BY ', color: '#6ee7b7' },
-  { label: 'ORDER BY', snippet: 'ORDER BY ', color: '#6ee7b7' },
-  { label: 'HAVING', snippet: 'HAVING ', color: '#6ee7b7' },
-  { label: 'LIMIT', snippet: 'LIMIT ', color: '#6ee7b7' },
-  { label: 'AS', snippet: 'AS ', color: '#fcd34d' },
-  { label: 'DISTINCT', snippet: 'DISTINCT ', color: '#fcd34d' },
-  { label: 'COUNT(*)', snippet: 'COUNT(*)', color: '#f9a8d4' },
-  { label: 'SUM()', snippet: 'SUM()', color: '#f9a8d4' },
-  { label: 'AVG()', snippet: 'AVG()', color: '#f9a8d4' },
-  { label: 'MAX()', snippet: 'MAX()', color: '#f9a8d4' },
-  { label: 'MIN()', snippet: 'MIN()', color: '#f9a8d4' },
-  { label: 'IS NULL', snippet: ' IS NULL', color: '#94a3b8' },
-  { label: 'IS NOT NULL', snippet: ' IS NOT NULL', color: '#94a3b8' },
-  { label: 'IN ()', snippet: ' IN ()', color: '#94a3b8' },
-  { label: 'NOT IN ()', snippet: ' NOT IN ()', color: '#94a3b8' },
-  { label: 'BETWEEN', snippet: ' BETWEEN ', color: '#94a3b8' },
-  { label: 'LIKE', snippet: ' LIKE ', color: '#94a3b8' },
-  { label: 'CASE', snippet: 'CASE WHEN  THEN  ELSE  END', color: '#fb923c' },
-  { label: 'WITH', snippet: 'WITH  AS (\n  \n)\n', color: '#fb923c' },
-  { label: 'OVER()', snippet: ' OVER()', color: '#fb923c' },
-  { label: 'PARTITION BY', snippet: 'PARTITION BY ', color: '#fb923c' },
-  { label: 'ROW_NUMBER()', snippet: 'ROW_NUMBER()', color: '#fb923c' },
-  { label: '*', snippet: '*', color: '#64748b' },
-  { label: ',', snippet: ', ', color: '#64748b' },
-  { label: '=', snippet: ' = ', color: '#64748b' },
-  { label: '!=', snippet: ' != ', color: '#64748b' },
-  { label: '>', snippet: ' > ', color: '#64748b' },
-  { label: '<', snippet: ' < ', color: '#64748b' },
-  { label: '\n', snippet: '\n', color: '#64748b' },
-]
+// ── MÓDULO CONFIG ─────────────────────────────────────────────────────────────
+const MODULO_CONFIG: Record<number, { lecciones: Leccion[]; glosario: GlosarioItem[]; resumen: ResumenModulo; label: string }> = {
+  1:  { lecciones: LECCIONES_M1,  glosario: GLOSARIO_M1,  resumen: RESUMEN_M1,  label: 'Módulo 1 · SELECT & Básicos' },
+  2:  { lecciones: LECCIONES_M2,  glosario: GLOSARIO_M2,  resumen: RESUMEN_M2,  label: 'Módulo 2 · WHERE & Filtros' },
+  3:  { lecciones: LECCIONES_M3,  glosario: GLOSARIO_M3,  resumen: RESUMEN_M3,  label: 'Módulo 3 · JOINs' },
+  4:  { lecciones: LECCIONES_M4,  glosario: GLOSARIO_M4,  resumen: RESUMEN_M4,  label: 'Módulo 4 · GROUP BY & Agregados' },
+  5:  { lecciones: LECCIONES_M5,  glosario: GLOSARIO_M5,  resumen: RESUMEN_M5,  label: 'Módulo 5 · Funciones de Agregación' },
+  6:  { lecciones: LECCIONES_M6,  glosario: GLOSARIO_M6,  resumen: RESUMEN_M6,  label: 'Módulo 6 · Subqueries' },
+  7:  { lecciones: LECCIONES_M7,  glosario: GLOSARIO_M7,  resumen: RESUMEN_M7,  label: 'Módulo 7 · CTEs' },
+  8:  { lecciones: LECCIONES_M8,  glosario: GLOSARIO_M8,  resumen: RESUMEN_M8,  label: 'Módulo 8 · Window Functions' },
+  9:  { lecciones: LECCIONES_M9,  glosario: GLOSARIO_M9,  resumen: RESUMEN_M9,  label: 'Módulo 9 · Optimización' },
+  10: { lecciones: LECCIONES_M10, glosario: GLOSARIO_M10, resumen: RESUMEN_M10, label: 'Módulo 10 · Modo Entrevista' },
+}
 
 export default function LeccionClient({ moduloId }: { moduloId: number }) {
   const router = useRouter()
@@ -117,61 +92,10 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     })
   }
 
-  const getLecciones = () => {
-    if (moduloId === 1) return LECCIONES_M1
-    if (moduloId === 2) return LECCIONES_M2
-    if (moduloId === 3) return LECCIONES_M3
-    if (moduloId === 4) return LECCIONES_M4
-    if (moduloId === 5) return LECCIONES_M5
-    if (moduloId === 6) return LECCIONES_M6
-    if (moduloId === 7) return LECCIONES_M7
-    if (moduloId === 8) return LECCIONES_M8
-    if (moduloId === 9) return LECCIONES_M9
-    if (moduloId === 10) return LECCIONES_M10
-    return []
-  }
-
-  const getGlosario = () => {
-    if (moduloId === 1) return GLOSARIO_M1
-    if (moduloId === 2) return GLOSARIO_M2
-    if (moduloId === 3) return GLOSARIO_M3
-    if (moduloId === 4) return GLOSARIO_M4
-    if (moduloId === 5) return GLOSARIO_M5
-    if (moduloId === 6) return GLOSARIO_M6
-    if (moduloId === 7) return GLOSARIO_M7
-    if (moduloId === 8) return GLOSARIO_M8
-    if (moduloId === 9) return GLOSARIO_M9
-    if (moduloId === 10) return GLOSARIO_M10
-    return []
-  }
-
-  const getResumen = () => {
-    if (moduloId === 1) return RESUMEN_M1
-    if (moduloId === 2) return RESUMEN_M2
-    if (moduloId === 3) return RESUMEN_M3
-    if (moduloId === 4) return RESUMEN_M4
-    if (moduloId === 5) return RESUMEN_M5
-    if (moduloId === 6) return RESUMEN_M6
-    if (moduloId === 7) return RESUMEN_M7
-    if (moduloId === 8) return RESUMEN_M8
-    if (moduloId === 9) return RESUMEN_M9
-    if (moduloId === 10) return RESUMEN_M10
-    return null
-  }
-
-  const getModuloLabel = () => {
-    if (moduloId === 1) return 'Módulo 1 · SELECT & Básicos'
-    if (moduloId === 2) return 'Módulo 2 · WHERE & Filtros'
-    if (moduloId === 3) return 'Módulo 3 · JOINs'
-    if (moduloId === 4) return 'Módulo 4 · GROUP BY & Agregados'
-    if (moduloId === 5) return 'Módulo 5 · Funciones de Agregación'
-    if (moduloId === 6) return 'Módulo 6 · Subqueries'
-    if (moduloId === 7) return 'Módulo 7 · CTEs'
-    if (moduloId === 8) return 'Módulo 8 · Window Functions'
-    if (moduloId === 9) return 'Módulo 9 · Optimización'
-    if (moduloId === 10) return 'Módulo 10 · Modo Entrevista'
-    return `Módulo ${moduloId}`
-  }
+  const getLecciones   = (): Leccion[]          => MODULO_CONFIG[moduloId]?.lecciones ?? []
+  const getGlosario    = (): GlosarioItem[]     => MODULO_CONFIG[moduloId]?.glosario  ?? []
+  const getResumen     = (): ResumenModulo | null => MODULO_CONFIG[moduloId]?.resumen ?? null
+  const getModuloLabel = (): string             => MODULO_CONFIG[moduloId]?.label    ?? `Módulo ${moduloId}`
 
   const getPrefix = () => `0${moduloId}-`
 
@@ -190,20 +114,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
       setProg(pm)
 
       if (moduloId !== 0) {
-        let SQL: any
-        if ((window as any)._sqljsReady && (window as any)._sqljsInstance) {
-          SQL = (window as any)._sqljsInstance
-        } else if ((window as any)._sqljsPromise) {
-          SQL = await (window as any)._sqljsPromise
-        } else {
-          const script = document.createElement('script')
-          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js'
-          document.head.appendChild(script)
-          await new Promise(resolve => { script.onload = resolve })
-          SQL = await (window as any).initSqlJs({
-            locateFile: (f: string) => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}`
-          })
-        }
+        const SQL = await loadSqlJs()
         const db = new SQL.Database()
         db.run(DATASET_SQL)
         sqlDbRef.current = db
@@ -218,12 +129,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
         if (moduloId === 6 && done === 0) setVista('intro-subqueries')
         if (moduloId === 7 && done === 0) setVista('intro-ctes')
         if (moduloId === 8 && done === 0) setVista('intro-windows')
-        if (moduloId === 6 && done === 0) {
-          setVista('intro-subqueries')
-        }
-        if (moduloId === 7 && done === 0) {
-          setVista('intro-ctes')
-        }
       }
 
       setLoading(false)
@@ -293,8 +198,6 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     return queryText
   }
 
-  const normalize = (q: string) => q.replace(/;$/, '').replace(/\s+/g, ' ').trim().toUpperCase()
-
   const runQuery = async () => {
     const lecciones = getLecciones()
     const l = lecciones[curIdx]
@@ -312,13 +215,11 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
         if (!solRes.length) return
         const uRows = JSON.stringify(res[0].values)
         const sRows = JSON.stringify(solRes[0].values)
-        const uCols = JSON.stringify(res[0].columns.map((c: string) => c.toLowerCase()))
-        const sCols = JSON.stringify(solRes[0].columns.map((c: string) => c.toLowerCase()))
+        const colsMatch = sameColumns(res[0].columns, solRes[0].columns)
 
-        const exact = uRows === sRows && uCols === sCols
+        const exact = uRows === sRows && colsMatch
         const normMatch = normalize(q) === normalize(l.solucion)
-        const sameColCount = res[0].columns.length === solRes[0].columns.length
-        const flexMatch = uRows === sRows && sameColCount
+        const flexMatch = uRows === sRows && res[0].columns.length === solRes[0].columns.length
 
         if (exact || normMatch || flexMatch) {
           setAnswered(true)

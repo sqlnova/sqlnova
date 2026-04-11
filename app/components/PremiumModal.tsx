@@ -37,7 +37,10 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
 
       const data = await res.json();
 
-      // 3. Redireccionamos a la URL de Mercado Pago que devuelve el backend
+      // 3. Guardamos flag para que el dashboard sepa que el pago fue iniciado
+      sessionStorage.setItem('pago_iniciado_uid', session.user.id);
+
+      // 4. Redireccionamos a la URL de Mercado Pago que devuelve el backend
       if (data.url) {
         window.location.href = data.url;
       } else {
