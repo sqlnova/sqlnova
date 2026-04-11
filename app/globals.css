@@ -81,6 +81,14 @@ body::after {
   transition: border-color 0.2s;
 }
 
+/* SQL Keyboard buttons: darken pastel colors in light mode */
+[data-theme="claro"] .sql-keyboard button {
+  filter: brightness(0.45) saturate(1.8);
+}
+[data-theme="claro"] .sql-keyboard {
+  background: var(--bg3) !important;
+}
+
 .level-fill {
   background: linear-gradient(90deg, var(--nova2), var(--nova), var(--green));
   background-size: 200% 100%;

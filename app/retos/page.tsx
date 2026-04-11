@@ -2,6 +2,8 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { sb } from '@/lib/supabase'
+import { normalize, loadSqlJs } from '@/lib/utils'
+import ShareRetoCard from '@/components/ShareRetoCard'
 
 type Reto = {
   id: string
@@ -48,6 +50,8 @@ export default function RetosPage() {
   
   const sqlDbRef = useRef<any>(null)
   const dbInitRef = useRef(false)
+  const [perfil, setPerfil] = useState<{ alias: string } | null>(null)
+  const [showShare, setShowShare] = useState(false)
 
   const hoy = new Date().toISOString().split('T')[0]
 
@@ -56,6 +60,8 @@ export default function RetosPage() {
       const { data: { session } } = await sb.auth.getSession()
       if (!session) { router.replace('/auth'); return }
       setUser(session.user)
+      const { data: perfilData } = await sb.from('perfiles').select('alias').eq('id', session.user.id).single()
+      if (perfilData) setPerfil(perfilData)
 
       // Traer retos del día
       const { data: retosData } = await sb
@@ -72,20 +78,7 @@ export default function RetosPage() {
         const dataset = retosData[0].dataset_sql
         if (dataset && !dbInitRef.current) {
           dbInitRef.current = true
-          let SQL: any
-          if ((window as any)._sqljsReady && (window as any)._sqljsInstance) {
-            SQL = (window as any)._sqljsInstance
-          } else if ((window as any)._sqljsPromise) {
-            SQL = await (window as any)._sqljsPromise
-          } else {
-            const script = document.createElement('script')
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js'
-            document.head.appendChild(script)
-            await new Promise(resolve => { script.onload = resolve })
-            SQL = await (window as any).initSqlJs({
-              locateFile: (f: string) => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}`
-            })
-          }
+          const SQL = await loadSqlJs()
           const db = new SQL.Database()
           db.run(dataset)
           sqlDbRef.current = db
@@ -121,6 +114,7 @@ export default function RetosPage() {
     setHintUsed(false)
     setTablePreview(null)
     setAnswered(false)
+    setShowShare(false)
   }, [nivelActivo])
 
   // Verificar si el nivel actual ya está completado
@@ -130,8 +124,6 @@ export default function RetosPage() {
   useEffect(() => {
     if (yaCompletado) setAnswered(true)
   }, [yaCompletado, nivelActivo])
-
-  const normalize = (q: string) => q.replace(/;$/, '').replace(/\s+/g, ' ').trim().toUpperCase()
 
   const openTablePreview = (t: string) => {
     if (!sqlDbRef.current) return;
@@ -369,7 +361,7 @@ export default function RetosPage() {
 
               {/* Éxito */}
               {answered && (
-                <div style={{ background: finalXp > 0 ? 'rgba(62,207,142,0.06)' : 'rgba(232,168,56,0.06)', border: `1px solid ${finalXp > 0 ? 'rgba(62,207,142,0.2)' : 'rgba(232,168,56,0.2)'}`, borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ background: finalXp > 0 ? 'rgba(62,207,142,0.06)' : 'rgba(232,168,56,0.06)', border: `1px solid ${finalXp > 0 ? 'rgba(62,207,142,0.2)' : 'rgba(232,168,56,0.2)'}`, borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                   <span style={{ fontSize: '1.5rem' }}>{celebrating ? '🎉' : '✅'}</span>
                   <div>
                     <div style={{ fontWeight: 700, color: finalXp > 0 ? 'var(--green)' : 'var(--amber)', marginBottom: 2 }}>
@@ -379,18 +371,26 @@ export default function RetosPage() {
                       {finalXp > 0 ? `+${finalXp} XP sumados al leaderboard semanal` : 'Reto completado con ayuda (+0 XP)'}
                     </div>
                   </div>
-                  {completadosHoy < 3 && (
+                  <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, flexShrink: 0 }}>
                     <button
-                      onClick={() => {
-                        const niveles: ('inicial' | 'avanzado' | 'experto')[] = ['inicial', 'avanzado', 'experto']
-                        const siguiente = niveles.find(n => n !== nivelActivo && !completados.some(c => c.reto_id === retos.find(r => r.nivel === n)?.id))
-                        if (siguiente) setNivelActivo(siguiente)
-                      }}
-                      style={{ marginLeft: 'auto', background: 'var(--nova2)', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 14px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, flexShrink: 0 }}
+                      onClick={() => setShowShare(true)}
+                      style={{ background: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.25)', borderRadius: 8, padding: '8px 13px', color: '#06b6d4', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}
                     >
-                      Siguiente →
+                      📸 Compartir
                     </button>
-                  )}
+                    {completadosHoy < 3 && (
+                      <button
+                        onClick={() => {
+                          const niveles: ('inicial' | 'avanzado' | 'experto')[] = ['inicial', 'avanzado', 'experto']
+                          const siguiente = niveles.find(n => n !== nivelActivo && !completados.some(c => c.reto_id === retos.find(r => r.nivel === n)?.id))
+                          if (siguiente) setNivelActivo(siguiente)
+                        }}
+                        style={{ background: 'var(--nova2)', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 14px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}
+                      >
+                        Siguiente →
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -406,6 +406,16 @@ export default function RetosPage() {
           </div>
         )}
       </div>
+      {showShare && retoActual && (
+        <ShareRetoCard
+          nivel={retoActual.nivel}
+          enunciado={retoActual.enunciado}
+          fecha={hoy}
+          alias={perfil?.alias || user?.email?.split('@')[0] || 'Usuario'}
+          xpGanado={finalXp}
+          onClose={() => setShowShare(false)}
+        />
+      )}
     </div>
   )
 }

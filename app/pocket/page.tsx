@@ -2,8 +2,10 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { sb } from '@/lib/supabase'
+import { SQL_BUTTONS } from '@/lib/constants'
+import { loadSqlJs } from '@/lib/utils'
 import Papa from 'papaparse'
-import * as XLSX from 'xlsx'
+import readXlsxFile from 'read-excel-file'
 import PremiumModal from '@/app/components/PremiumModal'
 
 // Tipos de datos .
@@ -53,6 +55,21 @@ export default function PocketPage() {
   const [isModalOpen, setIsModalOpen] = useState(false) 
   const [tablePreview, setTablePreview] = useState<PreviewData | null>(null)
   const dbRef = useRef<any>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const insertSnippet = (snippet: string) => {
+    const ta = textareaRef.current
+    if (!ta) return
+    const start = ta.selectionStart
+    const end = ta.selectionEnd
+    const newText = query.slice(0, start) + snippet + query.slice(end)
+    setQuery(newText)
+    requestAnimationFrame(() => {
+      ta.focus()
+      const newPos = start + snippet.length
+      ta.setSelectionRange(newPos, newPos)
+    })
+  }
 
   const actualizarEsquema = () => {
     if (!dbRef.current) return;
@@ -93,14 +110,7 @@ export default function PocketPage() {
       
       setEsPremium(!!p?.es_premium)
 
-      const script = document.createElement('script')
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js'
-      document.head.appendChild(script)
-      await new Promise(resolve => { script.onload = resolve })
-      const SQL = await (window as any).initSqlJs({
-        locateFile: (f: string) => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}`
-      })
-      
+      const SQL = await loadSqlJs()
       dbRef.current = new SQL.Database()
       setLoading(false)
     }
@@ -119,45 +129,49 @@ export default function PocketPage() {
     if (!file || !dbRef.current) return
     setError('')
 
-    const reader = new FileReader()
     const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls')
 
-    reader.onload = (event) => {
-      try {
-        let csvContent = ''
-        if (isExcel) {
-          const data = new Uint8Array(event.target?.result as ArrayBuffer)
-          const workbook = XLSX.read(data, { type: 'array' })
-          csvContent = XLSX.utils.sheet_to_csv(workbook.Sheets[workbook.SheetNames[0]])
-        } else {
-          csvContent = event.target?.result as string
+    const cargarCsv = (csvContent: string) => {
+      Papa.parse(csvContent, {
+        header: true,
+        skipEmptyLines: true,
+        transformHeader: (h) => h.trim().replace(/[^a-z0-9]/gi, '_').toLowerCase(),
+        complete: (results) => {
+          try {
+            const nombreTabla = file.name.replace(/\.[^/.]+$/, '').trim().replace(/[^a-z0-9]/gi, '_').toLowerCase()
+            const columnas = Object.keys(results.data[0] as object)
+            dbRef.current.run(`DROP TABLE IF EXISTS "${nombreTabla}"`)
+            dbRef.current.run(`CREATE TABLE "${nombreTabla}" (${columnas.map(c => `"${c}" TEXT`).join(', ')});`)
+            const sqlInsert = `INSERT INTO "${nombreTabla}" VALUES (${columnas.map(() => '?').join(', ')});`
+            results.data.forEach((fila: any) => { dbRef.current.run(sqlInsert, Object.values(fila)) })
+            actualizarEsquema()
+            setQuery(`SELECT * FROM ${nombreTabla} LIMIT 10;`)
+          } catch (err: any) { setError('Error SQL: ' + err.message) }
         }
-
-        Papa.parse(csvContent, {
-          header: true,
-          skipEmptyLines: true,
-          transformHeader: (h) => h.trim().replace(/[^a-z0-9]/gi, '_').toLowerCase(),
-          complete: (results) => {
-            try {
-              const nombreTabla = file.name.replace(/\.[^/.]+$/, "").trim().replace(/[^a-z0-9]/gi, '_').toLowerCase()
-              const columnas = Object.keys(results.data[0] as object)
-              dbRef.current.run(`DROP TABLE IF EXISTS "${nombreTabla}"`)
-              dbRef.current.run(`CREATE TABLE "${nombreTabla}" (${columnas.map(c => `"${c}" TEXT`).join(', ')});`)
-              
-              const sqlInsert = `INSERT INTO "${nombreTabla}" VALUES (${columnas.map(() => '?').join(', ')});`
-              results.data.forEach((fila: any) => {
-                dbRef.current.run(sqlInsert, Object.values(fila))
-              })
-              actualizarEsquema()
-              setQuery(`SELECT * FROM ${nombreTabla} LIMIT 10;`)
-            } catch (err: any) { setError("Error SQL: " + err.message) }
-          }
-        })
-      } catch (err: any) { setError("Error al leer: " + err.message) }
+      })
     }
 
-    if (isExcel) reader.readAsArrayBuffer(file)
-    else reader.readAsText(file)
+    if (isExcel) {
+      // read-excel-file es 100% browser-native, sin deps Node.js
+      readXlsxFile(file).then((rows) => {
+        if (rows.length === 0) { setError('El archivo está vacío.'); return }
+        const headers = rows[0].map(h => String(h ?? '').trim().replace(/[^a-z0-9]/gi, '_').toLowerCase())
+        const csvRows = [headers.join(','), ...rows.slice(1).map(row =>
+          row.map(cell => {
+            const v = cell !== null && cell !== undefined ? String(cell) : ''
+            return v.includes(',') || v.includes('"') ? `"${v.replace(/"/g, '""')}"` : v
+          }).join(',')
+        )]
+        cargarCsv(csvRows.join('\n'))
+      }).catch((err: any) => setError('Error al leer Excel: ' + err.message))
+    } else {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        try { cargarCsv(event.target?.result as string) }
+        catch (err: any) { setError('Error al leer: ' + err.message) }
+      }
+      reader.readAsText(file)
+    }
   }
 
   const ejecutarSQL = () => {
@@ -273,10 +287,54 @@ export default function PocketPage() {
             )}
 
             <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden shadow-sm">
-              <textarea 
-                className="w-full bg-transparent p-5 text-sm font-mono text-[var(--text)] outline-none min-h-[300px] resize-none focus:bg-[var(--bg)] transition-colors"
+              {/* Editor header */}
+              <div className="bg-[var(--bg3)] px-3 py-1.5 flex items-center gap-1.5 border-b border-[var(--border)]">
+                {['#ff5f57','#ffbd2e','#28c840'].map(c => <div key={c} style={{ width: 7, height: 7, borderRadius: '50%', background: c }} />)}
+                <span className="font-mono text-[10px] text-[var(--dim)] ml-1">query.sql</span>
+              </div>
+
+              {/* SQL Keyboard */}
+              <div className="sql-keyboard" style={{ borderBottom: '1px solid var(--border)', padding: '8px 10px', display: 'flex', gap: 5, flexWrap: 'wrap', background: 'var(--bg3)' }}>
+                {SQL_BUTTONS.map(btn => (
+                  <button
+                    key={btn.label}
+                    onMouseDown={e => { e.preventDefault(); insertSnippet(btn.snippet) }}
+                    style={{
+                      fontFamily: 'DM Mono',
+                      fontSize: '0.68rem',
+                      fontWeight: 600,
+                      color: btn.color,
+                      background: `${btn.color}12`,
+                      border: `1px solid ${btn.color}30`,
+                      borderRadius: 5,
+                      padding: '3px 8px',
+                      cursor: 'pointer',
+                      lineHeight: 1.6,
+                      whiteSpace: 'nowrap',
+                      transition: 'background 0.1s, border-color 0.1s',
+                      userSelect: 'none',
+                    }}
+                    onMouseEnter={e => {
+                      (e.target as HTMLButtonElement).style.background = `${btn.color}28`
+                      ;(e.target as HTMLButtonElement).style.borderColor = `${btn.color}60`
+                    }}
+                    onMouseLeave={e => {
+                      (e.target as HTMLButtonElement).style.background = `${btn.color}12`
+                      ;(e.target as HTMLButtonElement).style.borderColor = `${btn.color}30`
+                    }}
+                  >
+                    {btn.label === '\n' ? '↵ Enter' : btn.label}
+                  </button>
+                ))}
+              </div>
+
+              <textarea
+                ref={textareaRef}
+                className="sql-editor w-full outline-none resize-y"
+                style={{ minHeight: 220, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--border)' }}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); ejecutarSQL() } }}
                 placeholder="Escribí tu query SQL..."
               />
               <div className="p-4 bg-[var(--bg2)] border-t border-[var(--border)] flex justify-end">

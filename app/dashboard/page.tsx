@@ -12,17 +12,20 @@ export default function Dashboard() {
   const [prog, setProg] = useState<Record<string, Progreso>>({})
   const [dropOpen, setDropOpen] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [retoPopup, setRetoPopup] = useState(false)
   const [tieneRetoHoy, setTieneRetoHoy] = useState(false)
+  const [pagoMsg, setPagoMsg] = useState<'exitoso' | 'timeout' | null>(null)
 
   const loadData = useCallback(async () => {
     try {
+      setLoadError(false)
       const { data: { session } } = await sb.auth.getSession()
       if (!session) { router.replace('/auth'); return }
 
       const uid = session.user.id
       let { data: p } = await sb.from('perfiles').select('*').eq('id', uid).maybeSingle()
-      
+
       if (!p) {
         const { data: newProfile } = await sb.from('perfiles')
           .insert({
@@ -50,50 +53,55 @@ export default function Dashboard() {
         const retoId = retosRes.data[0].id
         const { data: comp } = await sb.from('retos_completados').select('reto_id').eq('usuario_id', uid).eq('reto_id', retoId).maybeSingle()
         setTieneRetoHoy(true)
-        
+
         const popupVisto = localStorage.getItem(`reto_popup_${hoy}`)
         if (!comp && !popupVisto) {
           setRetoPopup(true)
         }
       }
-    } catch (e) { console.error(e) } finally { setLoading(false) }
+    } catch (e) {
+      console.error(e)
+      setLoadError(true)
+    } finally { setLoading(false) }
   }, [router])
 
   useEffect(() => { loadData() }, [loadData])
 
-  // ✅ NUEVO: Detectar retorno de MercadoPago
+  // Detectar retorno de MercadoPago con guard anti-CSRF vía sessionStorage
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    if (params.get('pago') === 'exitoso') {
-      // Limpiar URL inmediatamente
-      window.history.replaceState({}, '', '/dashboard')
-      
-      // Esperar 4 segundos para que el webhook procese
-      setTimeout(async () => {
-        const { data: { session } } = await sb.auth.getSession()
-        if (!session) return
+    if (params.get('pago') !== 'exitoso') return
 
-        // Reintentar hasta 5 veces cada 3 segundos
-        let intentos = 0
-        const verificar = async () => {
-          intentos++
-          const { data: p } = await sb.from('perfiles')
-            .select('es_premium')
-            .eq('id', session.user.id)
-            .single()
+    window.history.replaceState({}, '', '/dashboard')
 
-          if (p?.es_premium) {
-            alert('✅ ¡Bienvenido a Premium! Ya tenés acceso completo a Pocket Database.')
-            loadData()
-          } else if (intentos < 5) {
-            setTimeout(verificar, 3000)
-          } else {
-            alert('⏳ Tu pago fue procesado. Si en unos minutos no tenés acceso, escribinos y lo resolvemos.')
-          }
+    const verificarPago = async () => {
+      const { data: { session } } = await sb.auth.getSession()
+      if (!session) return
+
+      // Guard: solo procesar si el pago fue iniciado desde esta sesión del navegador
+      const flagUid = sessionStorage.getItem('pago_iniciado_uid')
+      if (flagUid !== session.user.id) return
+      sessionStorage.removeItem('pago_iniciado_uid')
+
+      // Polling con backoff exponencial: 3s, 6s, 12s, 24s, 48s
+      const delays = [3000, 6000, 12000, 24000, 48000]
+      for (const delay of delays) {
+        await new Promise(r => setTimeout(r, delay))
+        const { data: p } = await sb.from('perfiles')
+          .select('es_premium')
+          .eq('id', session.user.id)
+          .single()
+
+        if (p?.es_premium) {
+          setPagoMsg('exitoso')
+          loadData()
+          return
         }
-        verificar()
-      }, 4000)
+      }
+      setPagoMsg('timeout')
     }
+
+    verificarPago()
   }, [loadData])
 
   if (loading) return (
@@ -102,12 +110,26 @@ export default function Dashboard() {
     </div>
   )
 
+  if (loadError) return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[var(--bg)] gap-4 p-6">
+      <div className="text-3xl">⚠️</div>
+      <p className="text-[var(--text)] font-bold">No se pudieron cargar tus datos</p>
+      <p className="text-[var(--sub)] text-sm text-center">Verificá tu conexión a internet e intentá de nuevo.</p>
+      <button
+        onClick={() => { setLoading(true); loadData() }}
+        className="bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold px-6 py-2.5 rounded-xl transition-all"
+      >
+        Reintentar
+      </button>
+    </div>
+  )
+
   const xp = perfil?.xp_total || 0
   const nivel = Math.min(Math.floor(xp / 500) + 1, NIVELES.length - 1)
   const xpEnNivel = xp % 500
   const nombre = perfil?.nombre || 'Amigo'
   const iniciales = nombre.trim().split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-  const esPremium = (perfil as any)?.es_premium || false
+  const esPremium = perfil?.es_premium === true
 
   return (
     <div className="flex flex-col min-h-screen bg-[var(--bg)] text-[var(--text)] transition-colors duration-300">
@@ -145,6 +167,19 @@ export default function Dashboard() {
         </div>
       </nav>
 
+      {pagoMsg === 'exitoso' && (
+        <div className="bg-green-500/10 border-b border-green-500/20 px-6 py-3 flex items-center justify-between gap-4">
+          <span className="text-sm text-green-400 font-bold">✅ ¡Bienvenido a Premium! Ya tenés acceso completo a Pocket Database.</span>
+          <button onClick={() => setPagoMsg(null)} className="text-green-600 hover:text-green-400 text-lg leading-none">✕</button>
+        </div>
+      )}
+      {pagoMsg === 'timeout' && (
+        <div className="bg-amber-500/10 border-b border-amber-500/20 px-6 py-3 flex items-center justify-between gap-4">
+          <span className="text-sm text-amber-400 font-bold">⏳ Tu pago fue procesado. Si en unos minutos no tenés acceso, escribinos y lo resolvemos.</span>
+          <button onClick={() => setPagoMsg(null)} className="text-amber-600 hover:text-amber-400 text-lg leading-none">✕</button>
+        </div>
+      )}
+
       <div className="flex-1 p-6 lg:p-10 max-w-5xl mx-auto w-full">
         <header className="mb-8">
           <h1 className="text-2xl font-bold tracking-tight text-[var(--text)]">Hola, {nombre.split(' ')[0]} 👋</h1>
@@ -173,7 +208,7 @@ export default function Dashboard() {
         <h2 className="text-[10px] font-bold text-[var(--sub)] uppercase tracking-[0.2em] mb-4">Módulos de aprendizaje</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
           {MODULOS.map((m, i) => {
-             const prefix = m.id === 0 ? '00-' : `0${m.id}-`;
+             const prefix = String(m.id).padStart(2, '0') + '-';
              const done = Object.keys(prog).filter(k => k.startsWith(prefix) && prog[k]?.completada).length;
              const pct = Math.round((done / m.lecciones_total) * 100);
              const locked = i > 1 && Object.keys(prog).length < i * 5;
