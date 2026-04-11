@@ -9,6 +9,7 @@ import {
   INTRO_SLIDES, DATASET_SQL,
   GLOSARIO_M1, GLOSARIO_M2, GLOSARIO_M3, GLOSARIO_M4,
   RESUMEN_M1, RESUMEN_M2, RESUMEN_M3, RESUMEN_M4,
+  type Leccion, type GlosarioItem, type ResumenModulo,
 } from '@/lib/curriculum'
 import {
   LECCIONES_M5, LECCIONES_M6,
@@ -37,7 +38,7 @@ type Vista =
   | 'intro-ctes'
 
 // ── MÓDULO CONFIG ─────────────────────────────────────────────────────────────
-const MODULO_CONFIG: Record<number, { lecciones: any[]; glosario: any[]; resumen: any; label: string }> = {
+const MODULO_CONFIG: Record<number, { lecciones: Leccion[]; glosario: GlosarioItem[]; resumen: ResumenModulo; label: string }> = {
   1:  { lecciones: LECCIONES_M1,  glosario: GLOSARIO_M1,  resumen: RESUMEN_M1,  label: 'Módulo 1 · SELECT & Básicos' },
   2:  { lecciones: LECCIONES_M2,  glosario: GLOSARIO_M2,  resumen: RESUMEN_M2,  label: 'Módulo 2 · WHERE & Filtros' },
   3:  { lecciones: LECCIONES_M3,  glosario: GLOSARIO_M3,  resumen: RESUMEN_M3,  label: 'Módulo 3 · JOINs' },
@@ -91,10 +92,10 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     })
   }
 
-  const getLecciones = () => MODULO_CONFIG[moduloId]?.lecciones ?? []
-  const getGlosario  = () => MODULO_CONFIG[moduloId]?.glosario  ?? []
-  const getResumen   = () => MODULO_CONFIG[moduloId]?.resumen   ?? null
-  const getModuloLabel = () => MODULO_CONFIG[moduloId]?.label  ?? `Módulo ${moduloId}`
+  const getLecciones   = (): Leccion[]          => MODULO_CONFIG[moduloId]?.lecciones ?? []
+  const getGlosario    = (): GlosarioItem[]     => MODULO_CONFIG[moduloId]?.glosario  ?? []
+  const getResumen     = (): ResumenModulo | null => MODULO_CONFIG[moduloId]?.resumen ?? null
+  const getModuloLabel = (): string             => MODULO_CONFIG[moduloId]?.label    ?? `Módulo ${moduloId}`
 
   const getPrefix = () => `0${moduloId}-`
 
