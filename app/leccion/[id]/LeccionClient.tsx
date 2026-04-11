@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import FeedbackEntrevista from '@/components/FeedbackEntrevista'
 import { sb } from '@/lib/supabase'
 import { SQL_BUTTONS } from '@/lib/constants'
 import { normalize, sameColumns, loadSqlJs } from '@/lib/utils'
@@ -71,6 +72,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
   const [vista, setVista] = useState<Vista>('leccion')
   const [intentos, setIntentos] = useState(0)
   const [glosarioSearch, setGlosarioSearch] = useState('')
+  const [solResultado, setSolResultado] = useState<any[][] | null>(null)
   const sqlDbRef = useRef<any>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -146,6 +148,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     setQueryText('')
     setRachaAnimate(false)
     setIntentos(0)
+    setSolResultado(null)
     const lecciones = getLecciones()
     if (lecciones.length > 0 && lecciones[curIdx]) {
       const l = lecciones[curIdx]
@@ -213,6 +216,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
       if (!answered) {
         const solRes = sqlDbRef.current.exec(l.solucion)
         if (!solRes.length) return
+        setSolResultado(solRes[0]?.values ?? [])
         const uRows = JSON.stringify(res[0].values)
         const sRows = JSON.stringify(solRes[0].values)
         const colsMatch = sameColumns(res[0].columns, solRes[0].columns)
@@ -1138,6 +1142,16 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
                   </div>
                 )}
               </div>
+            )}
+
+            {moduloId === 10 && result && !resultError && solResultado !== null && (
+              <FeedbackEntrevista
+                consultaUsuario={getQuery()}
+                consultaCorrecta={l.solucion}
+                enunciado={l.enunciado}
+                resultadoUsuario={result.values}
+                resultadoCorrecto={solResultado}
+              />
             )}
 
             {answered && (
