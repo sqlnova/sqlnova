@@ -600,18 +600,18 @@ INSERT INTO envios VALUES
 (17,3,'Norte',66.8,'completado','2024-01-21'),(18,5,'Sur',77.2,'completado','2024-01-22'),
 (19,4,'Este',55.0,'completado','2024-01-23'),(20,6,'Oeste',93.7,'completado','2024-01-24');
 
-CREATE TABLE ventas(id INTEGER PRIMARY KEY,vendedor_id INTEGER,zona TEXT,monto REAL,fecha TEXT);
+CREATE TABLE ventas(id INTEGER PRIMARY KEY,vendedor_id INTEGER,zona TEXT,monto REAL,estado TEXT,fecha TEXT);
 INSERT INTO ventas VALUES
-(1,101,'Norte',8500,'2024-01-03'),(2,102,'Sur',12300,'2024-01-05'),
-(3,103,'Norte',6200,'2024-01-07'),(4,101,'Norte',15800,'2024-01-10'),
-(5,104,'Este',9400,'2024-01-12'),(6,102,'Sur',7100,'2024-01-14'),
-(7,103,'Norte',18200,'2024-01-16'),(8,105,'Oeste',11600,'2024-01-18'),
-(9,101,'Norte',6800,'2024-01-20'),(10,104,'Este',14200,'2024-01-22'),
-(11,102,'Sur',9800,'2024-01-24'),(12,105,'Oeste',7500,'2024-01-26'),
-(13,103,'Norte',21000,'2024-01-28'),(14,101,'Norte',4300,'2024-02-01'),
-(15,104,'Este',16700,'2024-02-03'),(16,102,'Sur',13400,'2024-02-05'),
-(17,105,'Oeste',8900,'2024-02-07'),(18,103,'Norte',11300,'2024-02-09'),
-(19,101,'Norte',19600,'2024-02-11'),(20,104,'Este',5800,'2024-02-13');
+(1,101,'Norte',8500,'completado','2024-01-03'),(2,102,'Sur',12300,'completado','2024-01-05'),
+(3,103,'Norte',6200,'pendiente','2024-01-07'),(4,101,'Norte',15800,'completado','2024-01-10'),
+(5,104,'Este',9400,'completado','2024-01-12'),(6,102,'Sur',7100,'pendiente','2024-01-14'),
+(7,103,'Norte',18200,'completado','2024-01-16'),(8,105,'Oeste',11600,'completado','2024-01-18'),
+(9,101,'Norte',6800,'completado','2024-01-20'),(10,104,'Este',14200,'pendiente','2024-01-22'),
+(11,102,'Sur',9800,'completado','2024-01-24'),(12,105,'Oeste',7500,'completado','2024-01-26'),
+(13,103,'Norte',21000,'completado','2024-01-28'),(14,101,'Norte',4300,'pendiente','2024-02-01'),
+(15,104,'Este',16700,'completado','2024-02-03'),(16,102,'Sur',13400,'completado','2024-02-05'),
+(17,105,'Oeste',8900,'pendiente','2024-02-07'),(18,103,'Norte',11300,'completado','2024-02-09'),
+(19,101,'Norte',19600,'completado','2024-02-11'),(20,104,'Este',5800,'completado','2024-02-13');
 
 CREATE TABLE usuarios(id INTEGER PRIMARY KEY,nombre TEXT,username TEXT,email TEXT,pais TEXT,es_premium INTEGER DEFAULT 0,verificado INTEGER DEFAULT 0);
 INSERT INTO usuarios VALUES

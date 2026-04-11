@@ -908,7 +908,7 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     consultas: { cols: ['id','paciente_id','medico_id','diagnostico','costo'], rows: [[1,1,1,'Hipertensión controlada',4500],[2,2,2,'Vacunación',2800],[3,3,3,'Control Parkinson',6200]] },
     choferes: { cols: ['id','nombre','zona','antiguedad_anios'], rows: [[1,'Carlos Díaz','Norte',8],[2,'Laura Martínez','Sur',5],[3,'Miguel Torres','Norte',12]] },
     envios: { cols: ['id','chofer_id','zona','peso_kg','estado'], rows: [[1,1,'Norte',45.5,'completado'],[2,1,'Norte',78.2,'completado'],[3,2,'Sur',23.1,'completado']] },
-    ventas: { cols: ['id','vendedor_id','zona','monto','fecha'], rows: [[1,101,'Norte',8500,'2024-01-03'],[2,102,'Sur',12300,'2024-01-05'],[3,103,'Norte',6200,'2024-01-07']] },
+    ventas: { cols: ['id','vendedor_id','zona','monto','estado','fecha'], rows: [[1,101,'Norte',8500,'completado','2024-01-03'],[2,102,'Sur',12300,'completado','2024-01-05'],[3,103,'Norte',6200,'pendiente','2024-01-07']] },
     usuarios: { cols: ['id','nombre','username','email','pais','es_premium'], rows: [[1,'Ana Garcia','anagarcia','ana@mail.com','Argentina',1],[2,'Luis Perez','luisperez','luis@mail.com','Mexico',0]] },
     posts: { cols: ['id','usuario_id','titulo','categoria','cantidad_likes','fecha'], rows: [[1,1,'Mi primer post','Tech',1200,'2024-01-05'],[2,1,'SQL es increible','Tech',890,'2024-01-15'],[3,2,'Viajando por Mexico','Travel',450,'2024-01-20']] },
     metricas_red: { cols: ['id','mes','plataforma','likes'], rows: [[1,'2024-01','Instagram',45200],[2,'2024-01','Twitter',18900],[3,'2024-01','Facebook',12400]] },
