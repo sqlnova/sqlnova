@@ -5,7 +5,7 @@ import { sb } from '@/lib/supabase'
 import { SQL_BUTTONS } from '@/lib/constants'
 import { loadSqlJs } from '@/lib/utils'
 import Papa from 'papaparse'
-import ExcelJS from 'exceljs'
+import readXlsxFile from 'read-excel-file'
 import PremiumModal from '@/app/components/PremiumModal'
 
 // Tipos de datos .
@@ -129,56 +129,49 @@ export default function PocketPage() {
     if (!file || !dbRef.current) return
     setError('')
 
-    const reader = new FileReader()
     const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls')
 
-    reader.onload = async (event) => {
-      try {
-        let csvContent = ''
-        if (isExcel) {
-          const buffer = event.target?.result as ArrayBuffer
-          const workbook = new ExcelJS.Workbook()
-          await workbook.xlsx.load(buffer)
-          const worksheet = workbook.worksheets[0]
-          const rows: string[][] = []
-          worksheet.eachRow({ includeEmpty: false }, (row) => {
-            const values: string[] = []
-            row.eachCell({ includeEmpty: true }, (cell) => {
-              const v = cell.value
-              values.push(v !== null && v !== undefined ? String(v) : '')
-            })
-            rows.push(values)
-          })
-          csvContent = rows.map(r => r.map(v => v.includes(',') ? `"${v}"` : v).join(',')).join('\n')
-        } else {
-          csvContent = event.target?.result as string
+    const cargarCsv = (csvContent: string) => {
+      Papa.parse(csvContent, {
+        header: true,
+        skipEmptyLines: true,
+        transformHeader: (h) => h.trim().replace(/[^a-z0-9]/gi, '_').toLowerCase(),
+        complete: (results) => {
+          try {
+            const nombreTabla = file.name.replace(/\.[^/.]+$/, '').trim().replace(/[^a-z0-9]/gi, '_').toLowerCase()
+            const columnas = Object.keys(results.data[0] as object)
+            dbRef.current.run(`DROP TABLE IF EXISTS "${nombreTabla}"`)
+            dbRef.current.run(`CREATE TABLE "${nombreTabla}" (${columnas.map(c => `"${c}" TEXT`).join(', ')});`)
+            const sqlInsert = `INSERT INTO "${nombreTabla}" VALUES (${columnas.map(() => '?').join(', ')});`
+            results.data.forEach((fila: any) => { dbRef.current.run(sqlInsert, Object.values(fila)) })
+            actualizarEsquema()
+            setQuery(`SELECT * FROM ${nombreTabla} LIMIT 10;`)
+          } catch (err: any) { setError('Error SQL: ' + err.message) }
         }
-
-        Papa.parse(csvContent, {
-          header: true,
-          skipEmptyLines: true,
-          transformHeader: (h) => h.trim().replace(/[^a-z0-9]/gi, '_').toLowerCase(),
-          complete: (results) => {
-            try {
-              const nombreTabla = file.name.replace(/\.[^/.]+$/, "").trim().replace(/[^a-z0-9]/gi, '_').toLowerCase()
-              const columnas = Object.keys(results.data[0] as object)
-              dbRef.current.run(`DROP TABLE IF EXISTS "${nombreTabla}"`)
-              dbRef.current.run(`CREATE TABLE "${nombreTabla}" (${columnas.map(c => `"${c}" TEXT`).join(', ')});`)
-              
-              const sqlInsert = `INSERT INTO "${nombreTabla}" VALUES (${columnas.map(() => '?').join(', ')});`
-              results.data.forEach((fila: any) => {
-                dbRef.current.run(sqlInsert, Object.values(fila))
-              })
-              actualizarEsquema()
-              setQuery(`SELECT * FROM ${nombreTabla} LIMIT 10;`)
-            } catch (err: any) { setError("Error SQL: " + err.message) }
-          }
-        })
-      } catch (err: any) { setError("Error al leer: " + err.message) }
+      })
     }
 
-    if (isExcel) reader.readAsArrayBuffer(file)
-    else reader.readAsText(file)
+    if (isExcel) {
+      // read-excel-file es 100% browser-native, sin deps Node.js
+      readXlsxFile(file).then((rows) => {
+        if (rows.length === 0) { setError('El archivo está vacío.'); return }
+        const headers = rows[0].map(h => String(h ?? '').trim().replace(/[^a-z0-9]/gi, '_').toLowerCase())
+        const csvRows = [headers.join(','), ...rows.slice(1).map(row =>
+          row.map(cell => {
+            const v = cell !== null && cell !== undefined ? String(cell) : ''
+            return v.includes(',') || v.includes('"') ? `"${v.replace(/"/g, '""')}"` : v
+          }).join(',')
+        )]
+        cargarCsv(csvRows.join('\n'))
+      }).catch((err: any) => setError('Error al leer Excel: ' + err.message))
+    } else {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        try { cargarCsv(event.target?.result as string) }
+        catch (err: any) { setError('Error al leer: ' + err.message) }
+      }
+      reader.readAsText(file)
+    }
   }
 
   const ejecutarSQL = () => {
