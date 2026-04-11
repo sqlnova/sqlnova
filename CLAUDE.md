@@ -82,3 +82,9 @@ SUPABASE_SERVICE_ROLE_KEY  # Used in webhook route (admin client)
 ```
 
 The public Supabase URL and anon key in `lib/supabase.ts` are hardcoded (publishable keys).
+
+## Git Workflow
+
+- Desarrollar siempre en branches `claude/...`
+- Al terminar los cambios, crear PR hacia `master`
+- Si el usuario aprueba los cambios o indica que están OK, mergear el PR a `master` sin pedir confirmación adicional
