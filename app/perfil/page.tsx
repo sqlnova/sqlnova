@@ -4,6 +4,145 @@ import { useRouter } from 'next/navigation'
 import { sb } from '@/lib/supabase'
 import { MODULOS } from '@/lib/curriculum'
 
+// Activity calendar helpers
+function buildCalendarData(completadaEnDates: string[]): Map<string, number> {
+  const map = new Map<string, number>()
+  for (const isoStr of completadaEnDates) {
+    const day = isoStr.split('T')[0] // YYYY-MM-DD
+    map.set(day, (map.get(day) || 0) + 1)
+  }
+  return map
+}
+
+function getCalendarDays(): Date[] {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  // Go back to the most recent Sunday to align weeks
+  const dayOfWeek = today.getDay() // 0 = Sunday
+  const startDate = new Date(today)
+  startDate.setDate(today.getDate() - dayOfWeek - 7 * 51) // 52 weeks back
+  const days: Date[] = []
+  const cur = new Date(startDate)
+  while (cur <= today) {
+    days.push(new Date(cur))
+    cur.setDate(cur.getDate() + 1)
+  }
+  return days
+}
+
+function toYMD(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function ActivityCalendar({ activityMap }: { activityMap: Map<string, number> }) {
+  const days = getCalendarDays()
+  const today = toYMD(new Date())
+
+  // Group by week
+  const weeks: Date[][] = []
+  for (let i = 0; i < days.length; i += 7) {
+    weeks.push(days.slice(i, i + 7))
+  }
+
+  const cellColor = (count: number, isToday: boolean): string => {
+    if (isToday && count === 0) return 'rgba(77,166,255,0.15)'
+    if (count === 0) return 'var(--bg3)'
+    if (count === 1) return 'rgba(62,207,142,0.25)'
+    if (count <= 3) return 'rgba(62,207,142,0.5)'
+    return 'rgba(62,207,142,0.85)'
+  }
+
+  const cellBorder = (count: number, isToday: boolean): string => {
+    if (isToday) return '1px solid rgba(77,166,255,0.4)'
+    if (count > 0) return '1px solid rgba(62,207,142,0.2)'
+    return '1px solid var(--border)'
+  }
+
+  // Month labels
+  const monthLabels: { label: string; col: number }[] = []
+  let lastMonth = -1
+  weeks.forEach((week, wi) => {
+    const firstDay = week[0]
+    if (firstDay && firstDay.getMonth() !== lastMonth) {
+      lastMonth = firstDay.getMonth()
+      monthLabels.push({
+        label: firstDay.toLocaleString('es', { month: 'short' }),
+        col: wi,
+      })
+    }
+  })
+
+  const DAY_LABELS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+
+  const totalActive = activityMap.size
+  const totalLecciones = Array.from(activityMap.values()).reduce((a, b) => a + b, 0)
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+        <span style={{ fontSize: '0.7rem', color: 'var(--sub)', fontFamily: 'DM Mono' }}>
+          {totalLecciones} lecciones en {totalActive} día{totalActive !== 1 ? 's' : ''}
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ fontSize: '0.62rem', color: 'var(--dim)' }}>Menos</span>
+          {[0, 1, 2, 4, 6].map(v => (
+            <div key={v} style={{ width: 10, height: 10, borderRadius: 2, background: cellColor(v, false), border: cellBorder(v, false) }} />
+          ))}
+          <span style={{ fontSize: '0.62rem', color: 'var(--dim)' }}>Más</span>
+        </div>
+      </div>
+      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ display: 'flex', gap: 2, minWidth: 'max-content' }}>
+          {/* Day labels column */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, paddingTop: 18 }}>
+            {DAY_LABELS.map((d, i) => (
+              <div key={d} style={{ height: 11, fontSize: '0.55rem', color: i % 2 === 0 ? 'var(--sub)' : 'transparent', display: 'flex', alignItems: 'center', paddingRight: 4, fontFamily: 'DM Mono', width: 22 }}>{d}</div>
+            ))}
+          </div>
+          {/* Weeks grid */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {/* Month labels row */}
+            <div style={{ display: 'flex', gap: 2, height: 16, marginBottom: 2 }}>
+              {weeks.map((_, wi) => {
+                const ml = monthLabels.find(m => m.col === wi)
+                return (
+                  <div key={wi} style={{ width: 11, fontSize: '0.58rem', color: 'var(--sub)', fontFamily: 'DM Mono', whiteSpace: 'nowrap', overflow: 'visible' }}>
+                    {ml ? ml.label : ''}
+                  </div>
+                )
+              })}
+            </div>
+            {/* Grid */}
+            <div style={{ display: 'flex', gap: 2 }}>
+              {weeks.map((week, wi) => (
+                <div key={wi} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {week.map((day, di) => {
+                    const ymd = toYMD(day)
+                    const count = activityMap.get(ymd) || 0
+                    const isToday = ymd === today
+                    return (
+                      <div
+                        key={di}
+                        title={`${ymd}: ${count} lección${count !== 1 ? 'es' : ''}`}
+                        style={{
+                          width: 11, height: 11, borderRadius: 2,
+                          background: cellColor(count, isToday),
+                          border: cellBorder(count, isToday),
+                          cursor: count > 0 ? 'default' : 'default',
+                        }}
+                      />
+                    )
+                  })}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function PerfilPage() {
   const router = useRouter()
   const [perfil, setPerfil] = useState<any>(null)
@@ -15,6 +154,7 @@ export default function PerfilPage() {
   const [loading, setLoading] = useState(true)
   const [leccionesCompletadas, setLeccionesCompletadas] = useState(0)
   const [modulosCompletados, setModulosCompletados] = useState(0)
+  const [activityMap, setActivityMap] = useState<Map<string, number>>(new Map())
 
   useEffect(() => {
     const load = async () => {
@@ -23,7 +163,7 @@ export default function PerfilPage() {
 
       const [{ data: p }, { data: progreso }] = await Promise.all([
         sb.from('perfiles').select('*').eq('id', session.user.id).single(),
-        sb.from('progreso').select('leccion_id, completada').eq('usuario_id', session.user.id),
+        sb.from('progreso').select('leccion_id, completada, completada_en').eq('usuario_id', session.user.id),
       ])
 
       if (p) {
@@ -42,7 +182,11 @@ export default function PerfilPage() {
 
       if (progreso) {
         const prog: Record<string, boolean> = {}
-        for (const r of progreso) { prog[r.leccion_id] = r.completada }
+        const dates: string[] = []
+        for (const r of progreso) {
+          prog[r.leccion_id] = r.completada
+          if (r.completada && r.completada_en) dates.push(r.completada_en)
+        }
 
         const totalDone = Object.values(prog).filter(Boolean).length
         setLeccionesCompletadas(totalDone)
@@ -53,6 +197,7 @@ export default function PerfilPage() {
           return done >= m.lecciones_total
         }).length
         setModulosCompletados(modulosDone)
+        setActivityMap(buildCalendarData(dates))
       }
 
       setLoading(false)
@@ -175,6 +320,12 @@ const save = async () => {
               <div style={{ fontSize: '0.7rem', color: 'var(--sub)' }}>Módulos</div>
             </div>
           </div>
+        </div>
+
+        {/* Activity Calendar */}
+        <div style={card}>
+          <span style={label}>Actividad · últimas 52 semanas</span>
+          <ActivityCalendar activityMap={activityMap} />
         </div>
 
         {/* Alias */}
