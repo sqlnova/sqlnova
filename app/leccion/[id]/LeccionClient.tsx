@@ -26,6 +26,7 @@ import {
   GLOSARIO_M9, GLOSARIO_M10,
   RESUMEN_M9, RESUMEN_M10,
 } from '@/lib/curriculum-m9m10'
+import { type Dialecto, NOMBRES_DIALECTO, COLOR_DIALECTO, NOTAS_POR_MODULO } from '@/lib/dialectos'
 
 type Prog = Record<string, { completada: boolean; xp_ganado: number }>
 type Vista =
@@ -72,8 +73,13 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
   const [intentos, setIntentos] = useState(0)
   const [glosarioSearch, setGlosarioSearch] = useState('')
   const [kbOpen, setKbOpen] = useState(false)
+  const [interviewMode, setInterviewMode] = useState(false)
+  const [timerSeconds, setTimerSeconds] = useState(300)
+  const [timerExpired, setTimerExpired] = useState(false)
+  const [dialecto, setDialecto] = useState<Dialecto>('sqlite')
   const sqlDbRef = useRef<any>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Inserta un snippet en la posición actual del cursor del textarea
   const insertSnippet = (snippet: string) => {
@@ -159,6 +165,65 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [curIdx, curSlide, moduloId])
+
+  // Load persistent settings from localStorage
+  useEffect(() => {
+    const savedMode = localStorage.getItem('sqlnova-interview-mode')
+    if (savedMode === 'true') setInterviewMode(true)
+    const savedDialecto = localStorage.getItem('sqlnova-dialecto') as Dialecto | null
+    if (savedDialecto && ['sqlite', 'postgresql', 'mysql'].includes(savedDialecto)) {
+      setDialecto(savedDialecto)
+    }
+  }, [])
+
+  // Interview mode timer
+  useEffect(() => {
+    if (timerRef.current) clearInterval(timerRef.current)
+    setTimerExpired(false)
+    if (interviewMode && vista === 'leccion') {
+      setTimerSeconds(300)
+      if (!answered) {
+        timerRef.current = setInterval(() => {
+          setTimerSeconds(prev => {
+            if (prev <= 1) {
+              clearInterval(timerRef.current!)
+              timerRef.current = null
+              setTimerExpired(true)
+              return 0
+            }
+            return prev - 1
+          })
+        }, 1000)
+      }
+    }
+    return () => { if (timerRef.current) clearInterval(timerRef.current) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [curIdx, interviewMode, vista])
+
+  // Stop timer when lesson is answered
+  useEffect(() => {
+    if (answered && timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
+  }, [answered])
+
+  const toggleInterviewMode = () => {
+    const next = !interviewMode
+    setInterviewMode(next)
+    localStorage.setItem('sqlnova-interview-mode', String(next))
+  }
+
+  const changeDialecto = (d: Dialecto) => {
+    setDialecto(d)
+    localStorage.setItem('sqlnova-dialecto', d)
+  }
+
+  const formatTimer = (s: number) => {
+    const m = Math.floor(s / 60)
+    const sec = s % 60
+    return `${m}:${String(sec).padStart(2, '0')}`
+  }
 
   const getSemanaActual = () => {
     const now = new Date()
@@ -977,13 +1042,72 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
               style={{ padding: '0 10px', height: 32, borderRadius: 8, border: '1px solid rgba(77,166,255,0.3)', background: 'rgba(77,166,255,0.08)', color: 'var(--nova)', fontSize: '0.75rem', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}
             >{ {3:'⬤⬤ JOINs', 6:'📦 Subqueries', 7:'🔄 CTEs', 8:'⬤ OVER()'}[moduloId] }</button>
           )}
-          <div style={{ marginLeft: 'auto', flexShrink: 0 }}>
+          <div style={{ marginLeft: 'auto', flexShrink: 0, display: 'flex', gap: 5, alignItems: 'center' }}>
+            <button
+              onClick={toggleInterviewMode}
+              title={interviewMode ? 'Desactivar Modo Interview' : 'Activar Modo Interview (sin pistas, con timer)'}
+              style={{
+                padding: '0 9px', height: 32, borderRadius: 8,
+                border: `1px solid ${interviewMode ? 'rgba(167,139,250,0.5)' : 'var(--border)'}`,
+                background: interviewMode ? 'rgba(167,139,250,0.12)' : 'transparent',
+                color: interviewMode ? '#a78bfa' : 'var(--sub)',
+                fontSize: '0.72rem', cursor: 'pointer', whiteSpace: 'nowrap', fontWeight: interviewMode ? 700 : 400,
+              }}
+            >{interviewMode ? '🎯 Interview' : '🎯'}</button>
             <button
               onClick={() => setVista('glosario')}
               style={{ padding: '0 12px', height: 32, borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--sub)', fontSize: '0.75rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
             >📖</button>
           </div>
         </div>
+
+        {/* Dialect selector */}
+        <div style={{ display: 'flex', gap: 5, marginBottom: 12, alignItems: 'center' }}>
+          <span style={{ fontSize: '0.65rem', color: 'var(--sub)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', flexShrink: 0 }}>Dialecto:</span>
+          {(['sqlite', 'postgresql', 'mysql'] as Dialecto[]).map(d => (
+            <button
+              key={d}
+              onClick={() => changeDialecto(d)}
+              style={{
+                padding: '3px 10px', borderRadius: 6, fontSize: '0.68rem', fontWeight: dialecto === d ? 700 : 400, cursor: 'pointer',
+                border: `1px solid ${dialecto === d ? COLOR_DIALECTO[d] + '80' : 'var(--border)'}`,
+                background: dialecto === d ? COLOR_DIALECTO[d] + '18' : 'transparent',
+                color: dialecto === d ? COLOR_DIALECTO[d] : 'var(--sub)',
+                transition: 'all 0.15s',
+              }}
+            >{NOMBRES_DIALECTO[d]}</button>
+          ))}
+        </div>
+
+        {/* Banner Interview Mode */}
+        {interviewMode && !answered && (
+          <div style={{
+            background: timerExpired ? 'rgba(229,83,75,0.07)' : timerSeconds < 60 ? 'rgba(229,83,75,0.06)' : 'rgba(167,139,250,0.07)',
+            border: `1px solid ${timerExpired ? 'rgba(229,83,75,0.3)' : timerSeconds < 60 ? 'rgba(229,83,75,0.25)' : 'rgba(167,139,250,0.25)'}`,
+            borderRadius: 12, padding: '10px 16px', marginBottom: 14,
+            display: 'flex', alignItems: 'center', gap: 10,
+          }}>
+            <span style={{ fontSize: '1.2rem' }}>{timerExpired ? '⏰' : '🎯'}</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, fontSize: '0.84rem', color: timerExpired ? 'var(--red)' : timerSeconds < 60 ? 'var(--red)' : '#a78bfa' }}>
+                {timerExpired ? '¡Tiempo agotado!' : 'Modo Interview · Sin pistas'}
+              </div>
+              <div style={{ fontSize: '0.73rem', color: 'var(--sub)' }}>
+                {timerExpired ? 'Podés continuar con la siguiente lección' : 'Resolvé el ejercicio sin ayuda para fortalecer tus skills'}
+              </div>
+            </div>
+            {!timerExpired && (
+              <div style={{
+                fontFamily: 'DM Mono', fontSize: '1.1rem', fontWeight: 700,
+                color: timerSeconds < 60 ? 'var(--red)' : '#a78bfa',
+                minWidth: 52, textAlign: 'right',
+                animation: timerSeconds < 60 && timerSeconds % 2 === 0 ? 'none' : 'none',
+              }}>
+                {formatTimer(timerSeconds)}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Banner racha */}
         {rachaAnimate && (
@@ -1010,6 +1134,21 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
           <div style={{ padding: '18px 17px' }}>
             <div style={{ fontSize: '0.97rem', fontWeight: 500, letterSpacing: '-0.01em', lineHeight: 1.6, marginBottom: 15, color: 'var(--text)' }}
               dangerouslySetInnerHTML={{ __html: l.enunciado.replace(/\n/g, '<br/>') }} />
+
+            {/* Dialect notes */}
+            {dialecto !== 'sqlite' && NOTAS_POR_MODULO[moduloId]?.[dialecto] && (
+              <div style={{ marginBottom: 15, background: `${COLOR_DIALECTO[dialecto]}0d`, border: `1px solid ${COLOR_DIALECTO[dialecto]}30`, borderRadius: 10, padding: '10px 14px' }}>
+                <div style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: COLOR_DIALECTO[dialecto], marginBottom: 7 }}>
+                  Diferencias en {NOMBRES_DIALECTO[dialecto]}
+                </div>
+                {NOTAS_POR_MODULO[moduloId]![dialecto]!.map((nota, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: i < (NOTAS_POR_MODULO[moduloId]![dialecto]!.length - 1) ? 5 : 0 }}>
+                    <span style={{ color: COLOR_DIALECTO[dialecto], fontSize: '0.75rem', flexShrink: 0, marginTop: 1 }}>›</span>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--sub)', lineHeight: 1.5, fontFamily: nota.includes('(') ? 'inherit' : 'inherit' }}>{nota}</span>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Tablas relacionadas */}
             {(() => {
@@ -1128,9 +1267,13 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
 
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
               <button onClick={runQuery} style={{ background: 'var(--nova2)', color: '#fff', border: 'none', borderRadius: 9, padding: '9px 17px', fontWeight: 600, cursor: 'pointer', fontSize: '0.84rem', flexShrink: 0 }}>▶ Ejecutar</button>
-              <button onClick={() => setHintOpen(!hintOpen)} style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 9, padding: '8px 15px', color: hintOpen ? 'var(--amber)' : 'var(--sub)', cursor: 'pointer', fontSize: '0.84rem' }}>💡 Pista</button>
-              {(intentos >= 2 || l.dificultad === 'avanzado') && !answered && (
-                <button onClick={nextLesson} style={{ background: 'transparent', border: '1px solid rgba(100,116,139,0.4)', borderRadius: 9, padding: '8px 15px', color: 'var(--sub)', cursor: 'pointer', fontSize: '0.84rem', opacity: 0.8 }} title="Podés continuar sin completar esta lección">Saltar →</button>
+              {interviewMode ? (
+                <button disabled title="Las pistas no están disponibles en Modo Interview" style={{ background: 'transparent', border: '1px solid var(--border)', borderRadius: 9, padding: '8px 15px', color: 'var(--dim)', cursor: 'not-allowed', fontSize: '0.84rem', opacity: 0.45 }}>🚫 Sin pistas</button>
+              ) : (
+                <button onClick={() => setHintOpen(!hintOpen)} style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 9, padding: '8px 15px', color: hintOpen ? 'var(--amber)' : 'var(--sub)', cursor: 'pointer', fontSize: '0.84rem' }}>💡 Pista</button>
+              )}
+              {((intentos >= 2 || l.dificultad === 'avanzado') || (interviewMode && timerExpired)) && !answered && (
+                <button onClick={nextLesson} style={{ background: 'transparent', border: `1px solid ${timerExpired ? 'rgba(229,83,75,0.4)' : 'rgba(100,116,139,0.4)'}`, borderRadius: 9, padding: '8px 15px', color: timerExpired ? 'var(--red)' : 'var(--sub)', cursor: 'pointer', fontSize: '0.84rem', opacity: 0.9 }} title="Continuar con la siguiente lección">{timerExpired ? '⏭ Siguiente →' : 'Saltar →'}</button>
               )}
               {curIdx > 0 && (
                 <button onClick={() => goToLesson(curIdx - 1)} style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 9, padding: '8px 15px', color: 'var(--sub)', cursor: 'pointer', fontSize: '0.84rem' }}>← Anterior</button>
@@ -1172,11 +1315,13 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
 
             {answered && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 13, marginTop: 15, background: 'rgba(62,207,142,0.05)', border: '1px solid rgba(62,207,142,0.18)', borderRadius: 12, padding: '15px 17px' }}>
-                <span style={{ fontSize: '1.5rem' }}>✅</span>
+                <span style={{ fontSize: '1.5rem' }}>{interviewMode && justAnswered ? '🎯' : '✅'}</span>
                 <div>
-                  <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--green)', marginBottom: 2 }}>¡Correcto!</div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--green)', marginBottom: 2 }}>
+                    {interviewMode && justAnswered ? '¡Completado en Modo Interview!' : '¡Correcto!'}
+                  </div>
                   <div style={{ fontSize: '0.79rem', color: 'var(--sub)' }}>
-                    {!justAnswered && !result ? 'Ya habías completado esta lección.' : '¡Excelente! Tu respuesta es correcta.'}
+                    {!justAnswered && !result ? 'Ya habías completado esta lección.' : interviewMode ? 'Excelente trabajo sin usar pistas.' : '¡Excelente! Tu respuesta es correcta.'}
                   </div>
                 </div>
                 <div style={{ marginLeft: 'auto', fontFamily: 'DM Mono', fontWeight: 700, fontSize: '1rem', color: 'var(--green)' }}>+{l.xp} XP</div>
