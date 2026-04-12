@@ -160,6 +160,13 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [curIdx, curSlide, moduloId])
 
+  const getSemanaActual = () => {
+    const now = new Date()
+    const jan1 = new Date(now.getFullYear(), 0, 1)
+    const week = Math.ceil((((now.getTime() - jan1.getTime()) / 86400000) + jan1.getDay() + 1) / 7)
+    return `${now.getFullYear()}-W${String(week).padStart(2, '0')}`
+  }
+
   const saveProg = async (lid: string, mid: number, xp: number, pistaUsada: boolean) => {
     await sb.from('progreso').upsert({
       usuario_id: user.id, leccion_id: lid, modulo_id: mid,
@@ -183,6 +190,21 @@ export default function LeccionClient({ moduloId }: { moduloId: number }) {
         ultima_actividad: new Date().toISOString().split('T')[0],
       }))
       if (rachaSubio) setRachaAnimate(true)
+    }
+
+    if (xp > 0) {
+      const semanaKey = getSemanaActual()
+      const { data: xpExisting } = await sb
+        .from('xp_semanal')
+        .select('xp')
+        .eq('usuario_id', user.id)
+        .eq('semana', semanaKey)
+        .maybeSingle()
+      await sb.from('xp_semanal').upsert({
+        usuario_id: user.id,
+        semana: semanaKey,
+        xp: (xpExisting?.xp ?? 0) + xp,
+      }, { onConflict: 'usuario_id,semana' })
     }
 
     setProg(prev => ({ ...prev, [lid]: { completada: true, xp_ganado: xp } }))

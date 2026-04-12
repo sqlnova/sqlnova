@@ -27,6 +27,13 @@ const NIVEL_COLOR = {
 
 const NIVEL_XP = { inicial: 15, avanzado: 30, experto: 50 }
 
+const getSemanaActual = () => {
+  const now = new Date()
+  const jan1 = new Date(now.getFullYear(), 0, 1)
+  const week = Math.ceil((((now.getTime() - jan1.getTime()) / 86400000) + jan1.getDay() + 1) / 7)
+  return `${now.getFullYear()}-W${String(week).padStart(2, '0')}`
+}
+
 export default function RetosPage() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
@@ -175,6 +182,21 @@ export default function RetosPage() {
             setCelebrating(true)
             setCompletados(prev => [...prev, { reto_id: retoActual.id, xp_ganado: xpToAward }])
             setTimeout(() => setCelebrating(false), 3000)
+
+            if (xpToAward > 0) {
+              const semanaKey = getSemanaActual()
+              const { data: xpExisting } = await sb
+                .from('xp_semanal')
+                .select('xp')
+                .eq('usuario_id', user.id)
+                .eq('semana', semanaKey)
+                .maybeSingle()
+              await sb.from('xp_semanal').upsert({
+                usuario_id: user.id,
+                semana: semanaKey,
+                xp: (xpExisting?.xp ?? 0) + xpToAward,
+              }, { onConflict: 'usuario_id,semana' })
+            }
           }
         }
       }
