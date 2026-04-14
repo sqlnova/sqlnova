@@ -75,7 +75,7 @@ export default function LandingPage() {
         <div className="flex gap-4 flex-wrap justify-center">
           <Link href="/privacy" className="hover:text-[var(--text)] transition-colors">Política de Privacidad</Link>
           <Link href="/terms" className="hover:text-[var(--text)] transition-colors">Términos de Servicio</Link>
-          <Link href="/eliminar-cuenta" className="hover:text-[var(--text)] transition-colors">Eliminar cuenta</Link>
+          <Link href="https://app.sqlnova.app/eliminar-cuenta" className="hover:text-[var(--text)] transition-colors">Eliminar cuenta</Link>
         </div>
       </footer>
 

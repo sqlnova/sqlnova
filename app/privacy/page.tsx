@@ -36,8 +36,8 @@ export default function PrivacyPage() {
           <p className="text-[var(--sub)] leading-relaxed">
             Tenés derecho a solicitar la eliminación completa de tu cuenta y todos los datos asociados en cualquier momento.
             Podés iniciar el pedido desde la página{' '}
-            <Link href="/eliminar-cuenta" className="text-blue-500 hover:underline font-semibold">
-              /eliminar-cuenta
+            <Link href="https://app.sqlnova.app/eliminar-cuenta" className="text-blue-500 hover:underline font-semibold">
+              app.sqlnova.app/eliminar-cuenta
             </Link>{' '}
             o enviando un correo a <strong>sqlnovaapp@gmail.com</strong> con asunto{' '}
             <strong>&quot;Eliminar datos de cuenta SQLNova&quot;</strong>.
