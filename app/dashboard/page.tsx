@@ -207,16 +207,15 @@ export default function Dashboard() {
 
         <h2 className="text-[10px] font-bold text-[var(--sub)] uppercase tracking-[0.2em] mb-4">Módulos de aprendizaje</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
-          {MODULOS.map((m, i) => {
+          {MODULOS.map((m) => {
              const prefix = String(m.id).padStart(2, '0') + '-';
              const done = Object.keys(prog).filter(k => k.startsWith(prefix) && prog[k]?.completada).length;
              const pct = Math.round((done / m.lecciones_total) * 100);
-             const locked = i > 1 && Object.keys(prog).length < i * 5;
              return (
                <div 
                 key={m.id} 
-                onClick={() => !locked && router.push(`/leccion/${m.id}`)}
-                className={`bg-[var(--card)] border ${pct === 100 ? 'border-green-500/20' : 'border-[var(--border)]'} p-5 rounded-2xl cursor-pointer hover:border-blue-500/30 transition-all ${locked && 'opacity-40 cursor-default'}`}
+                onClick={() => router.push(`/leccion/${m.id}`)}
+                className={`bg-[var(--card)] border ${pct === 100 ? 'border-green-500/20' : 'border-[var(--border)]'} p-5 rounded-2xl cursor-pointer hover:border-blue-500/30 transition-all`}
                >
                  <div className="flex items-center gap-4 mb-4">
                     <span className="text-2xl">{m.icono}</span>
