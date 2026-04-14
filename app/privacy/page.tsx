@@ -39,7 +39,7 @@ export default function PrivacyPage() {
             <Link href="/eliminar-cuenta" className="text-blue-500 hover:underline font-semibold">
               /eliminar-cuenta
             </Link>{' '}
-            o enviando un correo a <strong>sqlnova@gmail.com</strong> con asunto{' '}
+            o enviando un correo a <strong>sqlnovaapp@gmail.com</strong> con asunto{' '}
             <strong>&quot;Eliminar datos de cuenta SQLNova&quot;</strong>.
           </p>
         </section>

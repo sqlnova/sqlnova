@@ -23,8 +23,8 @@ export default function DeleteAccountPage() {
           <div className="space-y-2 text-[var(--sub)] leading-relaxed">
             <p>
               1. Enviá un mail a{' '}
-              <a className="text-blue-400 hover:underline font-semibold" href="mailto:sqlnova@gmail.com">
-                sqlnova@gmail.com
+              <a className="text-blue-400 hover:underline font-semibold" href="mailto:sqlnovaapp@gmail.com">
+                sqlnovaapp@gmail.com
               </a>
               .
             </p>
