@@ -72,9 +72,10 @@ export default function LandingPage() {
 
       <footer className="p-8 text-center text-xs text-[var(--sub)] flex flex-col sm:flex-row justify-center items-center gap-4 border-t border-[var(--border)]">
         <span>© 2026 SQLNova. Todos los derechos reservados.</span>
-        <div className="flex gap-4">
+        <div className="flex gap-4 flex-wrap justify-center">
           <Link href="/privacy" className="hover:text-[var(--text)] transition-colors">Política de Privacidad</Link>
           <Link href="/terms" className="hover:text-[var(--text)] transition-colors">Términos de Servicio</Link>
+          <Link href="/eliminar-cuenta" className="hover:text-[var(--text)] transition-colors">Eliminar cuenta</Link>
         </div>
       </footer>
 
