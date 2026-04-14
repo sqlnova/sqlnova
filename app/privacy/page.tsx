@@ -34,7 +34,13 @@ export default function PrivacyPage() {
         <section className="space-y-3">
           <h2 className="text-xl font-bold">4. Eliminación de datos</h2>
           <p className="text-[var(--sub)] leading-relaxed">
-            Tenés derecho a solicitar la eliminación completa de tu cuenta y todos los datos asociados en cualquier momento contactando a nuestro equipo de soporte.
+            Tenés derecho a solicitar la eliminación completa de tu cuenta y todos los datos asociados en cualquier momento.
+            Podés iniciar el pedido desde la página{' '}
+            <Link href="/eliminar-cuenta" className="text-blue-500 hover:underline font-semibold">
+              /eliminar-cuenta
+            </Link>{' '}
+            o enviando un correo a <strong>sqlnova@gmail.com</strong> con asunto{' '}
+            <strong>&quot;Eliminar datos de cuenta SQLNova&quot;</strong>.
           </p>
         </section>
       </div>
