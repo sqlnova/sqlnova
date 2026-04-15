@@ -15,6 +15,7 @@ export const viewport: Viewport = {
 // Configuración de Metadata optimizada para Google (SEO)
 export const metadata: Metadata = {
   metadataBase: new URL('https://app.sqlnova.app'),
+  manifest: '/manifest.json',
   title: {
     default: 'SQLNova | Aprendé SQL Gratis de forma Interactiva',
     template: '%s | SQLNova'
