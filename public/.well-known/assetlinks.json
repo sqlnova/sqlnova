@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.sqlnova.app",
+        "sha256_cert_fingerprints": ["A0:18:AD:48:B2:BC:4A:FD:67:E8:CF:EA:2E:34:ED:42:BC:8B:AB:E5:32:EE:49:88:F2:C3:D0:D7:F0:C9:A5:E5"]
+      }
+    }]
