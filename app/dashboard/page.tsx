@@ -67,41 +67,62 @@ export default function Dashboard() {
 
   useEffect(() => { loadData() }, [loadData])
 
-  // Detectar retorno de MercadoPago con guard anti-CSRF vía sessionStorage
+  // Detectar retorno de MercadoPago y esperar confirmación vía Supabase Realtime
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get('pago') !== 'exitoso') return
 
     window.history.replaceState({}, '', '/dashboard')
 
-    const verificarPago = async () => {
+    let channel: ReturnType<typeof sb.channel> | null = null
+    let timeoutId: ReturnType<typeof setTimeout> | null = null
+
+    const iniciarEspera = async () => {
       const { data: { session } } = await sb.auth.getSession()
       if (!session) return
 
-      // Guard: solo procesar si el pago fue iniciado desde esta sesión del navegador
       const flagUid = sessionStorage.getItem('pago_iniciado_uid')
       if (flagUid !== session.user.id) return
       sessionStorage.removeItem('pago_iniciado_uid')
 
-      // Polling con backoff exponencial: 3s, 6s, 12s, 24s, 48s
-      const delays = [3000, 6000, 12000, 24000, 48000]
-      for (const delay of delays) {
-        await new Promise(r => setTimeout(r, delay))
-        const { data: p } = await sb.from('perfiles')
-          .select('es_premium')
-          .eq('id', session.user.id)
-          .single()
-
-        if (p?.es_premium) {
-          setPagoMsg('exitoso')
-          loadData()
-          return
-        }
+      // Verificar si ya es premium antes de suscribirse (webhook puede haber llegado rápido)
+      const { data: p } = await sb.from('perfiles').select('es_premium').eq('id', session.user.id).single()
+      if (p?.es_premium) {
+        setPagoMsg('exitoso')
+        loadData()
+        return
       }
-      setPagoMsg('timeout')
+
+      // Escuchar cambios en tiempo real en lugar de polling
+      channel = sb.channel(`premium-${session.user.id}`)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'perfiles',
+          filter: `id=eq.${session.user.id}`,
+        }, (payload) => {
+          if (payload.new?.es_premium) {
+            setPagoMsg('exitoso')
+            loadData()
+            cleanup()
+          }
+        })
+        .subscribe()
+
+      // Timeout de 90 segundos como fallback
+      timeoutId = setTimeout(() => {
+        setPagoMsg('timeout')
+        cleanup()
+      }, 90000)
     }
 
-    verificarPago()
+    const cleanup = () => {
+      if (channel) { sb.removeChannel(channel); channel = null }
+      if (timeoutId) { clearTimeout(timeoutId); timeoutId = null }
+    }
+
+    iniciarEspera()
+    return cleanup
   }, [loadData])
 
   if (loading) return (

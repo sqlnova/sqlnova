@@ -1,6 +1,7 @@
 // lib/constants.ts
 export const PREMIUM_PRICE = 11900;
 export const PREMIUM_PLAN_NAME = "SQLNova Premium - Acceso de por vida";
+export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://app.sqlnova.app';
 
 export const SQL_BUTTONS = [
   { label: 'SELECT', snippet: 'SELECT ', color: '#93c5fd' },

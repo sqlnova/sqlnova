@@ -11,44 +11,40 @@ interface PremiumModalProps {
 
 export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   if (!isOpen) return null;
 
   const handleSubscription = async () => {
     setIsRedirecting(true);
+    setErrorMsg('');
     try {
-      // 1. Validamos sesión del usuario
       const { data: { session } } = await sb.auth.getSession();
-      
+
       if (!session) {
-        alert("Por favor, iniciá sesión para realizar la compra.");
+        setErrorMsg('Por favor, iniciá sesión para realizar la compra.');
         setIsRedirecting(false);
         return;
       }
 
-      // 2. Llamamos a nuestra API interna de Checkout
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          userId: session.user.id 
-        })
+        body: JSON.stringify({ userId: session.user.id })
       });
 
       const data = await res.json();
 
-      // 3. Guardamos flag para que el dashboard sepa que el pago fue iniciado
       sessionStorage.setItem('pago_iniciado_uid', session.user.id);
 
-      // 4. Redireccionamos a la URL de Mercado Pago que devuelve el backend
       if (data.url) {
         window.location.href = data.url;
       } else {
-        throw new Error("No se pudo generar el link de pago");
+        throw new Error('No se pudo generar el link de pago');
       }
     } catch (err) {
       console.error(err);
-      alert("No se pudo conectar con el sistema de pagos. Intentá de nuevo.");
+      setErrorMsg('No se pudo conectar con el sistema de pagos. Intentá de nuevo.');
       setIsRedirecting(false);
     }
   };
@@ -126,6 +122,12 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
             )}
           </button>
           
+          {errorMsg && (
+            <p className="mt-3 text-center text-red-400 text-xs font-medium bg-red-500/10 border border-red-500/20 rounded-xl py-2 px-3">
+              {errorMsg}
+            </p>
+          )}
+
           <p className="text-center text-[var(--sub)] text-[11px] mt-4 uppercase tracking-widest font-bold">
             Pago único de ${PREMIUM_PRICE.toLocaleString('es-AR')} · Acceso de por vida
           </p>
