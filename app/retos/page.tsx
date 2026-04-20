@@ -1,9 +1,10 @@
 'use client'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { sb } from '@/lib/supabase'
 import { normalize, loadSqlJs } from '@/lib/utils'
 import ShareRetoCard from '@/components/ShareRetoCard'
+import DOMPurify from 'dompurify'
 
 type Reto = {
   id: string
@@ -127,6 +128,11 @@ export default function RetosPage() {
   // Verificar si el nivel actual ya está completado
   const retoActual = retos.find(r => r.nivel === nivelActivo)
   const yaCompletado = retoActual ? completados.some(c => c.reto_id === retoActual.id) : false
+  const enunciadoSanitizado = useMemo(() => {
+    if (!retoActual?.enunciado) return ''
+    if (typeof window === 'undefined') return retoActual.enunciado
+    return DOMPurify.sanitize(retoActual.enunciado, { ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'code', 'pre', 'br', 'span', 'p', 'ul', 'li', 'ol'], ALLOWED_ATTR: ['class'] })
+  }, [retoActual?.enunciado])
 
   useEffect(() => {
     if (yaCompletado) setAnswered(true)
@@ -292,7 +298,7 @@ export default function RetosPage() {
             <div style={{ padding: '18px' }}>
               {/* Enunciado */}
               <div style={{ fontSize: '0.95rem', lineHeight: 1.7, marginBottom: 16, color: 'var(--text)' }}
-                dangerouslySetInnerHTML={{ __html: retoActual.enunciado }} />
+                dangerouslySetInnerHTML={{ __html: enunciadoSanitizado }} />
 
               {/* Tablas disponibles e Interactivas */}
               <div style={{ marginBottom: 14, display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>

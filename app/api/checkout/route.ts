@@ -1,6 +1,8 @@
-import { PREMIUM_PRICE, PREMIUM_PLAN_NAME } from '@/lib/constants';
+import { PREMIUM_PRICE, PREMIUM_PLAN_NAME, APP_URL } from '@/lib/constants';
 
 export const runtime = 'edge';
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function POST(request: Request) {
   try {
@@ -10,8 +12,8 @@ export async function POST(request: Request) {
     if (!token) {
       return Response.json({ error: 'Payment system not configured' }, { status: 500 });
     }
-    if (!userId) {
-      return Response.json({ error: 'userId requerido' }, { status: 400 });
+    if (!userId || typeof userId !== 'string' || !UUID_REGEX.test(userId)) {
+      return Response.json({ error: 'userId inválido' }, { status: 400 });
     }
 
     const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
@@ -32,12 +34,12 @@ export async function POST(request: Request) {
         ],
         metadata: { user_id: userId },
         back_urls: {
-          success: 'https://app.sqlnova.app/dashboard?pago=exitoso',
-          failure: 'https://app.sqlnova.app/pocket?pago=error',
-          pending: 'https://app.sqlnova.app/pocket?pago=pendiente',
+          success: `${APP_URL}/dashboard?pago=exitoso`,
+          failure: `${APP_URL}/pocket?pago=error`,
+          pending: `${APP_URL}/pocket?pago=pendiente`,
         },
         auto_return: 'approved',
-        notification_url: 'https://app.sqlnova.app/api/webhook',
+        notification_url: `${APP_URL}/api/webhook`,
       }),
     });
 

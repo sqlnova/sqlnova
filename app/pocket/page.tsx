@@ -122,13 +122,29 @@ export default function PocketPage() {
     // Si NO es premium, bloqueamos la subida y abrimos el modal
     if (!esPremium) {
       setIsModalOpen(true)
-      e.target.value = '' 
+      e.target.value = ''
       return
     }
 
     const file = e.target.files?.[0]
     if (!file || !dbRef.current) return
     setError('')
+
+    const MAX_SIZE_MB = 10
+    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+      setError(`El archivo supera el límite de ${MAX_SIZE_MB} MB.`)
+      e.target.value = ''
+      return
+    }
+
+    const ALLOWED_TYPES = ['text/csv', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel', 'text/plain']
+    const isExcelExt = file.name.endsWith('.xlsx') || file.name.endsWith('.xls')
+    const isCsvExt = file.name.endsWith('.csv')
+    if (!ALLOWED_TYPES.includes(file.type) && !isExcelExt && !isCsvExt) {
+      setError('Tipo de archivo no soportado. Solo se admiten CSV y Excel (.xlsx, .xls).')
+      e.target.value = ''
+      return
+    }
 
     const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls')
 
